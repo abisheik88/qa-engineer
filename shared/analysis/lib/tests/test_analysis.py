@@ -256,6 +256,91 @@ class DiffGuardTests(unittest.TestCase):
                 self.assertTrue(issue["why"])
 
 
+class RealRunnerMessageTests(unittest.TestCase):
+    """Classification pinned to real, captured runner output.
+
+    Every string below was copied from an actual `npx playwright test` run
+    against examples/getting-started, not written from memory. They exist because
+    Playwright prints a timeout budget in *every* assertion failure, which made a
+    naive timeout rule swallow both locator and assertion failures — and told the
+    reader to raise a timeout, the one action that cannot help.
+    """
+
+    # Element does not exist. Note "element(s)" — the parenthesis is why an
+    # `element .*not found` pattern missed this for real output.
+    MISSING_ELEMENT = (
+        "Error: expect(locator).toHaveText(expected) failed\n"
+        "\n"
+        "Locator: getByTestId('welcome-missing')\n"
+        "Expected: \"Welcome back\"\n"
+        "Timeout: 5000ms\n"
+        "Error: element(s) not found\n"
+        "\n"
+        "Call log:\n"
+        "  - Expect \"toHaveText\" with timeout 5000ms\n"
+        "  - waiting for getByTestId('welcome-missing')\n"
+    )
+
+    # Element exists; the text differs. Both messages contain "waiting for
+    # getByTestId(...)", so that phrase alone cannot discriminate them.
+    TEXT_MISMATCH = (
+        "Error: expect(locator).toHaveText(expected) failed\n"
+        "\n"
+        "Locator:  getByTestId('welcome')\n"
+        "Expected: \"Totally different text\"\n"
+        "Received: \"Welcome back\"\n"
+        "Timeout:  5000ms\n"
+        "\n"
+        "Call log:\n"
+        "  - Expect \"toHaveText\" with timeout 5000ms\n"
+        "  - waiting for getByTestId('welcome')\n"
+        "    14 x locator resolved to <h1 data-testid=\"welcome\">Welcome back</h1>\n"
+    )
+
+    def test_missing_element_is_a_locator_failure_not_a_timeout(self):
+        classification, confidence, _ = taxonomy.classify(self.MISSING_ELEMENT)
+        self.assertEqual(classification, taxonomy.LOCATOR)
+        self.assertGreaterEqual(confidence, 0.8)
+
+    def test_value_mismatch_is_an_assertion_failure_not_a_timeout(self):
+        classification, confidence, _ = taxonomy.classify(self.TEXT_MISMATCH)
+        self.assertEqual(classification, taxonomy.ASSERTION)
+        self.assertGreaterEqual(confidence, 0.8)
+
+    def test_the_two_messages_are_not_conflated(self):
+        """They share the locator expression and the timeout line, so a rule that
+        keys on either one alone would classify both identically."""
+        for shared in ("waiting for getByTestId(", "Timeout"):
+            self.assertIn(shared, self.MISSING_ELEMENT)
+            self.assertIn(shared, self.TEXT_MISMATCH)
+        self.assertNotEqual(
+            taxonomy.classify(self.MISSING_ELEMENT)[0],
+            taxonomy.classify(self.TEXT_MISMATCH)[0],
+        )
+
+    def test_a_genuine_timeout_is_still_a_timeout(self):
+        """Neither an element-not-found nor an expected/received comparison."""
+        genuine = "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"/slow\"\n"
+        self.assertEqual(taxonomy.classify(genuine)[0], taxonomy.TIMEOUT)
+
+    def test_selenium_missing_element_phrasing(self):
+        selenium = (
+            'no such element: Unable to locate element: '
+            '{"method":"css selector","selector":"#cart-button"}'
+        )
+        self.assertEqual(taxonomy.classify(selenium)[0], taxonomy.LOCATOR)
+
+    def test_the_classification_drives_a_different_owner_and_action(self):
+        """The point of getting this right: the three classes lead to three
+        different next actions, so conflating them misroutes the work."""
+        seen = {
+            taxonomy.classify(self.MISSING_ELEMENT)[0],
+            taxonomy.classify(self.TEXT_MISMATCH)[0],
+            taxonomy.classify("page.goto: Timeout 30000ms exceeded.")[0],
+        }
+        self.assertEqual(seen, {taxonomy.LOCATOR, taxonomy.ASSERTION, taxonomy.TIMEOUT})
+
+
 class TaxonomyTests(unittest.TestCase):
     def test_http_status_wins(self):
         self.assertEqual(taxonomy.classify("something", http_status=401)[0], taxonomy.AUTH)

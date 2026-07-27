@@ -132,6 +132,137 @@ test('verify reports a hostile lockfile rather than acting on it', () => {
   }
 });
 
+test('a symlink cannot carry a mutation out of the project', () => {
+  // Lexical containment is not enough: `path.resolve` does not follow symlinks
+  // but `fs` does, and git stores symlinks — so a hostile repository can ship
+  // `escape-hatch -> /` plus a lockfile entry through it. Reproduced before the
+  // real-path check existed.
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-sec-'));
+  const project = path.join(parent, 'project');
+  fs.mkdirSync(project);
+  const secret = path.join(parent, 'outside-secret.txt');
+  fs.writeFileSync(secret, 'must survive\n');
+  fs.symlinkSync(parent, path.join(project, 'escape-hatch'), 'dir');
+
+  try {
+    const tx = new Transaction(project, path.join(project, '.qa', 'backups', 'x'));
+    assert.throws(
+      () => tx.delete('escape-hatch/outside-secret.txt'),
+      /link out of the project/,
+      'a delete through a symlink was allowed',
+    );
+    assert.throws(
+      () => tx.write('escape-hatch/planted.txt', 'x'),
+      /link out of the project/,
+      'a write through a symlink was allowed',
+    );
+    assert.equal(fs.readFileSync(secret, 'utf8'), 'must survive\n');
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test('uninstall refuses a lockfile that points through a symlink', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-sec-'));
+  const project = path.join(parent, 'project');
+  fs.mkdirSync(project);
+  const secret = path.join(parent, 'outside-secret.txt');
+  fs.writeFileSync(secret, 'must survive\n');
+  fs.writeFileSync(path.join(project, 'package.json'), '{"name":"victim"}\n');
+
+  try {
+    assert.equal(runQa(['install', '--yes', '--project', project]).status, 0);
+    fs.symlinkSync(parent, path.join(project, 'escape-hatch'), 'dir');
+
+    const lockPath = path.join(project, 'qa-lock.json');
+    const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+    lock.files.push({
+      path: 'escape-hatch/outside-secret.txt', // lexically inside the project
+      sha256: crypto.createHash('sha256').update(fs.readFileSync(secret)).digest('hex'),
+      bytes: fs.statSync(secret).size,
+      owner: 'skill',
+    });
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    const result = runQa(['uninstall', '--project', project]);
+    assert.notEqual(result.status, 0);
+    assert.ok(fs.existsSync(secret), 'SYMLINK ESCAPE — a file outside the project was deleted');
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test('version-control directories are never touched', () => {
+  // A lockfile listing .git/hooks/pre-commit must not be able to delete it:
+  // repository metadata is not the installer's to modify, and the loss is not
+  // recoverable from the pack's own backups in any useful sense.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-sec-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"victim"}\n');
+    fs.mkdirSync(path.join(dir, '.git', 'hooks'), { recursive: true });
+    const hook = path.join(dir, '.git', 'hooks', 'pre-commit');
+    fs.writeFileSync(hook, '#!/bin/sh\necho original\n');
+
+    assert.equal(runQa(['install', '--yes', '--project', dir]).status, 0);
+    const lockPath = path.join(dir, 'qa-lock.json');
+    const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+    lock.files.push({
+      path: '.git/hooks/pre-commit',
+      sha256: crypto.createHash('sha256').update(fs.readFileSync(hook)).digest('hex'),
+      bytes: fs.statSync(hook).size,
+      owner: 'skill',
+    });
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2));
+
+    const result = runQa(['uninstall', '--project', dir]);
+    assert.notEqual(result.status, 0);
+    assert.match(`${result.stdout}${result.stderr}`, /\.git/);
+    assert.equal(fs.readFileSync(hook, 'utf8'), '#!/bin/sh\necho original\n');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the Transaction rejects null bytes and VCS paths at staging time', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-sec-'));
+  try {
+    const tx = new Transaction(dir, path.join(dir, '.qa', 'backups', 'x'));
+    assert.throws(() => tx.write('a\0b.txt', 'x'), /null byte/);
+    for (const vcs of ['.git/config', 'nested/.git/config', '.hg/store', '.svn/entries']) {
+      assert.throws(() => tx.delete(vcs), /version-control|inside \./, `allowed: ${vcs}`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a hostile project directory name cannot inject a shell command', () => {
+  // Every child process is spawned with an argv array and no shell, so
+  // metacharacters in a path are inert. Verified rather than assumed.
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-sec-'));
+  const canary = path.join(parent, 'INJECTED');
+  const hostileNames = [
+    `p; touch ${canary}`,
+    `p$(touch ${canary})`,
+    `p&&touch ${canary}`,
+    "p'quote",
+    'p with spaces',
+  ];
+  try {
+    for (const name of hostileNames) {
+      const dir = path.join(parent, name);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'package.json'), '{"name":"x"}\n');
+      const result = runQa(['install', '--yes', '--project', dir]);
+      assert.equal(result.status, 0, `install failed for ${name}: ${result.stderr}`);
+      assert.ok(fs.existsSync(path.join(dir, '.agents', 'skills', 'qa-run', 'SKILL.md')));
+    }
+    assert.ok(!fs.existsSync(canary), 'a shell command from a directory name executed');
+  } finally {
+    fs.rmSync(parent, { recursive: true, force: true });
+  }
+});
+
 test('install does not execute code from the project it installs into', () => {
   // SECURITY.md guarantees no code execution at install time. A malicious
   // package.json script must not run.

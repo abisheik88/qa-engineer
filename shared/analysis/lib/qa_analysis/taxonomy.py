@@ -31,11 +31,26 @@ CLASSES = {
 }
 
 # Ordered rules: (classification, message-pattern, confidence, reason).
-# Order encodes priority — a locator timeout is a locator failure, not a bare
-# timeout, so the locator rule precedes the timeout rule.
+#
+# Order encodes priority, and the first two rules exist because modern runners
+# print a timeout budget in *every* assertion failure. Playwright's message for a
+# plain text mismatch ends with "Timeout: 5000ms" even though nothing timed out,
+# so a naive timeout rule captures assertion and locator failures alike and sends
+# the reader to raise a timeout — the one action guaranteed not to help. The
+# patterns below are derived from real captured runner output; see
+# tests/test_analysis.py::RealRunnerMessageTests, which pins the exact strings.
+#
+# The discriminators, from that output:
+#   element missing  -> "Error: element(s) not found"   (no Received: value)
+#   value mismatch   -> "Expected: X" + "Received: Y"   (element was resolved)
+#   real timeout     -> a timeout with neither of the above
 _RULES = [
-    (LOCATOR, re.compile(r"(?i)(no such element|element .*not (?:found|visible|attached)|locator.*(?:resolved to 0|not found)|waiting for (?:locator|selector))"), 0.8,
+    (LOCATOR, re.compile(r"(?i)(no such element|element(?:\(s\))?\s+not\s+(?:found|visible|attached)|locator.*(?:resolved to 0|not found)|waiting for (?:locator|selector)|unable to locate element)"), 0.8,
      "Error indicates the target element could not be found or resolved."),
+    # A concrete expected-vs-received comparison is an assertion result, not a
+    # time budget: the runner resolved the target and compared values.
+    (ASSERTION, re.compile(r"(?is)expected:.*received:"), 0.8,
+     "Error shows a concrete expected-versus-received comparison, so the assertion did not hold."),
     (TIMEOUT, re.compile(r"(?i)(timeout|timed out|exceeded .*ms|deadline exceeded)"), 0.75,
      "Error indicates an operation exceeded its time budget."),
     (AUTH, re.compile(r"(?i)(401 unauthorized|authentication failed|invalid (?:credentials|token)|login failed|not authenticated)"), 0.85,

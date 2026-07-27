@@ -149,6 +149,28 @@ for (const skill of skills) {
   }
 }
 
+// --- security guarantee: untrusted input ------------------------------------
+// SECURITY.md states that artifact and repository content is treated as
+// untrusted data. That guarantee only holds if each skill says so where the
+// agent will read it, so it is checked per skill rather than assumed from the
+// policy document. Four skills that read external content were missing it.
+const UNTRUSTED_MARKER =
+  /untrusted data|as data to classify|never as instructions|never be treated as instructions/i;
+for (const skill of skills) {
+  const body = read(`skills/${skill}/SKILL.md`);
+  const audience = /audience:\s*user/.test(body) ? 'user' : 'model';
+  if (audience !== 'user') continue;
+  if (!UNTRUSTED_MARKER.test(body)) {
+    problems.push(
+      `skills/${skill}/SKILL.md has no untrusted-input guardrail — SECURITY.md promises that ` +
+        'artifact and repository content is treated as data, never as instructions',
+    );
+  }
+}
+if (!/untrusted/i.test(read('SECURITY.md'))) {
+  problems.push('SECURITY.md no longer states the untrusted-input guarantee the skills rely on');
+}
+
 // --- diff-guard claims ------------------------------------------------------
 // qa-fix is the guard's consumer; if it promises the guard gates a change, the
 // guard must be reachable from that skill.

@@ -77,7 +77,13 @@ export const AGENTS = Object.freeze([
     skillsDir: SHARED_SKILLS_DIR,
     wrapperFormat: 'prompt-md',
     wrapperDir: '.github/prompts',
-    detect: (root) => fs.existsSync(path.join(root, '.github')),
+    // Detected by a Copilot-specific marker, not by `.github/` — almost every
+    // repository has `.github/` for Actions or issue templates, so keying on it
+    // reported Copilot for projects that do not use it and wrote 13 wrapper
+    // files nobody asked for. Request them with `--agent github-copilot`.
+    detect: (root) =>
+      fs.existsSync(path.join(root, '.github', 'copilot-instructions.md')) ||
+      fs.existsSync(path.join(root, '.github', 'prompts')),
   },
   {
     id: 'antigravity',
@@ -86,7 +92,14 @@ export const AGENTS = Object.freeze([
     skillsDir: SHARED_SKILLS_DIR,
     wrapperFormat: 'workflow-md',
     wrapperDir: '.agents/workflows',
-    detect: (root) => fs.existsSync(path.join(root, '.agents')),
+    // Detected by its own configuration directory, NOT by `.agents/`.
+    // `.agents/skills/` is the shared Agent Skills path that this installer
+    // creates for every host, so keying on `.agents/` made the installer detect
+    // Antigravity purely because it had run once before: a second `install`
+    // silently added 13 wrapper files and reported a host that was never really
+    // there. Detection must never treat the pack's own footprint as evidence.
+    // Request the wrappers explicitly with `--agent antigravity`.
+    detect: (root) => fs.existsSync(path.join(root, '.antigravity')),
   },
   {
     id: 'kimi',

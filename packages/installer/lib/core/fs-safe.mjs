@@ -7,33 +7,89 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { environmentError, conflictError } from './errors.mjs';
 
+// Directories whose contents are never the installer's to touch, however a path
+// reaches it. Deleting a repository's own metadata (or its hooks) is not a
+// recoverable mistake, and no pack file legitimately lives there.
+const FORBIDDEN_SEGMENTS = new Set(['.git', '.hg', '.svn']);
+
+/** Contained inside `root` (or equal to it), compared as resolved paths. */
+function isInside(root, target) {
+  if (target === root) return true;
+  const prefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  return target.startsWith(prefix);
+}
+
+/**
+ * The deepest existing ancestor of `target`, with symlinks resolved, plus the
+ * not-yet-existing suffix appended. Used so containment reflects where a write
+ * would *land*, not merely how its path is spelled.
+ */
+function realTargetPath(target) {
+  let probe = target;
+  while (!fs.existsSync(probe)) {
+    const parent = path.dirname(probe);
+    if (parent === probe) return target; // reached the filesystem root
+    probe = parent;
+  }
+  const suffix = path.relative(probe, target);
+  const realProbe = fs.realpathSync(probe);
+  return suffix ? path.join(realProbe, suffix) : realProbe;
+}
+
 /**
  * Resolve a project-relative path, refusing anything that escapes the project.
  *
  * Every mutation the installer performs is expressed as a path relative to the
- * project root, and some of those paths come from `qa-lock.json` — a file that
- * is committed to the consumer's repository and therefore travels with a clone.
- * A lockfile containing `../../etc/something` must not be able to make
- * `uninstall` delete outside the project, so containment is enforced here, at
- * the single point every write and delete passes through, rather than at each
- * call site.
+ * project root, and some of those paths come from `qa-lock.json` — a file that is
+ * committed to the consumer's repository and therefore travels with a clone.
+ * Both the lockfile *and* the tree it describes are attacker-influenced, so two
+ * escapes must be closed, and closing only the first is a false sense of safety:
+ *
+ *   lexical   `../../etc/passwd` — spelled outside the project.
+ *   symbolic  `link/file` where `link` is a symlink pointing outside. The path is
+ *             lexically inside; `fs` follows the link and writes or deletes
+ *             outside anyway. Git stores symlinks, so this arrives by clone.
+ *
+ * Containment therefore compares *real* paths, and lives at the single point
+ * every write and delete passes through rather than at each call site.
  */
 function resolveInside(root, relPath) {
   if (typeof relPath !== 'string' || relPath.length === 0) {
-    throw conflictError(`refusing to operate on an empty path`);
+    throw conflictError('refusing to operate on an empty path');
+  }
+  if (relPath.includes('\0')) {
+    throw conflictError('refusing to operate on a path containing a null byte');
   }
   if (path.isAbsolute(relPath)) {
     throw conflictError(`refusing to operate on an absolute path: ${relPath}`);
   }
+  for (const segment of relPath.split(/[\\/]+/)) {
+    if (FORBIDDEN_SEGMENTS.has(segment)) {
+      throw conflictError(
+        `refusing to operate inside ${segment}/: ${relPath}`,
+        'no pack file belongs in a version-control directory',
+      );
+    }
+  }
+
   const resolvedRoot = path.resolve(root);
   const target = path.resolve(resolvedRoot, relPath);
-  const prefix = resolvedRoot.endsWith(path.sep) ? resolvedRoot : `${resolvedRoot}${path.sep}`;
-  if (target !== resolvedRoot && !target.startsWith(prefix)) {
+  if (!isInside(resolvedRoot, target)) {
     throw conflictError(
       `refusing to operate outside the project: ${relPath}`,
       'a lockfile or config entry points outside the project root; re-run: qa install --force',
     );
   }
+
+  // Symlink containment: where would this actually land?
+  const realRoot = fs.existsSync(resolvedRoot) ? fs.realpathSync(resolvedRoot) : resolvedRoot;
+  if (!isInside(realRoot, realTargetPath(target))) {
+    throw conflictError(
+      `refusing to follow a link out of the project: ${relPath}`,
+      'a path inside the project resolves outside it through a symbolic link',
+    );
+  }
+
   return target;
 }
 
