@@ -16,8 +16,6 @@ Most sections are knowledge (Markdown synced into skills). The [analysis](analys
 | [diagnostics/](diagnostics/README.md) | The shared diagnostic engine (knowledge + Python code): root-cause analysis, timeline, prioritization, recommendation ranking, repair planning, report aggregation | qa-debug, qa-fix, or qa-report reasons about a failure |
 | [domains/](domains/README.md) | The QA engineering knowledge base — locators, waiting, assertions, page objects, fixtures, test data, flakiness, retry, auth, REST/GraphQL/WebSocket, accessibility, performance, security, visual, anti-patterns, and more | A skill's task touches the domain |
 | [frameworks/](frameworks/README.md) | Framework-specific execution, generation, and analysis adapters: Playwright, Selenium, Cypress, and WebdriverIO (all built) | The project profile detects the framework |
-| [stacks/](stacks/README.md) | Language and ecosystem idioms: TypeScript, JavaScript, Java, Python, C# — **not yet authored** (scope note only) | The project profile detects the language |
-| [ci/](ci/README.md) | CI-system knowledge: GitHub Actions, Jenkins, GitLab CI, Azure DevOps — **not yet authored** (scope note only) | The task involves that CI system's runs or logs |
 
 Modules are **not skills**: no frontmatter, no activation, no context cost until a skill loads them. They are plain Markdown files whose format is defined by [templates/knowledge-module-template.md](../templates/knowledge-module-template.md).
 

@@ -251,8 +251,6 @@ jobs:
             "templates/release-notes-template.md"
             "shared/domains/README.md"
             "shared/frameworks/README.md"
-            "shared/stacks/README.md"
-            "shared/ci/README.md"
             "skills/qa-example/SKILL.md"
             ".vscode/extensions.json"
             ".vscode/settings.json"

@@ -14,6 +14,9 @@
 | [review-checklist.md](review-checklist.md) | What reviewers verify before approving a pull request |
 | [issue-lifecycle.md](issue-lifecycle.md) | Issue states, labels, triage expectations, and closure reasons |
 | [versioning-and-releases.md](versioning-and-releases.md) | Release process, branching strategy, and support policy |
+| [add-a-skill.md](add-a-skill.md) | Runbook: when a skill is the right answer (usually it is not), scaffolding, contracts, evals, and the review standard |
+| [add-a-framework.md](add-a-framework.md) | Runbook: adding a test framework behind the adapter boundary — registry, adapter, parity test, zero skill changes |
+| [release-process.md](release-process.md) | Cutting a release: pre-flight gates, tarball verification, tagging, notes, integrity digests, rollback |
 
 Skill-specific standards — the `SKILL.md` specification, authoring guide, and per-dimension quality checklists — live with the skill platform in [docs/skills/](../skills/README.md).
 

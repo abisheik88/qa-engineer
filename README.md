@@ -279,6 +279,18 @@ qa-automation-pack/
 
 Each reserved directory contains a README describing exactly what will live there and when.
 
+## Project governance and support
+
+| Question | Answer |
+| --- | --- |
+| Who decides, and how? | [GOVERNANCE.md](GOVERNANCE.md) — maintainer-led, ADR-governed, with the rules that bind maintainers too |
+| Who maintains it? | [MAINTAINERS.md](MAINTAINERS.md) — currently one maintainer, stated plainly, with the structural mitigations |
+| Where do I get help? | [SUPPORT.md](SUPPORT.md) — channels and honest expectations (no SLA) |
+| Something is broken | [docs/troubleshooting.md](docs/troubleshooting.md) — symptoms, causes, fixes |
+| How do I add a skill or framework? | [add a skill](docs/contributing/add-a-skill.md) · [add a framework](docs/contributing/add-a-framework.md) |
+| How is a release cut? | [release process](docs/contributing/release-process.md) |
+| What is actually verified? | [docs/release/](docs/release/) — audits, checklists, and known limitations |
+
 ## Contributing
 
 Contributions are welcome now, even before the first skill ships:

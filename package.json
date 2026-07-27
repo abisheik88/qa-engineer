@@ -63,6 +63,9 @@
     "validate:python": "python3 shared/analysis/lib/run_tests.py",
     "validate:bundle": "python3 scripts/bundle_python.py --check",
     "validate:release": "node scripts/release/validate-release.mjs",
+    "validate:release-notes": "node scripts/release/release-notes.mjs --check",
+    "release:notes": "node scripts/release/release-notes.mjs",
+    "release:checksums": "node scripts/release/release-notes.mjs --checksums",
     "validate:evals": "python3 tests/evals/run_evals.py",
     "eval:live": "python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json"
   },

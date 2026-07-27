@@ -43,6 +43,25 @@ if (exists('docs/architecture/ENGINEERING_PRINCIPLES.md')) {
   }
 }
 
+// No reserved-but-empty knowledge directories (ADR-0015). A directory under
+// shared/ that holds only a README is a promise the repository is not keeping:
+// shared/ci/ and shared/stacks/ sat that way from M1 until they were removed.
+const sharedDir = path.join(root, 'shared');
+for (const entry of fs.readdirSync(sharedDir, { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  const dir = path.join(sharedDir, entry.name);
+  const files = fs.readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((f) => f.isFile())
+    .map((f) => f.name);
+  const substantive = files.filter((name) => name.toLowerCase() !== 'readme.md');
+  if (substantive.length === 0) {
+    problems.push(
+      `shared/${entry.name}/ contains only a README — knowledge directories exist ` +
+        'only when they hold knowledge a skill loads (ADR-0015)',
+    );
+  }
+}
+
 // Framework registry is sole source — installer detector must import it
 const detector = read('packages/installer/lib/detect/frameworks.mjs');
 if (!detector.includes('shared/frameworks/registry')) {

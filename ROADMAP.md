@@ -39,12 +39,13 @@ Shipped: the canonical skill anatomy and normative `SKILL.md` specification; the
 
 Shipped: the three core skills — [`qa`](skills/qa/README.md) (router), [`qa-init`](skills/qa-init/README.md) (repository understanding, writes `.qa/context.md`), and [`qa-run`](skills/qa-run/README.md) (run planning; plans without executing); the [project context contract](docs/architecture/context-contract.md); the [execution lifecycle](docs/architecture/execution-lifecycle.md); the [engineering principles](docs/engineering-principles.md); the [skill-interaction](docs/architecture/skill-interactions.md) and [extension-point](docs/architecture/extension-points.md) maps; the [evaluation framework design](tests/evals/README.md); and ADR-0004 and ADR-0005.
 
-**Not shipped in M3, and still open:** the [`shared/ci/`](shared/ci/README.md) and
-[`shared/stacks/`](shared/stacks/README.md) knowledge catalogs. Both directories
-were scoped here and hold a scope note only. No skill loads them and no
-capability claim depends on them; they are listed here so "M3 complete" is not
-read as covering them. They will be scheduled as their own work rather than
-carried silently.
+**Not shipped in M3, and since removed:** the `shared/ci/` and `shared/stacks/`
+knowledge catalogs were scoped here and never authored. Rather than carry two
+empty directories, [ADR-0015](docs/architecture/ADR-0015-no-reserved-empty-directories.md)
+removed them: knowledge is added when a skill loads it. Language-idiom knowledge
+and CI-log triage knowledge remain worthwhile and are recorded below as
+unscheduled future work, with the condition for starting them — a skill that
+needs them.
 
 ## M4 — Execution engine
 

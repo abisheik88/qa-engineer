@@ -30,7 +30,7 @@ Each capability, the seam it uses, and what it took to add it. The "Shipped in" 
 | Performance | New skill | `qa-audit` performance mode; analyzer for Core Web Vitals | M8 |
 | Accessibility | New skill | `qa-audit` accessibility mode; ruleset knowledge in `shared/domains/` | M8 |
 | Frontend security | New skill | `qa-audit` security mode; client-side checks only | M8 |
-| CI failure triage | Context + knowledge | `ci.provider` already detected; `shared/ci/` log knowledge feeds `qa-debug` | M7 |
+| CI failure triage | Context + knowledge | `ci.provider` already detected; adding CI-log knowledge means creating `shared/ci/` together with the `qa-debug` reference that loads it ([ADR-0015](ADR-0015-no-reserved-empty-directories.md)) | Unscheduled |
 | Trace Viewer integration | Analyzer + knowledge | Reads what the trace analyzer emits; no new seam | Planned |
 
 ## Worked example: adding Playwright execution (Milestone 4)

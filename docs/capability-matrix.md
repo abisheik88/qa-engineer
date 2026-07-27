@@ -70,11 +70,6 @@ Node validators (`validate-skills`, `sync-shared --check`, `check-keywords`,
 `check-knowledge`, `check-doc-claims`, `check-docs-commands`) and the release
 packaging gate. See [Evidence index](#evidence-index).
 
-Two knowledge directories named in the architecture are **not yet authored**:
-[`shared/ci/`](../shared/ci/README.md) (CI-system log and artifact knowledge) and
-[`shared/stacks/`](../shared/stacks/README.md) (language idioms). They contain a
-scope note and nothing else. No capability in this matrix depends on them.
-
 ## Framework matrix
 
 Where each automation framework stands. The per-capability detail and the known

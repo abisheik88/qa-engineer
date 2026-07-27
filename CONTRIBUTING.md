@@ -12,6 +12,19 @@ The project is pre-release. The repository foundation is complete; skills, tooli
 - **Propose skills and knowledge modules.** Use the *Skill proposal* issue template. Proposals that extend an existing planned command with a mode, or add a shared knowledge module, have a much lower bar than new top-level commands.
 - **Improve documentation.** Unclear, incorrect, or missing documentation is always a valid issue or pull request.
 
+## Who decides what
+
+Decision rights, the ADR/RFC thresholds, and how disagreements are settled are in
+[GOVERNANCE.md](GOVERNANCE.md). Current maintainers are in
+[MAINTAINERS.md](MAINTAINERS.md); support expectations are in [SUPPORT.md](SUPPORT.md).
+
+The two things contributors most often want to do have runbooks:
+
+- [Add a skill](docs/contributing/add-a-skill.md) — start with step 0, which explains
+  why the answer is usually a knowledge module or an argument mode instead.
+- [Add a framework](docs/contributing/add-a-framework.md) — the extensibility path the
+  architecture was designed around; it should change only `shared/frameworks/`.
+
 ## Ground rules
 
 - Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).

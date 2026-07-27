@@ -16,7 +16,7 @@ One repository, one release unit, with this top-level layout:
 | Path | Role |
 | --- | --- |
 | `skills/` | Canonical Agent Skills — the shippable product, in standard form at the repository root |
-| `shared/` | Single-source knowledge modules (domains, frameworks, stacks, CI), synced into skills by copy |
+| `shared/` | Single-source knowledge modules (domains, frameworks, execution, generation, analysis, diagnostics), synced into skills by copy |
 | `packages/` | Installer CLI and documentation tooling (Node.js workspaces, added in Milestone 4) |
 | `scripts/` | Repository maintenance tooling: sync, validation, release helpers |
 | `templates/` | Scaffolds for new skills and knowledge modules |

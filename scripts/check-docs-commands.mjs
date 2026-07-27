@@ -56,12 +56,26 @@ if (!pkg.bin || !Object.prototype.hasOwnProperty.call(pkg.bin, PACKAGE_NAME)) {
 const docs = markdownFiles(root).filter((f) => !EXEMPT.has(f));
 const documented = new Set();
 
+/**
+ * True when this occurrence sits on a line that marks itself as a counter-example
+ * — troubleshooting documentation has to be able to show the wrong command in
+ * order to explain it. The convention is a `wrong` marker on the same line, which
+ * keeps the rest of the file checked instead of exempting it wholesale.
+ */
+function isAntiExample(text, index) {
+  const lineStart = text.lastIndexOf('\n', index) + 1;
+  let lineEnd = text.indexOf('\n', index);
+  if (lineEnd === -1) lineEnd = text.length;
+  return /\bwrong\b|\bdo not use\b|\bincorrect\b/i.test(text.slice(lineStart, lineEnd));
+}
+
 for (const rel of docs) {
   const text = fs.readFileSync(path.join(root, rel), 'utf8');
 
   // A bare `npx qa` (not the package name) installs something else entirely.
   for (const match of text.matchAll(/npx\s+(-[a-z-]+\s+)?([@a-z0-9/._-]+)/gi)) {
     const target = match[2];
+    if (isAntiExample(text, match.index)) continue;
     if (target === PACKAGE_NAME) continue;
     // Allowed: documented third-party tooling.
     if (['playwright', '--yes', 'markdownlint-cli2', 'editorconfig-checker'].includes(target)) continue;
