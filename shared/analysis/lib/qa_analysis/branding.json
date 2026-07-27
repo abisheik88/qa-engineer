@@ -1,0 +1,9 @@
+{
+  "$comment": "The single source of truth for product attribution in human-readable reports. Every renderer reads this file; no branding string is hardcoded anywhere else in the repository, and scripts/check-branding.mjs fails if one appears. Changing the footer means editing this file only.",
+  "projectName": "QA Automation Pack",
+  "tagline": "AI-First Deterministic QA Engineering Platform",
+  "author": "Abisheik",
+  "website": "https://abisheik.dev",
+  "attributionPrefix": "Powered by",
+  "authorPrefix": "Designed & Developed by"
+}

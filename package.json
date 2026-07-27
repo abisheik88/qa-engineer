@@ -58,6 +58,7 @@
     "validate:architecture": "node scripts/check-architecture-fitness.mjs",
     "validate:spec-sync": "node scripts/check-spec-code-sync.mjs",
     "validate:doc-claims": "node scripts/check-doc-claims.mjs",
+    "validate:branding": "node scripts/check-branding.mjs",
     "validate:docs-commands": "node scripts/check-docs-commands.mjs",
     "validate:context": "cd shared/analysis/lib && python3 -m qa_analysis.cli context --path tests/fixtures/valid-context.md",
     "validate:python": "python3 shared/analysis/lib/run_tests.py",

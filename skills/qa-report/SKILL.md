@@ -41,7 +41,7 @@ Do not investigate failures here (that is `/qa-debug`) or plan repairs (`/qa-fix
 2. **Aggregate deterministically.** Run the engine's summarize step (see Tooling) to compute the test totals, the by-classification breakdown, the ranked findings and recommendations, and the release-readiness verdict.
 3. **Frame for audiences.** Write the executive summary (shippability in a paragraph and a verdict) and the engineering summary (what broke, why, who owns it, in priority order) from the same aggregated data.
 4. **Detail.** Fill the test, failure, coverage, and risk sections; mark coverage unavailable rather than inventing it when there is no coverage data.
-5. **Render.** Produce the report in Markdown, an HTML-ready structure, and the JSON result — the same content in three forms.
+5. **Render.** Produce the report in Markdown, an HTML-ready structure, and the JSON result — the same content in three forms. Append the rendered attribution footer (see Tooling) to the Markdown and HTML renderings only; the JSON result is an interface and carries no footer.
 6. **Report.** Emit the report result and present the Markdown.
 
 ## Guardrails
@@ -65,6 +65,7 @@ QA_LIB="$(ls -d .agents/skills/qa-report/scripts/lib .claude/skills/qa-report/sc
 | Report aggregator | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
 | One-shot pipeline | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
 | Contract self-check | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
+| Attribution footer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format markdown` (or `html`) | The exact footer bytes to append to the **rendered** report | Omit the footer; never retype it |
 
 Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, and mark the report degraded.
 

@@ -13,6 +13,7 @@ Usage:
   python -m qa_analysis.cli validate <instance.json> <schema.json>
   python -m qa_analysis.cli classify "<error message>" [--http-status N]
   python -m qa_analysis.cli context [--root DIR] [--path .qa/context.md]
+  python -m qa_analysis.cli branding [--format html|markdown|text]
 """
 
 import argparse
@@ -21,6 +22,7 @@ import pathlib
 import sys
 
 from . import junit, har, discovery, diff_guard, redaction, contracts, taxonomy
+from . import branding as branding_module
 from . import context as context_module
 from .context import MalformedContext
 from .junit import MalformedArtifact
@@ -59,6 +61,9 @@ def main(argv=None):
     p = sub.add_parser("validate"); p.add_argument("instance"); p.add_argument("schema")
     p = sub.add_parser("classify"); p.add_argument("message"); p.add_argument("--http-status", type=int, default=None)
     p = sub.add_parser("context"); p.add_argument("--root", default="."); p.add_argument("--path", default=None)
+    p = sub.add_parser("branding")
+    p.add_argument("--format", default="text", choices=list(branding_module.FORMATS) + ["pdf", "md", "txt"])
+    p.add_argument("--metadata", action="store_true", help="emit the branding metadata as JSON instead")
 
     args = parser.parse_args(argv)
 
@@ -98,6 +103,16 @@ def main(argv=None):
                 "schemaChecked": schema is not None,
             })
             return 0 if parsed["valid"] else 1
+        elif args.command == "branding":
+            # Written to stdout verbatim, not as JSON: the caller pastes this into
+            # a rendered report, so it must be the exact bytes to embed.
+            if args.metadata:
+                _emit(branding_module.metadata())
+            else:
+                sys.stdout.write(branding_module.footer(args.format))
+    except branding_module.BrandingError as exc:
+        _emit({"error": "branding-error", "detail": str(exc)})
+        return 2
     except MalformedContext as exc:
         _emit({"error": "malformed-context", "detail": str(exc)})
         return 2

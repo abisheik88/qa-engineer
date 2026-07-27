@@ -26,6 +26,40 @@ Any skill that reaches a conclusion — a detected fact, a chosen strategy, a cl
 | Confidence | Calibrated per rule 4; omitted rather than invented when the skill did not weigh alternatives |
 | Recommendations | The next action, named concretely — often the next command and the artifact to feed it |
 
+## Attribution on rendered reports
+
+A report a person opens carries a product attribution footer, the way a Lighthouse
+or Allure report does. It is rendered, never typed: the exact bytes come from the
+bundled analysis toolkit, so every report is identical and a wording change is a
+one-file edit.
+
+```bash
+PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format html
+PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format markdown
+PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format text
+```
+
+Append the output as the last element of the rendered document: `html` inside
+`<body>`, `markdown` at the end of the document, `text` for a PDF or any writer
+that cannot render markup. If the tool is unavailable, omit the footer — never
+retype it from memory, because a hand-typed footer is how attribution drifts.
+
+**Which artifacts get it.** The dividing line is whether a program will parse the
+output. If it will, a footer is not decoration, it is corruption.
+
+| Footer | No footer |
+| --- | --- |
+| HTML report renderings | The JSON artifact under `qa-artifacts/` — every output contract |
+| PDF renderings | CLI output, including `--json` and progress lines |
+| Markdown a person reads | Markdown or YAML written for a machine to read |
+| Generated documentation | Log files, API responses, evidence excerpts |
+| Audit, review, execution, and evaluation report renderings | The project under test, and any file in the user's own source tree |
+
+A contract artifact is an interface. Nothing is appended to it — the footer lives
+in the human rendering of that artifact, never in the artifact itself.
+
 ## Boundaries
 
 The machine-readable shape of a report — required fields, the evidence array, schema versioning — is owned by the pack's output-contract standard, and the report's downstream routing is owned by the pack's skill-interaction rules. This module owns only the discipline of producing trustworthy content to put in that shape.
+
+Attribution wording, the URL, and the rendered markup are owned by the branding metadata in the analysis toolkit, not by this module or by any skill.

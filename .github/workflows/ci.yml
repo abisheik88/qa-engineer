@@ -84,6 +84,8 @@ jobs:
         run: node scripts/check-spec-code-sync.mjs
       - name: Documentation claims match skill behavior
         run: node scripts/check-doc-claims.mjs
+      - name: Report branding has a single source and stays out of artifacts
+        run: node scripts/check-branding.mjs
       - name: Every documented CLI command exists and runs
         run: node scripts/check-docs-commands.mjs
       - name: Release validation (identity, versions, tarball contents)

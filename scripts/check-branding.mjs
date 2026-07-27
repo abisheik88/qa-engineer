@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+// Branding single-source check.
+//
+// The promise is that changing the report footer means editing exactly one file:
+// shared/analysis/lib/qa_analysis/branding.json. A promise like that decays the
+// first time someone pastes the tagline into a template "just here", so it is
+// checked rather than trusted.
+//
+// Two rules:
+//   1. No branding VALUE appears anywhere outside the metadata file and the
+//      renderer's own tests. Naming the fields is fine; hardcoding the strings is
+//      not.
+//   2. No machine-readable artifact carries a footer. Appending prose to a
+//      contract, a lockfile, or CLI JSON corrupts an interface.
+//
+// Run: node scripts/check-branding.mjs
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const problems = [];
+
+const METADATA_REL = 'shared/analysis/lib/qa_analysis/branding.json';
+const RENDERER_REL = 'shared/analysis/lib/qa_analysis/branding.py';
+
+if (!fs.existsSync(path.join(root, METADATA_REL))) {
+  console.error(`branding check failed:\n  - missing ${METADATA_REL}`);
+  process.exit(1);
+}
+
+const metadata = JSON.parse(fs.readFileSync(path.join(root, METADATA_REL), 'utf8'));
+for (const key of ['projectName', 'tagline', 'author', 'website', 'attributionPrefix', 'authorPrefix']) {
+  if (!metadata[key]) problems.push(`${METADATA_REL}: missing or empty "${key}"`);
+}
+if (metadata.website && !/^https?:\/\//.test(metadata.website)) {
+  problems.push(`${METADATA_REL}: website must be an http(s) URL, got "${metadata.website}"`);
+}
+
+// The values that must not be duplicated. `projectName` is excluded: "QA
+// Automation Pack" is the project's actual name and appears legitimately in prose
+// throughout the documentation. The distinguishing strings are the ones that exist
+// only to brand a report.
+const GUARDED = ['tagline', 'website', 'authorPrefix']
+  .map((key) => ({ key, value: metadata[key] }))
+  .filter((entry) => entry.value);
+
+// Files allowed to contain the guarded values.
+const ALLOWED = new Set([
+  METADATA_REL,
+  RENDERER_REL,
+  'shared/analysis/lib/tests/test_branding.py', // snapshots, by design
+  'docs/release/v1-excellence-audit.md',        // audits quote what was implemented
+  'CHANGELOG.md',                                // release notes describe the footer
+]);
+
+// Where a footer is legitimately rendered at runtime rather than hardcoded: the
+// synced knowledge module tells skills to CALL the renderer, so it may name the
+// command but must not contain the strings.
+const MACHINE_READABLE_EXTENSIONS = new Set(['.json', '.yml', '.yaml', '.lock']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'test-results', 'playwright-report', '.qa']);
+
+function walk(dir, files = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, files);
+    else files.push(path.relative(root, full));
+  }
+  return files;
+}
+
+const files = walk(root);
+
+for (const rel of files) {
+  if (ALLOWED.has(rel)) continue;
+  const ext = path.extname(rel);
+  // Binary-ish and generated files are not scanned for prose.
+  if (['.png', '.jpg', '.zip', '.pyc', '.tgz', '.ico', '.woff', '.woff2'].includes(ext)) continue;
+
+  let text;
+  try {
+    text = fs.readFileSync(path.join(root, rel), 'utf8');
+  } catch {
+    continue;
+  }
+
+  // Rule 1 — no duplicated branding values.
+  for (const { key, value } of GUARDED) {
+    if (text.includes(value)) {
+      problems.push(
+        `${rel}: hardcodes the branding "${key}" ("${value}") — read it from ${METADATA_REL} ` +
+          'via qa_analysis.branding instead, so a wording change stays a one-file edit',
+      );
+    }
+  }
+
+  // Rule 2 — machine-readable artifacts carry no footer.
+  if (MACHINE_READABLE_EXTENSIONS.has(ext) && rel !== METADATA_REL) {
+    for (const marker of [metadata.attributionPrefix, 'qa-pack-attribution']) {
+      if (marker && text.includes(marker)) {
+        problems.push(
+          `${rel}: a machine-readable artifact contains a branding footer ("${marker}") — ` +
+            'a contract or config is an interface, and prose appended to it is corruption',
+        );
+      }
+    }
+  }
+}
+
+// The renderer must exist and expose the documented functions.
+const renderer = fs.readFileSync(path.join(root, RENDERER_REL), 'utf8');
+for (const fn of ['footer_html', 'footer_markdown', 'footer_text', 'append_to', 'metadata']) {
+  if (!renderer.includes(`def ${fn}(`)) {
+    problems.push(`${RENDERER_REL}: missing the documented function ${fn}()`);
+  }
+}
+
+// Deliberately NOT checked here: that the rendered anchor carries `target="_blank"`
+// and `rel="noopener noreferrer"`. A first attempt grepped the renderer's source for
+// those attributes and passed even after they were deleted from the emitted markup —
+// because the module's own prose mentions them. A check that cannot fail is worse
+// than none: it reports safety it never verified. Those attributes are asserted
+// against the RENDERED output, where it counts, by
+// shared/analysis/lib/tests/test_branding.py::HtmlFooterTests.
+
+// The instruction must reach skills from one synced source, not per-skill copies.
+const knowledge = fs.readFileSync(path.join(root, 'shared/domains/evidence-and-reporting.md'), 'utf8');
+if (!knowledge.includes('qa_analysis.cli branding')) {
+  problems.push(
+    'shared/domains/evidence-and-reporting.md must tell skills to render the footer with ' +
+      'qa_analysis.cli branding, so no skill types it by hand',
+  );
+}
+
+if (problems.length) {
+  console.error('branding check failed:');
+  for (const p of problems) console.error(`  - ${p}`);
+  process.exit(1);
+}
+
+console.log(
+  `branding OK (single source: ${METADATA_REL}; ${GUARDED.length} guarded value(s), ` +
+    `${files.length} file(s) scanned)`,
+);
