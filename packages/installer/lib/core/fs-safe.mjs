@@ -5,7 +5,37 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { environmentError } from './errors.mjs';
+import { environmentError, conflictError } from './errors.mjs';
+
+/**
+ * Resolve a project-relative path, refusing anything that escapes the project.
+ *
+ * Every mutation the installer performs is expressed as a path relative to the
+ * project root, and some of those paths come from `qa-lock.json` — a file that
+ * is committed to the consumer's repository and therefore travels with a clone.
+ * A lockfile containing `../../etc/something` must not be able to make
+ * `uninstall` delete outside the project, so containment is enforced here, at
+ * the single point every write and delete passes through, rather than at each
+ * call site.
+ */
+function resolveInside(root, relPath) {
+  if (typeof relPath !== 'string' || relPath.length === 0) {
+    throw conflictError(`refusing to operate on an empty path`);
+  }
+  if (path.isAbsolute(relPath)) {
+    throw conflictError(`refusing to operate on an absolute path: ${relPath}`);
+  }
+  const resolvedRoot = path.resolve(root);
+  const target = path.resolve(resolvedRoot, relPath);
+  const prefix = resolvedRoot.endsWith(path.sep) ? resolvedRoot : `${resolvedRoot}${path.sep}`;
+  if (target !== resolvedRoot && !target.startsWith(prefix)) {
+    throw conflictError(
+      `refusing to operate outside the project: ${relPath}`,
+      'a lockfile or config entry points outside the project root; re-run: qa install --force',
+    );
+  }
+  return target;
+}
 
 /** Create dir and parents; returns the list of directories actually created. */
 function ensureDir(dir, createdDirs) {
@@ -39,10 +69,12 @@ export class Transaction {
   }
 
   write(relPath, content) {
+    resolveInside(this.root, relPath); // reject escapes at staging time, not mid-commit
     this.ops.push({ kind: 'write', rel: relPath, content: Buffer.isBuffer(content) ? content : Buffer.from(content) });
   }
 
   delete(relPath) {
+    resolveInside(this.root, relPath);
     this.ops.push({ kind: 'delete', rel: relPath });
   }
 
@@ -93,7 +125,9 @@ export class Transaction {
 
     try {
       for (const op of this.ops) {
-        const abs = path.join(this.root, op.rel);
+        // Re-checked at commit time: staging and commit may be separated by
+        // other code, and containment is cheap to reassert.
+        const abs = resolveInside(this.root, op.rel);
         if (op.kind === 'write') {
           if (fs.existsSync(abs)) backup(abs, op.rel);
           else created.push(abs);

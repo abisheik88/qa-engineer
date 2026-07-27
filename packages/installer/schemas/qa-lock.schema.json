@@ -61,7 +61,12 @@
         "additionalProperties": false,
         "required": ["path", "sha256", "bytes", "owner"],
         "properties": {
-          "path": { "type": "string", "minLength": 1 },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Project-relative POSIX path. Must not be absolute and must not contain a '..' segment: a lockfile travels with a cloned repository, and uninstall deletes what it lists.",
+            "pattern": "^(?!/)(?!.*(^|/)\\.\\.($|/)).+$"
+          },
           "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
           "bytes": { "type": "integer", "minimum": 0 },
           "owner": { "type": "string", "enum": ["skill", "wrapper", "config"] },
