@@ -73,7 +73,7 @@
         "additionalProperties": false,
         "required": ["type", "description", "source"],
         "properties": {
-          "type": { "enum": ["execution-result", "generation-result", "analysis-result", "debug-result", "file"] },
+          "type": { "enum": ["execution-result", "generation-result", "analysis-result", "debug-result", "file", "command"] },
           "description": { "type": "string", "minLength": 1 },
           "source": { "type": "string", "minLength": 1 },
           "excerpt": { "type": "string" }

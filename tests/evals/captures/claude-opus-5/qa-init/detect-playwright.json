@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "qa-init@0.1.0",
+  "generatedAt": "2026-07-27T17:38:00Z",
+  "repository": {
+    "root": ".",
+    "monorepo": false,
+    "packages": []
+  },
+  "language": {
+    "primary": "typescript",
+    "others": [
+      "javascript"
+    ]
+  },
+  "runtime": {
+    "node": ">=18"
+  },
+  "packageManager": "npm",
+  "buildTool": null,
+  "testFramework": {
+    "unit": null,
+    "e2e": "playwright",
+    "bdd": null
+  },
+  "browserAutomation": {
+    "tool": "playwright",
+    "mcp": false
+  },
+  "apiStyles": [],
+  "ci": {
+    "provider": null,
+    "workflows": []
+  },
+  "conventions": {
+    "testDir": "tests",
+    "specGlob": "tests/**/*.spec.ts",
+    "configFiles": [
+      "playwright.config.ts",
+      "package.json"
+    ]
+  },
+  "existingAutomation": true,
+  "confidence": "high"
+}

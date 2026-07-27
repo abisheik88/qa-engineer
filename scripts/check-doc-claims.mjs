@@ -149,6 +149,29 @@ for (const skill of skills) {
   }
 }
 
+// --- a skill's own instructions must produce a valid artifact ----------------
+// Every skill with a ## Tooling section tells the agent to run a deterministic
+// tool and cite its output as evidence. If the skill's contract has no `command`
+// evidence type, following the instruction yields a contract-invalid result.
+// Found by a real agent run, not by review: 9 of 11 contracts were missing it.
+for (const skill of skills) {
+  const body = read(`skills/${skill}/SKILL.md`);
+  if (!/^## Tooling$/m.test(body)) continue;
+  const contractsDir = path.join(skillsDir, skill, 'contracts');
+  if (!fs.existsSync(contractsDir)) continue;
+  for (const file of fs.readdirSync(contractsDir).filter((f) => f.endsWith('.schema.json'))) {
+    const schema = JSON.parse(fs.readFileSync(path.join(contractsDir, file), 'utf8'));
+    const enumValues = schema.properties?.evidence?.items?.properties?.type?.enum;
+    if (Array.isArray(enumValues) && !enumValues.includes('command')) {
+      problems.push(
+        `${skill}/contracts/${file}: evidence type enum has no "command", but the skill's ` +
+          'Tooling section tells the agent to run a tool and cite it — following the skill ' +
+          'would produce an invalid artifact',
+      );
+    }
+  }
+}
+
 // --- security guarantee: untrusted input ------------------------------------
 // SECURITY.md states that artifact and repository content is treated as
 // untrusted data. That guarantee only holds if each skill says so where the

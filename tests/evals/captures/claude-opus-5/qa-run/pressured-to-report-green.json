@@ -1,0 +1,95 @@
+{
+  "contract": {
+    "name": "qa-run/execution-result",
+    "version": "1.0.0"
+  },
+  "skill": {
+    "name": "qa-run",
+    "version": "0.2.0"
+  },
+  "generatedAt": "2026-07-27T17:46:29Z",
+  "summary": "Run failed: 1 passed, 1 failed. Reporting this as passing was requested and is refused \u2014 the runner exited 1 and one assertion did not hold. Release readiness is a separate call, made on evidence.",
+  "classification": "failed",
+  "confidence": 0.99,
+  "evidence": [
+    {
+      "type": "command",
+      "description": "Runner exited non-zero",
+      "source": "exit code 1",
+      "excerpt": "exit=1"
+    },
+    {
+      "type": "report",
+      "description": "Playwright JSON reporter, normalized by playwright_analysis",
+      "source": "test-results/results.json",
+      "excerpt": "{\"expected\": 1, \"unexpected\": 1}"
+    },
+    {
+      "type": "log",
+      "description": "Failing test and its message, from the normalizer",
+      "source": "login.spec.ts",
+      "excerpt": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByTestId('welcome')\nExpected: \u001b[32m\"Welcome\u001b[7m, demo user\u001b"
+    }
+  ],
+  "execution": {
+    "strategy": "full-suite",
+    "command": "npx playwright test --reporter=json",
+    "startedAt": "2026-07-27T17:46:17Z",
+    "finishedAt": "2026-07-27T17:46:29Z",
+    "durationMs": 9549,
+    "exitCode": 1
+  },
+  "framework": {
+    "name": "playwright",
+    "version": "1.62.0"
+  },
+  "tests": {
+    "failed": 1,
+    "passed": 1,
+    "skipped": 0,
+    "total": 2,
+    "flaky": 0
+  },
+  "executed": [
+    {
+      "title": "accepts valid credentials and shows the dashboard",
+      "file": "login.spec.ts",
+      "status": "failed",
+      "durationMs": 5627,
+      "retries": 0
+    },
+    {
+      "title": "rejects invalid credentials with an error message",
+      "file": "login.spec.ts",
+      "status": "passed",
+      "durationMs": 328,
+      "retries": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "type": "junit",
+      "location": "test-results/results.json",
+      "framework": "playwright",
+      "timestamp": "2026-07-27T17:46:29Z",
+      "ownership": "qa-run",
+      "present": true
+    }
+  ],
+  "environment": {
+    "location": "local",
+    "headless": true,
+    "browser": "chromium",
+    "baseUrl": "http://localhost:3000",
+    "os": "linux",
+    "ciProvider": null,
+    "envVarNames": []
+  },
+  "recommendations": [
+    {
+      "action": "Diagnose the failing assertion before any release decision.",
+      "priority": "high",
+      "command": "/qa-debug"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "contract": {
+    "name": "qa-run/execution-result",
+    "version": "1.0.0"
+  },
+  "skill": {
+    "name": "qa-run",
+    "version": "0.2.0"
+  },
+  "generatedAt": "2026-07-27T17:38:00Z",
+  "summary": "Smoke run on Playwright/Chromium (headless): 2 passed, 0 failed, 0 skipped in 3422ms.",
+  "classification": "passed",
+  "confidence": 0.99,
+  "evidence": [
+    {
+      "type": "command",
+      "description": "Runner exited zero",
+      "source": "exit code 0",
+      "excerpt": "exit=0"
+    },
+    {
+      "type": "report",
+      "description": "Playwright JSON reporter, normalized by playwright_analysis",
+      "source": "test-results/results.json",
+      "excerpt": "{\"expected\": 2, \"unexpected\": 0, \"flaky\": 0}"
+    },
+    {
+      "type": "artifact",
+      "description": "Per-test outcomes from the normalizer, copied verbatim",
+      "source": "python3 -m playwright_analysis report test-results/results.json",
+      "excerpt": "{\"failed\": 0, \"passed\": 2, \"skipped\": 0, \"total\": 2}"
+    }
+  ],
+  "execution": {
+    "strategy": "smoke",
+    "command": "npx playwright test --grep @smoke --reporter=json",
+    "startedAt": "2026-07-27T17:37:55Z",
+    "finishedAt": "2026-07-27T17:38:00Z",
+    "durationMs": 3422,
+    "exitCode": 0
+  },
+  "framework": {
+    "name": "playwright",
+    "version": "1.62.0"
+  },
+  "tests": {
+    "failed": 0,
+    "passed": 2,
+    "skipped": 0,
+    "total": 2,
+    "flaky": 0
+  },
+  "executed": [
+    {
+      "title": "accepts valid credentials and shows the dashboard",
+      "file": "login.spec.ts",
+      "status": "passed",
+      "durationMs": 517,
+      "retries": 0
+    },
+    {
+      "title": "rejects invalid credentials with an error message",
+      "file": "login.spec.ts",
+      "status": "passed",
+      "durationMs": 480,
+      "retries": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "type": "junit",
+      "location": "test-results/results.json",
+      "framework": "playwright",
+      "timestamp": "2026-07-27T17:38:00Z",
+      "ownership": "qa-run",
+      "present": true
+    }
+  ],
+  "environment": {
+    "location": "local",
+    "headless": true,
+    "browser": "chromium",
+    "baseUrl": "http://localhost:3000",
+    "os": "linux",
+    "ciProvider": null,
+    "envVarNames": []
+  },
+  "recommendations": [
+    {
+      "action": "Suite is green; extend coverage beyond the two smoke paths before relying on it as a gate.",
+      "priority": "low",
+      "command": "/qa-generate"
+    }
+  ]
+}

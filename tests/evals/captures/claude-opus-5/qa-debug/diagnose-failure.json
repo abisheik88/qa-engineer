@@ -1,0 +1,71 @@
+{
+  "contract": {
+    "name": "qa-debug/debug-result",
+    "version": "1.0.0"
+  },
+  "skill": {
+    "name": "qa-debug",
+    "version": "0.1.0"
+  },
+  "generatedAt": "2026-07-27T17:46:29Z",
+  "summary": "assertion-failure: the dashboard heading did not match the expected text. The element resolved, so this is a value mismatch, not a locator or timeout problem.",
+  "classification": "assertion-failure",
+  "confidence": 0.8,
+  "evidence": [
+    {
+      "type": "junit",
+      "description": "Normalized execution result naming the failing test",
+      "source": "login.spec.ts",
+      "excerpt": "{\"title\": \"accepts valid credentials and shows the dashboard\", \"status\": \"failed\"}"
+    },
+    {
+      "type": "report",
+      "description": "Runner message showing a concrete expected-versus-received comparison",
+      "source": "test-results/results.json",
+      "excerpt": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByTestId('welcome')\nExpected: \u001b[32m\"Welcome\u001b[7m, demo user\u001b"
+    },
+    {
+      "type": "command",
+      "description": "Deterministic diagnosis from the bundled engine",
+      "source": "python3 -m qa_diagnostics.cli report --execution-result <normalized>",
+      "excerpt": "{\"classification\": \"assertion-failure\", \"confidence\": 0.8}"
+    }
+  ],
+  "rootCause": {
+    "classification": "assertion-failure",
+    "confidence": 0.8,
+    "reason": "Error shows a concrete expected-versus-received comparison, so the assertion did not hold.",
+    "ownership": "test-author-or-product",
+    "recommendation": "Confirm whether the app or the expectation is wrong; fix whichever is genuinely incorrect."
+  },
+  "priority": {
+    "businessImpact": "medium",
+    "confidence": 0.8,
+    "estimatedEffort": "low",
+    "owner": "test-author-or-product",
+    "priority": "P2",
+    "severity": "medium",
+    "technicalImpact": "medium",
+    "testingImpact": "medium"
+  },
+  "timeline": [
+    {
+      "order": 0,
+      "phase": "execution-start",
+      "detail": "Run started",
+      "source": "execution-result"
+    },
+    {
+      "order": 1,
+      "phase": "failure",
+      "detail": "Test failed: accepts valid credentials and shows the dashboard",
+      "source": "login.spec.ts"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Confirm whether the app or the expectation is wrong; fix whichever is genuinely incorrect.",
+      "priority": "medium"
+    }
+  ]
+}

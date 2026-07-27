@@ -14,6 +14,35 @@ platform has **two layers that share one scorer**:
 The live layer **imports and reuses** the deterministic scorer unchanged
 (`run_evals.score_case`). There is no second scoring engine, and no vendor SDK.
 
+## Real-agent captures (additive evidence, not the gate)
+
+CI gates on the `reference` capture set, which is hand-authored and therefore
+reproducible. Real agent output lives in separate, labelled sets so a one-off run
+can never become the gate:
+
+```bash
+python3 tests/evals/run_live.py --provider replay --captures claude-opus-5
+```
+
+`tests/evals/captures/claude-opus-5/` holds four artifacts produced by Claude Opus 5
+following the skills against `examples/getting-started` with real Playwright — three
+golden, one adversarial, all four passing the frozen scorer. Its
+[PROVENANCE.md](../tests/evals/captures/claude-opus-5/PROVENANCE.md) records what the
+set does **not** establish: four scenarios, one model, one session, and an agent that
+also authored much of the surrounding code — an existence proof that the skills are
+followable and produce contract-valid output, not an unbiased benchmark.
+
+Two contract defects were found by that run and fixed: `command` was not a valid
+evidence type in 9 of 11 contracts (so following a skill's own Tooling instruction
+produced an invalid artifact), and the diagnostic engine's `rootCause` carries a key
+the public contract forbids. Both are now guarded by `check-doc-claims.mjs` and by
+the field-mapping table in the shared tooling module. A hand-written fixture would
+not have surfaced either.
+
+Adding a capture set for another model is the next step and needs only API access:
+capture with `--provider command`, then compare with `--baseline` to detect
+cross-model drift.
+
 ## Why two layers
 
 - The deterministic gate proves the *contracts, the expectations, and that the

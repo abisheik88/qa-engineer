@@ -68,8 +68,26 @@ the engine runs, so a malformed payload fails loudly with `exit 2` instead of
 producing a confident-looking diagnosis from nothing.
 
 **Output.** Every diagnosis is validated against the internal diagnosis contract
-before it is returned. What the engine returns is what the skill presents; the
-skill adds explanation, never new facts.
+before it is returned. The skill adds explanation, never new facts.
+
+**The engine's shape is internal; the public contract is a projection of it.** Do
+not copy an engine object wholesale into a contract field — the internal shape
+carries more than the public contract accepts, and every public contract sets
+`additionalProperties: false`, so a wholesale copy is rejected. Map the fields the
+contract names:
+
+| Contract field | Take from | Note |
+| --- | --- | --- |
+| `rootCause` | `entries[i].rootCause` | Exactly five keys: `classification`, `confidence`, `reason`, `ownership`, `recommendation`. The engine also returns per-cause `evidence` — that belongs in the envelope's `evidence[]`, not nested here. |
+| `priority` | `entries[i].priority` | Copied as-is |
+| `timeline` | `diagnosis.timeline` | Add `order` if absent |
+| `evidence[]` | the artifacts and commands you actually ran | Include a `command` entry citing the invocation |
+| `classification` | `entries[0].rootCause.classification` | The envelope mirrors the top cause |
+
+This mapping is not busywork: the strictness is what stops a skill from shipping a
+result whose shape nobody checked. Validate before completion —
+`python3 -m qa_analysis.cli validate <result.json> <schema.json>` — and fix the
+result, never the claim.
 
 ## 4. Framework adapters
 
