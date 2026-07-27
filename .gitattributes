@@ -1,0 +1,20 @@
+# Normalize line endings: LF in the repository, regardless of contributor OS.
+* text=auto eol=lf
+
+# Text formats used in this repository.
+*.md text
+*.yml text
+*.yaml text
+*.json text
+*.jsonc text
+*.toml text
+LICENSE text
+CODEOWNERS text
+
+# Binary assets (screenshots, recorded fixtures in later milestones).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.har binary

@@ -1,0 +1,28 @@
+{
+  "name": "@qa-automation-pack/installer",
+  "version": "0.9.0",
+  "description": "The qa-automation-pack installer: agent detection, copy-based install, lockfile integrity, and wrapper generation.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./bin/qa.mjs"
+  },
+  "bin": {
+    "qa": "bin/qa.mjs"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "schemas",
+    "README.md"
+  ],
+  "dependencies": {
+    "@clack/prompts": "^0.11.0"
+  },
+  "scripts": {
+    "test": "node --test test"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "qa-fix/locator-repair",
+  "skill": "qa-fix",
+  "kind": "golden",
+  "description": "A rotted locator is repaired with a role-based locator: a plan only, permission required, diff guard clean, no assertion removed.",
+  "input": {
+    "scenario": "A test breaks because a positional XPath locator no longer matches after a redesign.",
+    "request": "/qa-fix heal the broken locator in login.spec.ts",
+    "fixture": "fixtures/locator-break"
+  },
+  "contract": "skills/qa-fix/contracts/fix-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "classification", "in": ["repairable", "not-repairable", "needs-investigation", "blocked"] },
+    { "path": "permissionRequired", "equals": true },
+    { "path": "repairPlan.proposedChanges", "minItems": 1 },
+    { "path": "diffGuardReview.status", "in": ["not-run", "pass"] },
+    { "anyOf": [{ "path": "diffGuardReview.status", "equals": "fail" }, { "path": "repairPlan.proposedChanges", "noneContains": "remove the failing assertion" }] }
+  ],
+  "output": {
+    "contract": { "name": "qa-fix/fix-result", "version": "1.0.0" },
+    "skill": { "name": "qa-fix", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T10:40:00Z",
+    "summary": "The login test's positional XPath no longer matches after a redesign; propose a role-based locator.",
+    "classification": "repairable",
+    "confidence": 0.85,
+    "evidence": [
+      { "type": "debug-result", "description": "qa-debug classified this as a locator-failure", "source": "qa-artifacts/debug-result.json" }
+    ],
+    "repairPlan": {
+      "candidateType": "locator-update",
+      "proposedChanges": [
+        "Replace the positional XPath //div[3]/button with a role-based locator getByRole('button', { name: 'Sign in' }).",
+        "Add a data-testid to the submit button if the role name is ambiguous."
+      ],
+      "affectedFiles": ["tests/login.spec.ts"],
+      "risk": "low"
+    },
+    "permissionRequired": true,
+    "rollbackStrategy": "Revert the single-line locator change; the assertion and flow are unchanged.",
+    "diffGuardReview": {
+      "status": "not-run",
+      "note": "Plan only; no diff drafted yet. When drafted, the guard must confirm no assertion is removed and no wait is weakened."
+    }
+  }
+}

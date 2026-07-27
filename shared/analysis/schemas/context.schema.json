@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:schema:context:1",
+  "title": "QA project context frontmatter",
+  "description": "The machine-readable frontmatter of .qa/context.md, produced by qa-init and read by every skill. Fields are always present; an undetermined value is null, never omitted. See docs/architecture/context-contract.md for semantics.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion", "generatedBy", "generatedAt", "repository", "language",
+    "packageManager", "testFramework", "browserAutomation", "apiStyles", "ci",
+    "conventions", "confidence"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatedBy": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "repository": {
+      "type": "object",
+      "required": ["root", "monorepo", "packages"],
+      "properties": {
+        "root": { "type": "string" },
+        "monorepo": { "type": "boolean" },
+        "packages": { "type": "array" }
+      }
+    },
+    "language": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {
+        "primary": { "type": ["string", "null"] },
+        "others": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "runtime": { "type": "object" },
+    "packageManager": {
+      "type": ["string", "null"],
+      "enum": ["npm", "pnpm", "yarn", "maven", "gradle", "pip", "poetry", "nuget", null]
+    },
+    "buildTool": { "type": ["string", "null"] },
+    "testFramework": {
+      "type": "object",
+      "required": ["unit", "e2e", "bdd"],
+      "properties": {
+        "unit": { "type": ["string", "null"] },
+        "e2e": { "type": ["string", "null"], "enum": ["playwright", "selenium", "cypress", "webdriverio", null] },
+        "bdd": { "type": ["string", "null"] }
+      }
+    },
+    "browserAutomation": {
+      "type": "object",
+      "required": ["tool", "mcp"],
+      "properties": {
+        "tool": { "type": ["string", "null"] },
+        "mcp": { "type": "boolean" }
+      }
+    },
+    "apiStyles": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["rest", "graphql", "websocket"] }
+    },
+    "ci": {
+      "type": "object",
+      "required": ["provider", "workflows"],
+      "properties": {
+        "provider": { "type": ["string", "null"], "enum": ["github-actions", "jenkins", "gitlab-ci", "azure-devops", null] },
+        "workflows": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "apiStylesDetail": { "type": "object" },
+    "conventions": {
+      "type": "object",
+      "required": ["testDir", "specGlob", "configFiles"],
+      "properties": {
+        "testDir": { "type": ["string", "null"] },
+        "specGlob": { "type": ["string", "null"] },
+        "configFiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "existingAutomation": { "type": "boolean" },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+  }
+}

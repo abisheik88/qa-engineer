@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-flaky:flaky-result:1",
+  "title": "qa-flaky flake result",
+  "description": "An assessment of a test's flakiness: the verdict, the flake rate where measurable, the ranked root causes, and mitigation strategies. Proposes mitigations; never quarantines automatically. classification is the flakiness verdict.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "rootCauses"],
+  "properties": {
+    "contract": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "const": "qa-flaky/flaky-result" }, "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" } }
+    },
+    "skill": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "const": "qa-flaky" }, "version": { "type": "string" } }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": { "enum": ["flaky", "likely-flaky", "stable", "insufficient-data"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "flakeRate": {
+      "type": ["number", "null"], "minimum": 0, "maximum": 1,
+      "description": "Fraction of runs that failed over repeated identical runs; null when run history is unavailable."
+    },
+    "evidence": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["report", "trace", "junit", "history", "file", "log"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "rootCauses": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["cause", "confidence"],
+        "properties": {
+          "cause": { "enum": ["race", "isolation", "timing", "network", "environment", "test-data", "unknown"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "mitigations": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

@@ -1,0 +1,417 @@
+# Continuous integration for the repository foundation.
+# Every job here runs against the current repository content — no job depends
+# on artifacts, packages, or tooling that does not exist yet.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdown-lint:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lint Markdown (markdownlint-cli2)
+        run: npx --yes markdownlint-cli2 "**/*.md"
+
+  editorconfig:
+    name: EditorConfig compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check formatting against .editorconfig
+        run: npx --yes editorconfig-checker
+
+  internal-links:
+    name: Internal link check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Check relative links between files (offline)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress --include-verbatim "**/*.md"
+          fail: true
+
+  skill-platform:
+    name: Skill platform validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate skills against the specification
+        run: node scripts/validate-skills.mjs
+      - name: Verify shared-knowledge sync integrity
+        run: node scripts/sync-shared.mjs --check
+      - name: Report description keyword collisions (advisory)
+        run: node scripts/check-keywords.mjs
+      - name: Check the QA knowledge base is consistent
+        run: node scripts/check-knowledge.mjs
+      - name: Check the capability matrix is internally consistent
+        run: node scripts/check-capability-matrix.mjs
+      - name: Check framework registry is the single source of truth
+        run: node scripts/check-framework-registry.mjs
+      - name: Architecture fitness tests
+        run: node scripts/check-architecture-fitness.mjs
+      - name: Spec ⇄ code consistency
+        run: node scripts/check-spec-code-sync.mjs
+      - name: Documentation claims match skill behavior
+        run: node scripts/check-doc-claims.mjs
+      - name: Every documented CLI command exists and runs
+        run: node scripts/check-docs-commands.mjs
+      - name: Release validation (identity, versions, tarball contents)
+        run: node scripts/release/validate-release.mjs
+      - name: Validate every JSON Schema parses
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r schema; do
+            if node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$schema"; then
+              echo "ok: $schema"
+            else
+              echo "::error file=$schema::invalid JSON"
+              status=1
+            fi
+          done < <(find skills templates shared -name '*.schema.json' | sort)
+          exit "$status"
+
+  analysis:
+    name: Analysis toolkit (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # COMPATIBILITY.md states Python 3.8+. 3.9 is the oldest version the
+        # hosted runners provide; the 3.8 floor is enforced separately by a
+        # syntax gate (below) that parses every shipped module with
+        # feature_version=(3, 8).
+        python-version: ["3.9", "3.12"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Confirm every shipped module parses under the stated 3.8 floor
+        run: python3 scripts/check-python-floor.py
+      - name: Run analysis unit tests (core, Playwright, Selenium, cross-framework)
+        run: python3 shared/analysis/lib/run_tests.py
+      - name: Run diagnostic unit tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s shared/diagnostics/lib/tests -v
+      - name: Run internal seam regression tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s tests/seams -v
+      - name: Validate the context schema against a sample
+        run: |
+          set -euo pipefail
+          cd shared/analysis/lib
+          python3 -m qa_analysis.cli validate tests/fixtures/valid-context.json ../schemas/context.schema.json
+      - name: Parse and validate a real .qa/context.md end to end
+        run: |
+          set -euo pipefail
+          cd shared/analysis/lib
+          # The Markdown path is what qa-init actually writes; validating only a
+          # hand-written JSON fixture left the real artifact unchecked.
+          python3 -m qa_analysis.cli context --path tests/fixtures/valid-context.md > /dev/null
+          # The template is deliberately full of placeholders: it must NOT validate.
+          if python3 -m qa_analysis.cli context \
+              --path ../../../skills/qa-init/templates/context.md > /dev/null; then
+            echo "::error::the qa-init template validated, so placeholders are being accepted"
+            exit 1
+          fi
+          echo "context parser accepts a generated file and rejects the raw template"
+      - name: Confirm the contract validator rejects an invalid result
+        run: |
+          set -euo pipefail
+          cd shared/analysis/lib
+          if python3 -m qa_analysis.cli validate tests/fixtures/invalid-execution-result.json \
+              ../../../skills/qa-run/contracts/execution-result.schema.json; then
+            echo "::error::validator accepted an invalid contract"
+            exit 1
+          fi
+          echo "validator correctly rejected the invalid contract"
+      - name: Verify bundled tooling RUNS self-contained in every bundling skill
+        run: python3 scripts/bundle_python.py --check
+      - name: Run behavioral eval harness (deterministic gate)
+        run: python3 tests/evals/run_evals.py
+      - name: Run live-agent eval (replay provider) + regression gate
+        run: python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json
+
+  installer:
+    name: Installer CLI (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # package.json declares engines.node >=18.18.0; test the floor, the
+        # current LTS, and the next line so the declared range is real.
+        node-version: [18, 20, 22]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up Python (the installer bundles and verifies a Python engine)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run installer tests (install, verify, doctor, drift, bundle, parity, uninstall)
+        run: npm test
+
+  repo-structure:
+    name: Repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify required files and directories
+        run: |
+          set -euo pipefail
+
+          required_paths=(
+            "LICENSE"
+            "README.md"
+            "CONTRIBUTING.md"
+            "CODE_OF_CONDUCT.md"
+            "SECURITY.md"
+            "CHANGELOG.md"
+            "COMPATIBILITY.md"
+            "ROADMAP.md"
+            ".gitignore"
+            ".editorconfig"
+            ".gitattributes"
+            ".markdownlint-cli2.jsonc"
+            ".github/CODEOWNERS"
+            ".github/PULL_REQUEST_TEMPLATE.md"
+            ".github/dependabot.yml"
+            ".github/ISSUE_TEMPLATE/config.yml"
+            ".github/ISSUE_TEMPLATE/bug_report.yml"
+            ".github/ISSUE_TEMPLATE/feature_request.yml"
+            ".github/ISSUE_TEMPLATE/skill_proposal.yml"
+            ".github/ISSUE_TEMPLATE/documentation.yml"
+            "docs/README.md"
+            "docs/architecture/README.md"
+            "docs/architecture/overview.md"
+            "docs/architecture/adr-template.md"
+            "docs/architecture/ADR-0001-repository-structure.md"
+            "docs/architecture/ADR-0002-agent-skill-standard.md"
+            "docs/architecture/ADR-0003-versioning-strategy.md"
+            "docs/installation/README.md"
+            "docs/contributing/README.md"
+            "docs/contributing/development-workflow.md"
+            "docs/skills/README.md"
+            "docs/skills/skill-anatomy.md"
+            "docs/skills/skill-specification.md"
+            "docs/skills/authoring-guide.md"
+            "docs/skills/output-contracts.md"
+            "docs/skills/quality-checklists.md"
+            "scripts/validate-skills.mjs"
+            "scripts/sync-shared.mjs"
+            "scripts/check-keywords.mjs"
+            "templates/skill-template/SKILL.md"
+            "templates/knowledge-module-template.md"
+            "templates/output-contract-template.json"
+            "templates/example-template.md"
+            "templates/rfc-template.md"
+            "templates/release-notes-template.md"
+            "shared/domains/README.md"
+            "shared/frameworks/README.md"
+            "shared/stacks/README.md"
+            "shared/ci/README.md"
+            "skills/qa-example/SKILL.md"
+            ".vscode/extensions.json"
+            ".vscode/settings.json"
+            "docs/engineering-principles.md"
+            "docs/architecture/context-contract.md"
+            "docs/architecture/execution-lifecycle.md"
+            "docs/architecture/skill-interactions.md"
+            "docs/architecture/extension-points.md"
+            "docs/architecture/ADR-0004-project-context.md"
+            "docs/architecture/ADR-0005-execution-lifecycle.md"
+            "skills/qa/SKILL.md"
+            "skills/qa-init/SKILL.md"
+            "skills/qa-run/SKILL.md"
+            "tests/evals/README.md"
+            "shared/execution/README.md"
+            "shared/execution/execution-contract.md"
+            "shared/execution/framework-detection.md"
+            "shared/execution/command-builder.md"
+            "shared/execution/browser-launch.md"
+            "shared/execution/artifact-collector.md"
+            "shared/execution/execution-strategy.md"
+            "shared/execution/report-normalization.md"
+            "shared/execution/environment-detection.md"
+            "shared/frameworks/playwright/README.md"
+            "shared/frameworks/playwright/playwright-execution.md"
+            "skills/qa-run/contracts/execution-result.schema.json"
+            "docs/architecture/ADR-0006-execution-architecture.md"
+            "docs/architecture/ADR-0007-normalized-result.md"
+            "shared/generation/README.md"
+            "shared/generation/repository-analysis.md"
+            "shared/generation/framework-selection.md"
+            "shared/generation/generation-strategy.md"
+            "shared/generation/project-bootstrap.md"
+            "shared/generation/suite-extension.md"
+            "shared/generation/template-selection.md"
+            "shared/generation/code-style.md"
+            "shared/generation/naming-conventions.md"
+            "shared/frameworks/playwright/playwright-generation.md"
+            "skills/qa-generate/SKILL.md"
+            "skills/qa-generate/contracts/generation-result.schema.json"
+            "skills/qa-generate/templates/playwright/playwright.config.ts"
+            "docs/architecture/ADR-0008-generation-architecture.md"
+            "tests/evals/qa-generate/README.md"
+            "shared/analysis/README.md"
+            "shared/analysis/analysis-contract.md"
+            "shared/analysis/artifact-discovery.md"
+            "shared/analysis/artifact-validation.md"
+            "shared/analysis/evidence-model.md"
+            "shared/analysis/finding-classification.md"
+            "shared/analysis/failure-taxonomy.md"
+            "shared/analysis/confidence-model.md"
+            "shared/analysis/redaction-policy.md"
+            "shared/analysis/recommendation-guidelines.md"
+            "shared/analysis/lib/README.md"
+            "shared/analysis/lib/run_tests.py"
+            "shared/analysis/lib/qa_analysis/redaction.py"
+            "shared/analysis/lib/qa_analysis/evidence.py"
+            "shared/analysis/lib/qa_analysis/taxonomy.py"
+            "shared/analysis/lib/qa_analysis/contracts.py"
+            "shared/analysis/lib/qa_analysis/diff_guard.py"
+            "shared/analysis/schemas/context.schema.json"
+            "shared/frameworks/playwright/lib/playwright_analysis.py"
+            "shared/frameworks/selenium/README.md"
+            "shared/frameworks/selenium/lib/selenium_analysis.py"
+            "docs/architecture/ADR-0009-analysis-platform.md"
+            "docs/architecture/ADR-0010-multi-framework-foundation.md"
+            "shared/diagnostics/README.md"
+            "shared/diagnostics/diagnostic-contract.md"
+            "shared/diagnostics/diagnostic-engine.md"
+            "shared/diagnostics/investigation-workflow.md"
+            "shared/diagnostics/root-cause-analysis.md"
+            "shared/diagnostics/timeline-builder.md"
+            "shared/diagnostics/finding-prioritization.md"
+            "shared/diagnostics/recommendation-ranking.md"
+            "shared/diagnostics/repair-strategy.md"
+            "shared/diagnostics/report-aggregation.md"
+            "shared/diagnostics/knowledge-integration.md"
+            "shared/diagnostics/lib/qa_diagnostics/engine.py"
+            "shared/diagnostics/lib/qa_diagnostics/root_cause.py"
+            "shared/diagnostics/lib/qa_diagnostics/prioritization.py"
+            "shared/diagnostics/lib/qa_diagnostics/repair.py"
+            "shared/diagnostics/lib/qa_diagnostics/timeline.py"
+            "scripts/bundle_python.py"
+            "skills/qa-debug/SKILL.md"
+            "skills/qa-debug/contracts/debug-result.schema.json"
+            "skills/qa-fix/SKILL.md"
+            "skills/qa-fix/contracts/fix-result.schema.json"
+            "skills/qa-report/SKILL.md"
+            "skills/qa-report/contracts/report-result.schema.json"
+            "docs/architecture/ADR-0011-diagnostic-platform.md"
+            "templates/domain-template.md"
+            "scripts/check-knowledge.mjs"
+            "shared/domains/locator-strategies.md"
+            "shared/domains/waiting-strategies.md"
+            "shared/domains/flakiness.md"
+            "shared/domains/anti-patterns.md"
+            "shared/domains/rest.md"
+            "shared/domains/graphql.md"
+            "shared/domains/accessibility.md"
+            "skills/qa-review/SKILL.md"
+            "skills/qa-review/contracts/review-result.schema.json"
+            "skills/qa-flaky/SKILL.md"
+            "skills/qa-flaky/contracts/flaky-result.schema.json"
+            "skills/qa-api/SKILL.md"
+            "skills/qa-api/contracts/api-result.schema.json"
+            "skills/qa-audit/SKILL.md"
+            "skills/qa-audit/contracts/audit-result.schema.json"
+            "shared/frameworks/cypress/README.md"
+            "shared/frameworks/cypress/lib/cypress_analysis.py"
+            "shared/frameworks/webdriverio/README.md"
+            "shared/frameworks/webdriverio/lib/webdriverio_analysis.py"
+            "docs/compatibility/framework-matrix.md"
+            "docs/architecture/ADR-0012-knowledge-base.md"
+            "docs/architecture/ADR-0013-framework-boundary.md"
+            "docs/capability-matrix.md"
+            "scripts/check-capability-matrix.mjs"
+            "packages/installer/test/smoke.test.mjs"
+            "packages/installer/test/m95.test.mjs"
+            "docs/installation/quickstart.md"
+            "docs/architecture/ENGINEERING_PRINCIPLES.md"
+            "docs/architecture/ADR-0014-evaluation-platform.md"
+            "shared/frameworks/registry.json"
+            "scripts/check-architecture-fitness.mjs"
+            "examples/getting-started/README.md"
+            "examples/getting-started/playwright.config.ts"
+            "examples/getting-started/tests/login.spec.ts"
+            "tests/evals/run_evals.py"
+            "tests/evals/run_live.py"
+            "tests/evals/baselines/reference.json"
+            "shared/analysis/lib/qa_analysis/context.py"
+            "shared/analysis/lib/qa_analysis/cli.py"
+            "shared/diagnostics/lib/qa_diagnostics/cli.py"
+            "shared/execution/deterministic-tooling.md"
+            "tests/parity/validator-cases.json"
+            "packages/installer/lib/commands/uninstall.mjs"
+            "packages/installer/lib/cli/commands.mjs"
+            "scripts/check-doc-claims.mjs"
+            "scripts/check-docs-commands.mjs"
+            "scripts/check-python-floor.py"
+            "docs/release/audit-verification.md"
+          )
+
+          status=0
+          for path in "${required_paths[@]}"; do
+            if [ ! -e "$path" ]; then
+              echo "::error::Missing required path: $path"
+              status=1
+            fi
+          done
+
+          # Every reserved top-level directory must exist and explain itself.
+          for dir in skills shared packages scripts templates tests examples; do
+            if [ ! -f "$dir/README.md" ]; then
+              echo "::error::Missing $dir/README.md (reserved directories must document their purpose)"
+              status=1
+            fi
+          done
+
+          if [ "$status" -eq 0 ]; then
+            echo "Repository structure is complete."
+          fi
+          exit "$status"

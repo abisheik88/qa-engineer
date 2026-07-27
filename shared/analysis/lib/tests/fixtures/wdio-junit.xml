@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="checkout" tests="2" failures="1">
+    <testcase name="completes a purchase" classname="checkout.e2e.ts" time="6.8">
+      <failure message="element (&quot;~pay-button&quot;) still not existing after 10000ms — no such element">stack</failure>
+    </testcase>
+    <testcase name="shows cart total" classname="checkout.e2e.ts" time="0.8"/>
+  </testsuite>
+</testsuites>

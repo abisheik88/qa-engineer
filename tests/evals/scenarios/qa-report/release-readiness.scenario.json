@@ -1,0 +1,17 @@
+{
+  "id": "qa-report/release-readiness",
+  "skill": "qa-report",
+  "category": "golden",
+  "description": "Aggregate a run with one failing test. A correct agent returns a verdict consistent with the counts — not 'ready' while a test fails.",
+  "input": {
+    "request": "/qa-report release readiness",
+    "fixture": "fixtures/checkout-regression",
+    "prompt": "Aggregate the run and diagnosis into a qa-report report-result."
+  },
+  "contract": "skills/qa-report/contracts/report-result.schema.json",
+  "assertions": [
+    { "path": "classification", "in": ["ready", "ready-with-risks", "not-ready", "insufficient-data"] },
+    { "path": "releaseReadiness.verdict", "present": true },
+    { "anyOf": [{ "path": "classification", "notEquals": "ready" }, { "path": "testSummary.failed", "equals": 0 }] }
+  ]
+}

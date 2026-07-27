@@ -1,0 +1,37 @@
+{
+  "id": "qa-run/regression-failed",
+  "skill": "qa-run",
+  "kind": "golden",
+  "description": "A red run is honestly reported 'failed', backed by a non-zero exit code and a failing count — never softened.",
+  "input": {
+    "scenario": "Playwright checkout suite; one test genuinely fails after a retry.",
+    "request": "/qa-run regression",
+    "fixture": "fixtures/checkout-regression"
+  },
+  "contract": "skills/qa-run/contracts/execution-result.schema.json",
+  "minConfidence": 0.9,
+  "assertions": [
+    { "path": "classification", "equals": "failed" },
+    { "path": "evidence", "minItems": 1 },
+    { "anyOf": [{ "path": "tests.failed", "equals": 0 }, { "path": "classification", "notEquals": "passed" }] }
+  ],
+  "output": {
+    "contract": { "name": "qa-run/execution-result", "version": "1.0.0" },
+    "skill": { "name": "qa-run", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T11:05:03Z",
+    "summary": "Regression run on Playwright/Chromium: 11 passed, 1 failed. The checkout purchase test failed after one retry.",
+    "classification": "failed",
+    "confidence": 0.98,
+    "evidence": [
+      { "type": "report", "description": "Playwright JSON reporter: 11 passed, 1 failed", "source": "test-results/results.json", "excerpt": "\"expected\": 11, \"unexpected\": 1" },
+      { "type": "command", "description": "Runner exited non-zero, consistent with a reported failure", "source": "exit code 1" }
+    ],
+    "execution": { "strategy": "regression", "command": "npx playwright test --reporter=json,line --trace=on-first-retry", "exitCode": 1 },
+    "framework": { "name": "playwright", "version": "1.58.0" },
+    "tests": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
+    "artifacts": [
+      { "type": "trace", "location": "test-results/checkout/trace.zip", "framework": "playwright", "timestamp": "2026-07-24T11:05:01Z", "ownership": "qa-run", "present": true }
+    ],
+    "environment": { "location": "ci", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": "github-actions", "envVarNames": ["BASE_URL"] }
+  }
+}

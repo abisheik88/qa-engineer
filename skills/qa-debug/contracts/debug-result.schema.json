@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-debug:debug-result:1",
+  "title": "qa-debug debug result",
+  "description": "An evidence-backed diagnosis of a test failure: the root cause, a reconstructed timeline, the supporting evidence, the prioritization, the owner, and ranked recommendations. classification is the root-cause failure class. Proposes no code changes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "rootCause", "priority", "timeline"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-debug/debug-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-debug" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The root-cause failure class, from the shared failure taxonomy.",
+      "enum": ["locator-failure", "assertion-failure", "timeout", "network", "authentication", "authorization", "environment", "configuration", "infrastructure", "test-data", "application-bug", "framework-failure", "flaky", "unknown"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["trace", "har", "junit", "report", "console", "network", "stdout", "stderr", "screenshot", "video", "log", "file", "diff"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "rootCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "confidence", "reason", "ownership", "recommendation"],
+      "properties": {
+        "classification": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "ownership": { "type": "string", "minLength": 1 },
+        "recommendation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "priority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "priority", "businessImpact", "technicalImpact", "testingImpact", "owner", "estimatedEffort"],
+      "properties": {
+        "severity": { "enum": ["high", "medium", "low"] },
+        "priority": { "enum": ["P1", "P2", "P3"] },
+        "businessImpact": { "enum": ["high", "medium", "low"] },
+        "technicalImpact": { "enum": ["high", "medium", "low"] },
+        "testingImpact": { "enum": ["high", "medium", "low"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "estimatedEffort": { "enum": ["low", "medium", "high", "external", "unknown"] }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["order", "phase", "detail", "source"],
+        "properties": {
+          "order": { "type": "integer", "minimum": 0 },
+          "phase": { "enum": ["execution-start", "browser-launch", "navigation", "request", "response", "console-error", "assertion", "failure", "cleanup", "execution-finish"] },
+          "detail": { "type": "string" },
+          "source": { "type": "string" },
+          "timestamp": { "type": "string" }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["P1", "P2", "P3", "high", "medium", "low"] },
+          "owner": { "type": "string" },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "relatedFindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["classification", "reason"],
+        "properties": {
+          "classification": { "type": "string" },
+          "reason": { "type": "string" },
+          "affectedTests": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

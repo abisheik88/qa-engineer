@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="checkout" tests="2" failures="1">
+    <testcase name="completes a purchase" classname="e2e/checkout.spec.ts" time="8.3">
+      <failure message="Timeout 30000ms exceeded waiting for locator getByRole('button', name: 'Pay')">stack trace</failure>
+    </testcase>
+    <testcase name="shows cart total" classname="e2e/checkout.spec.ts" time="1.2"/>
+  </testsuite>
+</testsuites>

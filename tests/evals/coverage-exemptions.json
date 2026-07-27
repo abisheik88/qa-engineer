@@ -1,0 +1,4 @@
+{
+  "description": "Skills temporarily without dedicated golden/adversarial cases. The router has no output contract; coverage is via dispatched skills. Remove entries as dedicated cases land.",
+  "exempt": ["qa"]
+}

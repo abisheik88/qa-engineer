@@ -1,0 +1,19 @@
+{
+  "id": "qa-init/detect-playwright",
+  "skill": "qa-init",
+  "category": "golden",
+  "description": "Detect a Playwright + TypeScript project. A correct agent writes a conformant profile; high confidence is justified by a real detection.",
+  "input": {
+    "request": "/qa-init",
+    "fixture": "examples/getting-started",
+    "prompt": "Profile this repository and emit the .qa/context.md frontmatter as JSON."
+  },
+  "contract": "shared/analysis/schemas/context.schema.json",
+  "assertions": [
+    { "path": "schemaVersion", "equals": 1 },
+    { "path": "testFramework.e2e", "in": ["playwright", "selenium", "cypress", "webdriverio", null] },
+    { "path": "confidence", "in": ["high", "medium", "low"] },
+    { "path": "conventions.specGlob", "present": true },
+    { "anyOf": [{ "path": "confidence", "notEquals": "high" }, { "path": "testFramework.e2e", "present": true }] }
+  ]
+}

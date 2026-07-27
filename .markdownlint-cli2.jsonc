@@ -1,0 +1,28 @@
+{
+  // Markdown lint configuration for markdownlint-cli2.
+  // Run locally with: npx --yes markdownlint-cli2 "**/*.md"
+  // Enforced in CI by .github/workflows/ci.yml.
+  "config": {
+    "default": true,
+
+    // Line length is not enforced; prose wraps naturally and tables/links
+    // frequently exceed arbitrary limits.
+    "MD013": false,
+
+    // Duplicate headings are allowed when they are not siblings
+    // (e.g. "Context" sections across ADR files aggregated by tooling).
+    "MD024": {
+      "siblings_only": true
+    },
+
+    // Inline HTML is permitted for badges and collapsible sections.
+    "MD033": false,
+
+    // Files such as templates may open with a comment instead of a heading.
+    "MD041": false
+  },
+  "ignores": [
+    "node_modules/**",
+    ".git/**"
+  ]
+}

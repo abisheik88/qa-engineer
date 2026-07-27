@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-generate:generation-result:1",
+  "title": "qa-generate generation result",
+  "description": "The record of a generation run: what was created, what was modified (with permission) or proposed, what was skipped and why, and the discovery evidence behind every decision. classification is the generation outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "framework", "generatedFiles", "modifiedFiles", "skippedFiles"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-generate/generation-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-generate" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The generation outcome. bootstrapped: a new framework was created. extended: an existing suite was added to. previewed: a plan was produced without writing. blocked: generation could not proceed.",
+      "enum": ["bootstrapped", "extended", "previewed", "blocked"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "description": "The discovery facts behind the generation decisions: reused assets found, conventions detected, the framework and mode chosen.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["context", "file", "convention", "command"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mode"],
+      "properties": {
+        "name": { "enum": ["playwright", "selenium", "cypress", "webdriverio"] },
+        "mode": { "enum": ["bootstrap", "extend"] }
+      }
+    },
+    "generatedFiles": {
+      "description": "New files written to the repository.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "purpose"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "category": {
+            "description": "The template category this file realizes.",
+            "enum": ["configuration", "page-object", "fixture", "api-helper", "test-data", "utility", "example-test", "environment", "readme", "test"]
+          }
+        }
+      }
+    },
+    "modifiedFiles": {
+      "description": "Existing files changed or proposed for change. A change is written only with permission; until then it is pending.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "change", "permission"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "change": { "type": "string", "minLength": 1 },
+          "permission": { "enum": ["granted", "pending"] }
+        }
+      }
+    },
+    "skippedFiles": {
+      "description": "Files deliberately not written, each with a reason — so nothing is silently dropped.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "reason": { "enum": ["exists-reused", "needs-permission", "conflict", "out-of-scope"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

@@ -1,0 +1,34 @@
+# EditorConfig keeps formatting consistent across editors and contributors.
+# https://editorconfig.org
+# Enforced in CI by editorconfig-checker.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Trailing whitespace can be a deliberate hard line break in Markdown, and
+# alignment inside code fences (diagrams, sample output) is intentional.
+trim_trailing_whitespace = false
+indent_size = unset
+
+# Python uses 4-space indentation, but the indent-size check is disabled:
+# PEP 8 aligned continuations are not multiples of the indent width, and the
+# interpreter enforces indentation correctness. Trailing-whitespace, final-
+# newline, and charset checks still apply.
+[*.py]
+indent_size = unset
+
+# Test fixtures are opaque recorded data (HAR, XML, diffs); their byte content
+# is fixed by what a tool actually produced, so indentation is not enforced.
+[**/tests/fixtures/**]
+indent_size = unset
+
+[Makefile]
+indent_style = tab

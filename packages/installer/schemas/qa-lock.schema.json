@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "urn:qa-pack:config:qa-lock:1",
+  "title": "QA Automation Pack install lockfile",
+  "description": "qa-lock.json records exactly what was installed and a hash per file, so an install can be verified, updated, or removed without guessing. Written by the installer; not hand-edited.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lockfileVersion", "pack", "installer", "generatedAt", "agents", "files"],
+  "properties": {
+    "lockfileVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "pack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "specRevision"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" },
+        "specRevision": { "type": "string" }
+      }
+    },
+    "installer": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "tier"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "name": { "type": "string" },
+          "tier": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 2,
+            "description": "Support tier, or null when the host is unknown — the shared Agent Skills path was installed without identifying a product."
+          },
+          "skillsDir": { "type": "string" },
+          "detected": {
+            "type": "boolean",
+            "description": "True only when project markers identified this host. False when it was requested explicitly or stands in as the unknown-agent path. Optional for lockfiles written before this field existed."
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "Every file the installer wrote, each with the hash it wrote, so verify detects drift and uninstall removes exactly these.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "bytes", "owner"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "owner": { "type": "string", "enum": ["skill", "wrapper", "config"] },
+          "skill": { "type": "string" },
+          "agent": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skills": { "type": "integer", "minimum": 0 },
+        "files": { "type": "integer", "minimum": 0 },
+        "wrappers": { "type": "integer", "minimum": 0 },
+        "directories": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

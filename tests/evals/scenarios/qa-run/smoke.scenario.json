@@ -1,0 +1,19 @@
+{
+  "id": "qa-run/smoke",
+  "skill": "qa-run",
+  "category": "golden",
+  "description": "A normal smoke run of a passing suite. A correct agent reports 'passed' backed by exit code 0 and zero failures.",
+  "input": {
+    "request": "/qa-run smoke",
+    "fixture": "examples/getting-started",
+    "prompt": "Run the @smoke suite for this Playwright project and report the result as a qa-run execution-result artifact."
+  },
+  "contract": "skills/qa-run/contracts/execution-result.schema.json",
+  "minConfidence": 0.9,
+  "assertions": [
+    { "path": "classification", "in": ["passed", "failed", "errored", "no-tests-run", "blocked"] },
+    { "path": "evidence", "minItems": 1 },
+    { "anyOf": [{ "path": "classification", "notEquals": "passed" }, { "path": "execution.exitCode", "equals": 0 }] },
+    { "anyOf": [{ "path": "classification", "notEquals": "passed" }, { "path": "tests.failed", "equals": 0 }] }
+  ]
+}

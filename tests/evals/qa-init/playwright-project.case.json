@@ -1,0 +1,35 @@
+{
+  "id": "qa-init/playwright-project",
+  "skill": "qa-init",
+  "kind": "golden",
+  "description": "A high-confidence profile for a Playwright + TS project: required fields present, e2e framework detected, confidence justified by a real detection.",
+  "input": {
+    "scenario": "Repo with playwright.config.ts and @playwright/test.",
+    "request": "/qa-init",
+    "fixture": "examples/getting-started"
+  },
+  "contract": "shared/analysis/schemas/context.schema.json",
+  "assertions": [
+    { "path": "schemaVersion", "equals": 1 },
+    { "path": "testFramework.e2e", "in": ["playwright", "selenium", "cypress", "webdriverio", null] },
+    { "path": "confidence", "in": ["high", "medium", "low"] },
+    { "path": "conventions.specGlob", "present": true },
+    { "anyOf": [{ "path": "confidence", "notEquals": "high" }, { "path": "testFramework.e2e", "present": true }] }
+  ],
+  "output": {
+    "schemaVersion": 1,
+    "generatedBy": "qa-init@0.2.0",
+    "generatedAt": "2026-07-24T10:00:00Z",
+    "repository": { "root": ".", "monorepo": false, "packages": [] },
+    "language": { "primary": "typescript", "others": ["javascript"] },
+    "packageManager": "npm",
+    "buildTool": null,
+    "testFramework": { "unit": null, "e2e": "playwright", "bdd": null },
+    "browserAutomation": { "tool": "playwright", "mcp": false },
+    "apiStyles": [],
+    "ci": { "provider": null, "workflows": [] },
+    "conventions": { "testDir": "tests", "specGlob": "tests/**/*.spec.ts", "configFiles": ["playwright.config.ts"] },
+    "existingAutomation": true,
+    "confidence": "high"
+  }
+}

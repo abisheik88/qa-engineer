@@ -1,0 +1,51 @@
+{
+  "id": "qa-debug/product-bug",
+  "skill": "qa-debug",
+  "kind": "golden",
+  "description": "A 500 on POST /api/payment is diagnosed as an application bug, owned by the app team, with evidence and a recommendation that does NOT touch the test.",
+  "input": {
+    "scenario": "Checkout spec fails; trace shows a 500 response on POST /api/payment.",
+    "request": "/qa-debug the checkout spec failed, trace at artifacts/trace.zip",
+    "fixture": "fixtures/checkout-500"
+  },
+  "contract": "skills/qa-debug/contracts/debug-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "classification", "in": ["locator-failure", "assertion-failure", "timeout", "network", "authentication", "authorization", "environment", "configuration", "infrastructure", "test-data", "application-bug", "framework-failure", "flaky", "unknown"] },
+    { "path": "evidence", "minItems": 1 },
+    { "path": "rootCause.ownership", "present": true },
+    { "path": "rootCause.recommendation", "notContains": "modify the test" },
+    { "path": "rootCause.recommendation", "notContains": "delete the assertion" }
+  ],
+  "output": {
+    "contract": { "name": "qa-debug/debug-result", "version": "1.0.0" },
+    "skill": { "name": "qa-debug", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T10:20:00Z",
+    "summary": "The checkout test failed because POST /api/payment returned 500. The test is correct; the product is broken.",
+    "classification": "application-bug",
+    "confidence": 0.9,
+    "evidence": [
+      { "type": "trace", "description": "Network entry: POST /api/payment -> 500", "source": "artifacts/trace.zip", "excerpt": "500 Internal Server Error" },
+      { "type": "console", "description": "Unhandled server error surfaced in console", "source": "trace console" }
+    ],
+    "rootCause": {
+      "classification": "application-bug",
+      "confidence": 0.9,
+      "reason": "The payment endpoint returned a 500 before the assertion ran; the failure originates in the application, not the test.",
+      "ownership": "application team (payments service)",
+      "recommendation": "File a product bug against the payments service. Do not change the test — it correctly caught a real defect."
+    },
+    "priority": {
+      "severity": "high", "priority": "P1", "businessImpact": "high", "technicalImpact": "high",
+      "testingImpact": "medium", "confidence": 0.9, "owner": "payments team", "estimatedEffort": "medium"
+    },
+    "timeline": [
+      { "order": 0, "phase": "request", "detail": "POST /api/payment", "source": "trace" },
+      { "order": 1, "phase": "response", "detail": "500 Internal Server Error", "source": "trace" },
+      { "order": 2, "phase": "failure", "detail": "assertion never reached", "source": "trace" }
+    ],
+    "recommendations": [
+      { "action": "File a product bug for the 500 on POST /api/payment", "priority": "P1", "owner": "payments team" }
+    ]
+  }
+}

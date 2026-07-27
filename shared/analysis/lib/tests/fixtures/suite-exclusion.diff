@@ -1,0 +1,6 @@
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -5,6 +5,7 @@
+   testDir: './e2e',
++  testIgnore: ['**/payment.spec.ts', '**/checkout.spec.ts'],
+   retries: 0,

@@ -1,0 +1,38 @@
+# Weekly external link health check.
+# Internal (relative) links are validated on every push by ci.yml; external
+# URLs rot independently of code changes, so they are checked on a schedule
+# instead of blocking pull requests. Failures open (or refresh) an issue.
+
+name: Link check (external)
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  external-links:
+    name: External link check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Check all links in Markdown files
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --max-retries 3 --accept "200..=299,429" "**/*.md"
+          fail: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Open or update an issue for broken links
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Link check report: broken external links"
+          content-filepath: ./lychee/out.md
+          labels: documentation

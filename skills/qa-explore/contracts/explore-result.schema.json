@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-explore:explore-result:1",
+  "title": "qa-explore explore result",
+  "description": "Full-spectrum product QA against a live URL: findings with severity and proof, optional test-case coverage and DB validation. classification is the overall explore outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "skill",
+    "generatedAt",
+    "summary",
+    "classification",
+    "url",
+    "evidence",
+    "findings",
+    "severityCounts"
+  ],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-explore/explore-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-explore" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "enum": ["pass", "issues-found", "blocked", "insufficient-data"]
+    },
+    "url": { "type": "string", "minLength": 1 },
+    "reportVersion": { "type": "string" },
+    "browserAdapter": {
+      "enum": [
+        "playwright-mcp",
+        "cursor-browser",
+        "cdp",
+        "cli-playwright",
+        "cli-other",
+        "unavailable"
+      ]
+    },
+    "dimensionsRun": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "functional",
+          "api",
+          "performance",
+          "security",
+          "ui",
+          "ux",
+          "data"
+        ]
+      }
+    },
+    "severityCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["critical", "high", "medium", "low"],
+      "properties": {
+        "critical": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": {
+            "enum": [
+              "screenshot",
+              "network",
+              "console",
+              "dom",
+              "har",
+              "db",
+              "file",
+              "report"
+            ]
+          },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "severity",
+          "dimension",
+          "title",
+          "repro",
+          "actual",
+          "expected",
+          "fixDirection",
+          "evidence",
+          "status"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["critical", "high", "medium", "low"] },
+          "dimension": {
+            "enum": [
+              "functional",
+              "api",
+              "performance",
+              "security",
+              "ui",
+              "ux",
+              "data"
+            ]
+          },
+          "title": { "type": "string", "minLength": 1 },
+          "repro": { "type": "string", "minLength": 1 },
+          "actual": { "type": "string", "minLength": 1 },
+          "expected": { "type": "string", "minLength": 1 },
+          "fixDirection": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": [
+              "confirmed",
+              "validated-user-report",
+              "could-not-reproduce",
+              "partial"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "source"],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "screenshot",
+                    "network",
+                    "console",
+                    "dom",
+                    "har",
+                    "db"
+                  ]
+                },
+                "source": { "type": "string", "minLength": 1 },
+                "excerpt": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "testCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed", "blocked", "skipped", "cases"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "status"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "status": {
+                "enum": ["pass", "fail", "blocked", "skipped"]
+              },
+              "findingId": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "dbValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inScope": { "type": "boolean" },
+        "summary": { "type": "string" },
+        "comparisons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "uiValue", "sourceValue", "match"],
+            "properties": {
+              "metric": { "type": "string" },
+              "uiValue": { "type": "string" },
+              "sourceValue": { "type": "string" },
+              "match": { "type": "boolean" },
+              "capturedAt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "whatWorksWell": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "fixOrder": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

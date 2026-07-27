@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:framework-registry:1",
+  "type": "object",
+  "required": ["version", "frameworks"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "frameworks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "displayName",
+          "supportLevel",
+          "adapterDir",
+          "liveExecution",
+          "liveGeneration",
+          "detection",
+          "capabilities"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "displayName": { "type": "string", "minLength": 1 },
+          "supportLevel": {
+            "type": "string",
+            "enum": ["Production", "Beta", "Experimental", "Planning"]
+          },
+          "adapterDir": { "type": ["string", "null"] },
+          "liveExecution": { "type": "boolean" },
+          "liveGeneration": { "type": "boolean" },
+          "detection": {
+            "type": "object",
+            "required": ["configFiles", "configPrefixes", "dependencies", "directories"],
+            "additionalProperties": false,
+            "properties": {
+              "configFiles": { "type": "array", "items": { "type": "string" } },
+              "configPrefixes": { "type": "array", "items": { "type": "string" } },
+              "dependencies": { "type": "array", "items": { "type": "string" } },
+              "directories": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "capabilities": {
+            "type": "object",
+            "required": [
+              "detection",
+              "execution",
+              "generation",
+              "artifactMapping",
+              "normalization",
+              "analysis",
+              "diagnostics",
+              "reporting"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "detection": { "type": "string" },
+              "execution": { "type": "string" },
+              "generation": { "type": "string" },
+              "artifactMapping": { "type": "string" },
+              "normalization": { "type": "string" },
+              "analysis": { "type": "string" },
+              "diagnostics": { "type": "string" },
+              "reporting": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

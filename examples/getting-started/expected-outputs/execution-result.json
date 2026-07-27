@@ -1,0 +1,56 @@
+{
+  "contract": { "name": "qa-run/execution-result", "version": "1.0.0" },
+  "skill": { "name": "qa-run", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:05:03Z",
+  "summary": "Smoke run executed on Playwright/Chromium (headless): 2 passed, 0 failed, 0 skipped. The login suite passed against the local demo server.",
+  "classification": "passed",
+  "confidence": 0.99,
+  "evidence": [
+    {
+      "type": "report",
+      "description": "Playwright JSON reporter: 2 passed, 0 failed, 0 skipped",
+      "source": "test-results/results.json",
+      "excerpt": "\"stats\": { \"expected\": 2, \"unexpected\": 0, \"skipped\": 0 }"
+    },
+    {
+      "type": "command",
+      "description": "Runner exited zero, consistent with an all-passing run",
+      "source": "exit code 0"
+    }
+  ],
+  "execution": {
+    "strategy": "smoke",
+    "command": "npx playwright test --grep @smoke --project=chromium --reporter=json,list --trace=on-first-retry",
+    "startedAt": "2026-07-24T10:04:51Z",
+    "finishedAt": "2026-07-24T10:05:03Z",
+    "durationMs": 12040,
+    "exitCode": 0
+  },
+  "framework": { "name": "playwright", "version": "1.58.0" },
+  "tests": { "total": 2, "passed": 2, "failed": 0, "skipped": 0, "flaky": 0 },
+  "executed": [
+    { "title": "login @smoke > accepts valid credentials and shows the dashboard", "file": "tests/login.spec.ts", "status": "passed", "durationMs": 2100, "retries": 0 },
+    { "title": "login @smoke > rejects invalid credentials with an error message", "file": "tests/login.spec.ts", "status": "passed", "durationMs": 1400, "retries": 0 }
+  ],
+  "artifacts": [
+    { "type": "attachment", "location": "test-results/results.json", "framework": "playwright", "timestamp": "2026-07-24T10:05:03Z", "mediaType": "application/json", "ownership": "qa-run", "present": true },
+    { "type": "html-report", "location": "playwright-report/index.html", "framework": "playwright", "timestamp": "2026-07-24T10:05:03Z", "ownership": "qa-run", "present": true }
+  ],
+  "environment": {
+    "location": "local",
+    "headless": true,
+    "browser": "chromium",
+    "baseUrl": "http://localhost:3000",
+    "os": "linux",
+    "ciProvider": null,
+    "envVarNames": []
+  },
+  "recommendations": [
+    {
+      "action": "Run the full suite before release, then summarize readiness",
+      "priority": "medium",
+      "command": "/qa-report"
+    }
+  ],
+  "metadata": { "planRef": "qa-run-plan-1a2b" }
+}

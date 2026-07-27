@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose an improvement to the project (for new skills, use the skill proposal template)
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, please skim [ROADMAP.md](../../ROADMAP.md) — the improvement may already be planned.
+        If you are proposing a **new skill or command**, use the dedicated *Skill proposal* template instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve? Describe the situation, not the solution.
+      placeholder: As a maintainer of a large Selenium suite, I cannot...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What you would like to happen, in as much concrete detail as you can give.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you considered and why they fall short.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, prior art, or related issues.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and the roadmap; this is not already planned or requested.
+          required: true

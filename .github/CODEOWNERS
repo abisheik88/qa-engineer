@@ -1,0 +1,17 @@
+# Code owners are automatically requested for review on every pull request
+# that touches matching paths. Later entries take precedence over earlier ones.
+#
+# Bootstrap configuration: a single maintainer team owns everything until the
+# project has dedicated area owners. Update the handle below to the actual
+# GitHub team or user once the repository is published under its organization.
+
+* @qa-automation-pack/maintainers
+
+# Per-area ownership, to be activated as the areas gain dedicated owners
+# (see docs/contributing/review-checklist.md for the review standards):
+#
+# /skills/    @qa-automation-pack/skill-owners
+# /shared/    @qa-automation-pack/skill-owners
+# /packages/  @qa-automation-pack/tooling-owners
+# /tests/     @qa-automation-pack/tooling-owners
+# /docs/      @qa-automation-pack/docs-owners

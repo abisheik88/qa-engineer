@@ -1,0 +1,13 @@
+{
+  // Workspace-recommended extensions — VS Code offers these on first open.
+  // Each maps to a check CI enforces; installing them surfaces failures at
+  // edit time instead of push time.
+  "recommendations": [
+    // Live feedback for the exact rules in .markdownlint-cli2.jsonc
+    "davidanson.vscode-markdownlint",
+    // Applies .editorconfig while typing (final newlines, indentation, LF)
+    "editorconfig.editorconfig",
+    // Schema-validates GitHub workflows and issue forms
+    "redhat.vscode-yaml"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "contract": { "name": "qa-run/execution-result", "version": "1.0.0" },
+  "skill": { "name": "qa-run", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:05:03Z",
+  "summary": "Smoke run on Playwright/Chromium: 2 passed, 0 failed, 0 skipped.",
+  "classification": "passed",
+  "confidence": 0.99,
+  "evidence": [
+    { "type": "report", "description": "Playwright JSON reporter: 2 passed, 0 failed", "source": "test-results/results.json" },
+    { "type": "command", "description": "Runner exited zero", "source": "exit code 0" }
+  ],
+  "execution": { "strategy": "smoke", "command": "npx playwright test --grep @smoke --reporter=json,list", "exitCode": 0 },
+  "framework": { "name": "playwright", "version": "1.58.0" },
+  "tests": { "total": 2, "passed": 2, "failed": 0, "skipped": 0, "flaky": 0 },
+  "artifacts": [],
+  "environment": { "location": "local", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": null, "envVarNames": [] }
+}

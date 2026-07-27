@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demo App — Sign in</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 22rem; margin: 4rem auto; }
+      label { display: block; margin: 0.75rem 0 0.25rem; }
+      input { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+      button { margin-top: 1rem; padding: 0.5rem 1rem; }
+      .error { color: #b00020; margin-top: 0.75rem; }
+      [hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sign in</h1>
+
+      <form id="login-form" data-testid="login-form" novalidate>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" data-testid="email" autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" data-testid="password" autocomplete="current-password" />
+
+        <button type="submit" data-testid="submit">Sign in</button>
+        <p class="error" data-testid="error" role="alert" hidden></p>
+      </form>
+
+      <section id="dashboard" data-testid="dashboard" hidden>
+        <h1 data-testid="welcome">Welcome back</h1>
+        <p>You are signed in to the demo dashboard.</p>
+        <button type="button" data-testid="sign-out">Sign out</button>
+      </section>
+    </main>
+
+    <script>
+      // Deliberately trivial, hermetic auth so the example runs with no backend.
+      const VALID = { email: 'demo@example.com', password: 'correct-horse' };
+      const form = document.querySelector('[data-testid="login-form"]');
+      const error = document.querySelector('[data-testid="error"]');
+      const dashboard = document.querySelector('[data-testid="dashboard"]');
+      const signOut = document.querySelector('[data-testid="sign-out"]');
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const email = document.querySelector('[data-testid="email"]').value.trim();
+        const password = document.querySelector('[data-testid="password"]').value;
+        if (email === VALID.email && password === VALID.password) {
+          error.hidden = true;
+          form.hidden = true;
+          dashboard.hidden = false;
+        } else {
+          error.textContent = 'Invalid email or password.';
+          error.hidden = false;
+        }
+      });
+
+      signOut.addEventListener('click', () => {
+        dashboard.hidden = true;
+        form.hidden = false;
+        form.reset();
+      });
+    </script>
+  </body>
+</html>

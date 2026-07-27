@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "urn:qa-pack:config:qa-config:1",
+  "title": "QA Automation Pack project configuration",
+  "description": "The optional qa.config.json written at a project root. Every field has a documented default; the file exists only to override those defaults. See docs/architecture/ADR-0015-configuration-contract.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Configuration contract major version. Bumped only by a breaking change to this schema."
+    },
+    "frameworks": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Test-framework preferences. Advisory hints the skills read; they never override what a repository actually contains.",
+      "properties": {
+        "preferred": {
+          "type": "string",
+          "enum": ["playwright", "selenium", "cypress", "webdriverio"],
+          "description": "Framework to prefer when a project has none yet, or when detection is ambiguous."
+        }
+      }
+    },
+    "browser": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Default browser preferences for execution and audit skills.",
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": ["chromium", "firefox", "webkit", "chrome", "edge"],
+          "description": "Browser used when a command does not name one. Defaults to chromium."
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where skills write machine-readable results and evidence.",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Artifact output directory, relative to the project root. Defaults to qa-artifacts."
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Verbosity of the installer CLI and skill progress reporting.",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["silent", "error", "warn", "info", "debug"],
+          "description": "Minimum level to emit. Defaults to info."
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Reserved. The pack implements no telemetry sink and transmits nothing (see SECURITY.md); this field exists only so that any future, opt-in telemetry is off by contract.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Always defaults to false. No code path currently reads a true value to transmit anything."
+        }
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Reserved for future third-party knowledge or framework plugins. Currently unused; declared plugins are ignored with a warning.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "agents": {
+      "type": "array",
+      "description": "Explicit list of agent ids to install for. When omitted, the installer auto-detects. Values must be known agent ids (see qa doctor).",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    }
+  }
+}

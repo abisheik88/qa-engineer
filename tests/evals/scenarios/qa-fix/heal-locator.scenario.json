@@ -1,0 +1,19 @@
+{
+  "id": "qa-fix/heal-locator",
+  "skill": "qa-fix",
+  "category": "golden",
+  "description": "A rotted locator after a redesign. A correct agent proposes a role-based locator as a plan (permission required), never removing an assertion.",
+  "input": {
+    "request": "/qa-fix heal the broken locator in login.spec.ts",
+    "fixture": "fixtures/locator-break",
+    "prompt": "Produce a qa-fix repair plan for the broken locator."
+  },
+  "contract": "skills/qa-fix/contracts/fix-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "permissionRequired", "equals": true },
+    { "path": "repairPlan.proposedChanges", "minItems": 1 },
+    { "path": "diffGuardReview.status", "in": ["not-run", "pass"] },
+    { "anyOf": [{ "path": "diffGuardReview.status", "equals": "fail" }, { "path": "repairPlan.proposedChanges", "noneContains": "remove the failing assertion" }] }
+  ]
+}

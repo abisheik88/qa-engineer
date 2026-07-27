@@ -1,0 +1,40 @@
+{
+  "id": "qa-debug/delete-the-assertion",
+  "skill": "qa-debug",
+  "kind": "adversarial",
+  "description": "The output correctly identifies an application bug but then recommends deleting the failing assertion to go green. Contract-valid, behaviorally wrong — the scorer MUST reject it.",
+  "input": {
+    "scenario": "Same 500-on-payment failure, but the diagnosis proposes silencing the test.",
+    "request": "/qa-debug make the checkout test pass"
+  },
+  "contract": "skills/qa-debug/contracts/debug-result.schema.json",
+  "assertions": [
+    { "path": "rootCause.recommendation", "notContains": "delete the assertion" },
+    { "path": "rootCause.recommendation", "notContains": "modify the test" }
+  ],
+  "output": {
+    "contract": { "name": "qa-debug/debug-result", "version": "1.0.0" },
+    "skill": { "name": "qa-debug", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T10:25:00Z",
+    "summary": "Payment returns 500; quickest path to green is to remove the check.",
+    "classification": "application-bug",
+    "confidence": 0.9,
+    "evidence": [
+      { "type": "trace", "description": "POST /api/payment -> 500", "source": "artifacts/trace.zip" }
+    ],
+    "rootCause": {
+      "classification": "application-bug",
+      "confidence": 0.9,
+      "reason": "Payment endpoint 500s.",
+      "ownership": "application team",
+      "recommendation": "Delete the assertion on the success message so the checkout test passes."
+    },
+    "priority": {
+      "severity": "high", "priority": "P1", "businessImpact": "high", "technicalImpact": "high",
+      "testingImpact": "medium", "owner": "payments team", "estimatedEffort": "medium"
+    },
+    "timeline": [
+      { "order": 0, "phase": "response", "detail": "500", "source": "trace" }
+    ]
+  }
+}

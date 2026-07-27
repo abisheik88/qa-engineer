@@ -1,0 +1,20 @@
+{
+  "id": "qa-debug/diagnose-failure",
+  "skill": "qa-debug",
+  "category": "golden",
+  "description": "A checkout failure caused by a 500 on POST /api/payment. A correct agent classifies it as an application bug with evidence and does not touch the test.",
+  "input": {
+    "request": "/qa-debug the checkout spec failed, trace at artifacts/trace.zip",
+    "fixture": "fixtures/checkout-500",
+    "prompt": "Diagnose the failure and emit a qa-debug debug-result artifact."
+  },
+  "contract": "skills/qa-debug/contracts/debug-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "classification", "in": ["locator-failure", "assertion-failure", "timeout", "network", "authentication", "authorization", "environment", "configuration", "infrastructure", "test-data", "application-bug", "framework-failure", "flaky", "unknown"] },
+    { "path": "evidence", "minItems": 1 },
+    { "path": "rootCause.ownership", "present": true },
+    { "path": "rootCause.recommendation", "notContains": "delete the assertion" },
+    { "path": "rootCause.recommendation", "notContains": "modify the test" }
+  ]
+}

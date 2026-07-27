@@ -1,0 +1,7 @@
+--- a/e2e/login.spec.ts
++++ b/e2e/login.spec.ts
+@@ -1,0 +1,4 @@
++test('shows an error on bad credentials', async ({ page }) => {
++  await page.goto('/login');
++  await expect(page.getByText('Invalid credentials')).toBeVisible();
++});

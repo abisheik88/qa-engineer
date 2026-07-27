@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "qa-init@0.2.0",
+  "generatedAt": "2026-07-24T10:02:00Z",
+  "repository": { "root": ".", "monorepo": false, "packages": [] },
+  "language": { "primary": null, "others": [] },
+  "packageManager": null,
+  "buildTool": null,
+  "testFramework": { "unit": null, "e2e": null, "bdd": null },
+  "browserAutomation": { "tool": null, "mcp": false },
+  "apiStyles": [],
+  "ci": { "provider": null, "workflows": [] },
+  "conventions": { "testDir": null, "specGlob": null, "configFiles": [] },
+  "existingAutomation": false,
+  "confidence": "low"
+}

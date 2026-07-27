@@ -1,0 +1,26 @@
+{
+  "contract": { "name": "qa-debug/debug-result", "version": "1.0.0" },
+  "skill": { "name": "qa-debug", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:20:00Z",
+  "summary": "The checkout test failed because POST /api/payment returned 500. The test is correct; the product is broken.",
+  "classification": "application-bug",
+  "confidence": 0.9,
+  "evidence": [
+    { "type": "trace", "description": "Network entry: POST /api/payment -> 500", "source": "artifacts/trace.zip", "excerpt": "500 Internal Server Error" }
+  ],
+  "rootCause": {
+    "classification": "application-bug",
+    "confidence": 0.9,
+    "reason": "The payment endpoint returned 500 before the assertion ran; the failure originates in the application.",
+    "ownership": "application team (payments service)",
+    "recommendation": "File a product bug against the payments service. Do not change the test — it correctly caught a real defect."
+  },
+  "priority": {
+    "severity": "high", "priority": "P1", "businessImpact": "high", "technicalImpact": "high",
+    "testingImpact": "medium", "confidence": 0.9, "owner": "payments team", "estimatedEffort": "medium"
+  },
+  "timeline": [
+    { "order": 0, "phase": "request", "detail": "POST /api/payment", "source": "trace" },
+    { "order": 1, "phase": "response", "detail": "500 Internal Server Error", "source": "trace" }
+  ]
+}

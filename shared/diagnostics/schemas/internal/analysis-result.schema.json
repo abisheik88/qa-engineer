@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:internal:analysis-result:1",
+  "title": "Internal analysis_result consumed by diagnostics",
+  "type": "object",
+  "required": ["findings"],
+  "additionalProperties": true,
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["classification", "reason"],
+        "additionalProperties": true,
+        "properties": {
+          "classification": { "type": "string" },
+          "reason": { "type": "string" },
+          "confidence": { "type": "number" },
+          "httpStatus": { "type": ["integer", "null"] },
+          "retries": { "type": "integer" },
+          "finalStatus": { "type": "string" },
+          "evidence": { "type": "array" },
+          "affectedTests": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

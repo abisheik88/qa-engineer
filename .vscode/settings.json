@@ -1,0 +1,27 @@
+{
+  // Workspace settings aligned with CI so the editor never fights the checks.
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
+
+  "editor.rulers": [],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  "[markdown]": {
+    // Markdown keeps trailing whitespace freedom (.editorconfig agrees);
+    // markdownlint governs style, not the formatter.
+    "files.trimTrailingWhitespace": false,
+    "editor.formatOnSave": false
+  },
+
+  // Treat skill files as Markdown everywhere (some tools guess wrongly).
+  "files.associations": {
+    "SKILL.md": "markdown"
+  },
+
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+    "https://json.schemastore.org/github-issue-forms.json": ".github/ISSUE_TEMPLATE/*.yml"
+  }
+}

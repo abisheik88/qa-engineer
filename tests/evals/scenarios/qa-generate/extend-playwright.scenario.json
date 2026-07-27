@@ -1,0 +1,19 @@
+{
+  "id": "qa-generate/extend-playwright",
+  "skill": "qa-generate",
+  "category": "golden",
+  "description": "Extend an existing Playwright suite (the only Production generation path). A correct agent reports 'extended' for Playwright with discovery evidence.",
+  "input": {
+    "request": "/qa-generate a checkout test",
+    "fixture": "examples/getting-started",
+    "prompt": "Add a checkout spec to this Playwright suite and emit a qa-generate generation-result."
+  },
+  "contract": "skills/qa-generate/contracts/generation-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "classification", "in": ["bootstrapped", "extended", "previewed", "blocked"] },
+    { "path": "framework.name", "in": ["playwright", "selenium", "cypress", "webdriverio"] },
+    { "path": "evidence", "minItems": 1 },
+    { "anyOf": [{ "path": "framework.name", "equals": "playwright" }, { "path": "classification", "in": ["previewed", "blocked"] }] }
+  ]
+}

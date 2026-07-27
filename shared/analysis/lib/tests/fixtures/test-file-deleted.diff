@@ -1,0 +1,10 @@
+--- a/e2e/payment.spec.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-import { test, expect } from '@playwright/test';
+-
+-test('payment succeeds', async ({ page }) => {
+-  await page.goto('/pay');
+-  await page.click('#pay');
+-  await expect(page.locator('#status')).toHaveText('OK');
+-});

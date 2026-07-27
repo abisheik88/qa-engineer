@@ -1,0 +1,39 @@
+{
+  "id": "qa-generate/extend-playwright",
+  "skill": "qa-generate",
+  "kind": "golden",
+  "description": "Extending a Playwright suite (the only Production generation path): classification 'extended', framework playwright, evidence recorded.",
+  "input": {
+    "scenario": "A Playwright + TS suite exists; add a checkout spec.",
+    "request": "/qa-generate a checkout test",
+    "fixture": "examples/getting-started"
+  },
+  "contract": "skills/qa-generate/contracts/generation-result.schema.json",
+  "minConfidence": 0.7,
+  "assertions": [
+    { "path": "classification", "in": ["bootstrapped", "extended", "previewed", "blocked"] },
+    { "path": "framework.name", "in": ["playwright", "selenium", "cypress", "webdriverio"] },
+    { "path": "evidence", "minItems": 1 },
+    { "anyOf": [{ "path": "framework.name", "equals": "playwright" }, { "path": "classification", "in": ["previewed", "blocked"] }] }
+  ],
+  "output": {
+    "contract": { "name": "qa-generate/generation-result", "version": "1.0.0" },
+    "skill": { "name": "qa-generate", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T10:10:00Z",
+    "summary": "Extended the Playwright suite with a checkout spec and a reused page object.",
+    "classification": "extended",
+    "confidence": 0.9,
+    "evidence": [
+      { "type": "context", "description": "Context records testFramework.e2e: playwright", "source": ".qa/context.md" },
+      { "type": "file", "description": "Reused existing LoginPage page object", "source": "tests/pages/login.page.ts" }
+    ],
+    "framework": { "name": "playwright", "mode": "extend" },
+    "generatedFiles": [
+      { "path": "tests/checkout.spec.ts", "purpose": "Checkout happy-path spec", "category": "test" }
+    ],
+    "modifiedFiles": [],
+    "skippedFiles": [
+      { "path": "tests/pages/login.page.ts", "reason": "exists-reused", "detail": "Reused rather than regenerated." }
+    ]
+  }
+}

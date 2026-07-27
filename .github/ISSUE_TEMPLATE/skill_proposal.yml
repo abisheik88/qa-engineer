@@ -1,0 +1,82 @@
+name: Skill proposal
+description: Propose a new skill, command, or knowledge module for the pack
+title: "skill: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The pack deliberately keeps a **small command surface** (11 user-facing commands) because every
+        installed skill competes for agent context and auto-activation accuracy. New surface area is a
+        zero-sum decision — see [ADR-0002](../../docs/architecture/ADR-0002-agent-skill-standard.md) and
+        [ROADMAP.md](../../ROADMAP.md). Proposals that extend an existing command with a mode or add a
+        shared knowledge module have a much lower bar than proposals for new top-level commands.
+  - type: input
+    id: name
+    attributes:
+      label: Proposed name
+      description: Kebab-case, prefixed with `qa-` for skills (e.g. `qa-contract`), or the module path for knowledge modules (e.g. `shared/domains/email-otp.md`).
+      placeholder: qa-example
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Proposal kind
+      options:
+        - Mode or argument on an existing command
+        - Shared knowledge module
+        - New top-level command (highest bar)
+    validations:
+      required: true
+  - type: textarea
+    id: job
+    attributes:
+      label: Job to be done
+      description: The concrete QA task a user accomplishes with this, phrased from the user's perspective.
+      placeholder: When my nightly regression run fails on three unrelated specs, I want...
+    validations:
+      required: true
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Overlap analysis
+      description: Why none of the planned commands (`qa`, `qa-init`, `qa-run`, `qa-generate`, `qa-debug`, `qa-fix`, `qa-review`, `qa-audit`, `qa-api`, `qa-flaky`, `qa-report`) or their modes already covers this.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Draft skill description
+      description: The `description` field you would ship (max 1024 characters). Include the trigger keywords a user's request would naturally contain.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Inputs and outputs
+      description: What the skill needs (artifacts, files, URLs) and what it produces (files, report structure, machine-readable contract).
+  - type: dropdown
+    id: frameworks
+    attributes:
+      label: Frameworks or protocols affected
+      multiple: true
+      options:
+        - Playwright
+        - Selenium
+        - Cypress
+        - WebdriverIO
+        - Cucumber / Gherkin
+        - REST
+        - GraphQL
+        - WebSocket
+        - Not framework-specific
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and proposals for this capability.
+          required: true
+        - label: I am willing to help implement this proposal.
+          required: false

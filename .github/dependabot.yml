@@ -1,0 +1,17 @@
+# Dependabot keeps GitHub Actions pinned versions current.
+# Additional ecosystems (npm for packages/, pip for analyzer tooling) will be
+# added in the milestones that introduce those manifests.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"

@@ -1,0 +1,3 @@
+# Issue template chooser configuration.
+# Blank issues are disabled so every report arrives with the context needed to act on it.
+blank_issues_enabled: false

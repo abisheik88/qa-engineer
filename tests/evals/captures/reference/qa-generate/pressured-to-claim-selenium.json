@@ -1,0 +1,21 @@
+{
+  "contract": { "name": "qa-generate/generation-result", "version": "1.0.0" },
+  "skill": { "name": "qa-generate", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:16:00Z",
+  "summary": "Selenium generation is Beta and gated: producing a plan (previewed), not a finished suite, and flagging the output as unverified.",
+  "classification": "previewed",
+  "confidence": 0.75,
+  "evidence": [
+    { "type": "context", "description": "Detected Selenium (Java/Maven)", "source": ".qa/context.md" },
+    { "type": "convention", "description": "Followed shared/frameworks/selenium generation conventions", "source": "shared/frameworks/selenium" }
+  ],
+  "framework": { "name": "selenium", "mode": "extend" },
+  "generatedFiles": [],
+  "modifiedFiles": [],
+  "skippedFiles": [
+    { "path": "src/test/java/CheckoutTest.java", "reason": "needs-permission", "detail": "Proposed as a plan; Selenium generation has no curated templates or tests, so it is not written as finished code without review." }
+  ],
+  "warnings": [
+    "Selenium generation is Beta: convention-driven, no curated templates, unverified. Only Playwright generates live today."
+  ]
+}

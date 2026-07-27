@@ -1,0 +1,319 @@
+{
+  "description": "Cross-language validator parity corpus. Every case runs through BOTH the Python contract validator (shared/analysis/lib/qa_analysis/contracts.py) and its JavaScript twin (packages/installer/lib/core/schema-validate.mjs). Both must agree with `valid` on every case. A case that disagrees means the two validators have drifted and a document could pass one while failing the other.",
+  "cases": [
+    {
+      "name": "type: string accepts a string",
+      "schema": { "type": "string" },
+      "instance": "hello",
+      "valid": true
+    },
+    {
+      "name": "type: string rejects a number",
+      "schema": { "type": "string" },
+      "instance": 42,
+      "valid": false
+    },
+    {
+      "name": "type: integer rejects a boolean (bool is not an int here)",
+      "schema": { "type": "integer" },
+      "instance": true,
+      "valid": false
+    },
+    {
+      "name": "type: number rejects a boolean",
+      "schema": { "type": "number" },
+      "instance": false,
+      "valid": false
+    },
+    {
+      "name": "type: union accepts null",
+      "schema": { "type": ["integer", "null"] },
+      "instance": null,
+      "valid": true
+    },
+    {
+      "name": "type: object rejects an array",
+      "schema": { "type": "object" },
+      "instance": [],
+      "valid": false
+    },
+    {
+      "name": "const: matches",
+      "schema": { "const": "qa-run" },
+      "instance": "qa-run",
+      "valid": true
+    },
+    {
+      "name": "const: mismatch",
+      "schema": { "const": 0 },
+      "instance": 1,
+      "valid": false
+    },
+    {
+      "name": "enum: member",
+      "schema": { "enum": ["passed", "failed"] },
+      "instance": "failed",
+      "valid": true
+    },
+    {
+      "name": "enum: non-member",
+      "schema": { "enum": ["passed", "failed"] },
+      "instance": "green",
+      "valid": false
+    },
+    {
+      "name": "pattern: unanchored search matches",
+      "schema": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+      "instance": "1.0.0",
+      "valid": true
+    },
+    {
+      "name": "pattern: mismatch",
+      "schema": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+      "instance": "2.0.0",
+      "valid": false
+    },
+    {
+      "name": "format date-time: UTC Z accepted",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "2026-07-24T10:05:03Z",
+      "valid": true
+    },
+    {
+      "name": "format date-time: fractional seconds accepted",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "2026-07-27T12:43:32.622Z",
+      "valid": true
+    },
+    {
+      "name": "format date-time: numeric offset accepted",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "2026-07-24T10:05:03+05:30",
+      "valid": true
+    },
+    {
+      "name": "format date-time: date-only rejected",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "2026-07-24",
+      "valid": false
+    },
+    {
+      "name": "format date-time: missing timezone rejected",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "2026-07-24T10:05:03",
+      "valid": false
+    },
+    {
+      "name": "format date-time: garbage rejected",
+      "schema": { "type": "string", "format": "date-time" },
+      "instance": "yesterday",
+      "valid": false
+    },
+    {
+      "name": "minLength: satisfied",
+      "schema": { "type": "string", "minLength": 1 },
+      "instance": "x",
+      "valid": true
+    },
+    {
+      "name": "minLength: violated by empty string",
+      "schema": { "type": "string", "minLength": 1 },
+      "instance": "",
+      "valid": false
+    },
+    {
+      "name": "maxLength: violated",
+      "schema": { "type": "string", "maxLength": 3 },
+      "instance": "abcd",
+      "valid": false
+    },
+    {
+      "name": "minimum and maximum: within range",
+      "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+      "instance": 0.9,
+      "valid": true
+    },
+    {
+      "name": "minimum: below",
+      "schema": { "type": "number", "minimum": 0 },
+      "instance": -1,
+      "valid": false
+    },
+    {
+      "name": "maximum: above",
+      "schema": { "type": "number", "maximum": 1 },
+      "instance": 1.5,
+      "valid": false
+    },
+    {
+      "name": "minItems: violated",
+      "schema": { "type": "array", "minItems": 1 },
+      "instance": [],
+      "valid": false
+    },
+    {
+      "name": "maxItems: violated",
+      "schema": { "type": "array", "maxItems": 1 },
+      "instance": [1, 2],
+      "valid": false
+    },
+    {
+      "name": "items: each element validated",
+      "schema": { "type": "array", "items": { "type": "string" } },
+      "instance": ["a", 2],
+      "valid": false
+    },
+    {
+      "name": "required: present",
+      "schema": { "type": "object", "required": ["a"] },
+      "instance": { "a": 1 },
+      "valid": true
+    },
+    {
+      "name": "required: missing",
+      "schema": { "type": "object", "required": ["a"] },
+      "instance": {},
+      "valid": false
+    },
+    {
+      "name": "additionalProperties false: extra key rejected",
+      "schema": { "type": "object", "additionalProperties": false, "properties": { "a": { "type": "integer" } } },
+      "instance": { "a": 1, "b": 2 },
+      "valid": false
+    },
+    {
+      "name": "additionalProperties absent: extra key allowed",
+      "schema": { "type": "object", "properties": { "a": { "type": "integer" } } },
+      "instance": { "a": 1, "b": 2 },
+      "valid": true
+    },
+    {
+      "name": "nested properties: inner violation surfaces",
+      "schema": {
+        "type": "object",
+        "properties": { "outer": { "type": "object", "properties": { "inner": { "type": "integer" } } } }
+      },
+      "instance": { "outer": { "inner": "not-an-int" } },
+      "valid": false
+    },
+    {
+      "name": "allOf: all subschemas must hold",
+      "schema": { "allOf": [{ "type": "string" }, { "minLength": 2 }] },
+      "instance": "ab",
+      "valid": true
+    },
+    {
+      "name": "allOf: one subschema fails",
+      "schema": { "allOf": [{ "type": "string" }, { "minLength": 3 }] },
+      "instance": "ab",
+      "valid": false
+    },
+    {
+      "name": "if/then: implication satisfied",
+      "schema": {
+        "type": "object",
+        "if": { "required": ["classification"], "properties": { "classification": { "const": "passed" } } },
+        "then": { "properties": { "exitCode": { "const": 0 } } }
+      },
+      "instance": { "classification": "passed", "exitCode": 0 },
+      "valid": true
+    },
+    {
+      "name": "if/then: implication violated (the hallucinated-green shape)",
+      "schema": {
+        "type": "object",
+        "if": { "required": ["classification"], "properties": { "classification": { "const": "passed" } } },
+        "then": { "properties": { "exitCode": { "const": 0 } } }
+      },
+      "instance": { "classification": "passed", "exitCode": 1 },
+      "valid": false
+    },
+    {
+      "name": "if/then: antecedent false, consequent ignored",
+      "schema": {
+        "type": "object",
+        "if": { "required": ["classification"], "properties": { "classification": { "const": "passed" } } },
+        "then": { "properties": { "exitCode": { "const": 0 } } }
+      },
+      "instance": { "classification": "failed", "exitCode": 1 },
+      "valid": true
+    },
+    {
+      "name": "if/then: antecedent false when the property is absent",
+      "schema": {
+        "type": "object",
+        "if": { "required": ["classification"], "properties": { "classification": { "const": "passed" } } },
+        "then": { "properties": { "exitCode": { "const": 0 } } }
+      },
+      "instance": { "exitCode": 7 },
+      "valid": true
+    },
+    {
+      "name": "if/else: else branch enforced",
+      "schema": {
+        "type": "object",
+        "if": { "required": ["kind"], "properties": { "kind": { "const": "a" } } },
+        "then": { "required": ["onlyForA"] },
+        "else": { "required": ["onlyForB"] }
+      },
+      "instance": { "kind": "b" },
+      "valid": false
+    },
+    {
+      "name": "if/then inside allOf: multiple independent invariants",
+      "schema": {
+        "type": "object",
+        "allOf": [
+          {
+            "if": { "required": ["status"], "properties": { "status": { "const": "passed" } } },
+            "then": { "properties": { "failed": { "const": 0 } } }
+          },
+          {
+            "if": { "required": ["status"], "properties": { "status": { "const": "failed" } } },
+            "then": { "properties": { "failed": { "minimum": 1 } } }
+          }
+        ]
+      },
+      "instance": { "status": "failed", "failed": 0 },
+      "valid": false
+    },
+    {
+      "name": "additionalProperties does not see properties introduced by then",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": { "kind": { "type": "string" } },
+        "if": { "required": ["kind"], "properties": { "kind": { "const": "a" } } },
+        "then": { "properties": { "extra": { "type": "integer" } } }
+      },
+      "instance": { "kind": "a", "extra": 1 },
+      "valid": false
+    },
+    {
+      "name": "unsupported keyword is an error, never a silent no-op",
+      "schema": { "type": "object", "anyOf": [{ "type": "object" }] },
+      "instance": {},
+      "valid": false
+    },
+    {
+      "name": "unsupported keyword nested in properties is an error",
+      "schema": { "type": "object", "properties": { "a": { "uniqueItems": true } } },
+      "instance": { "a": [1, 1] },
+      "valid": false
+    },
+    {
+      "name": "annotation-only keywords are inert",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "urn:qa-pack:test:1",
+        "title": "t",
+        "description": "d",
+        "default": 1,
+        "examples": [1],
+        "type": "integer"
+      },
+      "instance": 1,
+      "valid": true
+    }
+  ]
+}

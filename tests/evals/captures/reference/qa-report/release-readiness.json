@@ -1,0 +1,17 @@
+{
+  "contract": { "name": "qa-report/report-result", "version": "1.0.0" },
+  "skill": { "name": "qa-report", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T11:20:00Z",
+  "summary": "One failing test remains; not ready to release.",
+  "classification": "not-ready",
+  "evidence": [
+    { "type": "execution-result", "description": "Run: 11 passed, 1 failed", "source": "qa-artifacts/execution-result.json" }
+  ],
+  "summaries": {
+    "executive": "The build is not ready: a payment defect fails checkout.",
+    "engineering": "1 of 12 tests fails on a real 500 from POST /api/payment; fix the service before release."
+  },
+  "testSummary": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
+  "releaseReadiness": { "verdict": "not-ready", "rationale": "A high-severity application bug fails checkout." },
+  "formats": { "markdown": true, "htmlReady": true, "json": true }
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="checkout.cy.ts" tests="2" failures="1">
+    <testcase name="completes a purchase" classname="checkout" time="7.4">
+      <failure message="Timed out retrying: expected [data-cy=pay]: element not found in the DOM">stack</failure>
+    </testcase>
+    <testcase name="shows cart total" classname="checkout" time="1.1"/>
+  </testsuite>
+</testsuites>

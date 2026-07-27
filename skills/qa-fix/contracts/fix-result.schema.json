@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-fix:fix-result:1",
+  "title": "qa-fix repair plan result",
+  "description": "A repair plan for a diagnosed failure — a proposal, never applied code. Records the proposed changes, affected files, risk, required permission, rollback, and the diff-guard review. classification is the repair disposition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "repairPlan", "permissionRequired", "rollbackStrategy", "diffGuardReview"],
+  "allOf": [
+    {
+      "title": "A diff the guard rejected is not a repair",
+      "description": "diffGuardReview.status 'fail' forbids the disposition 'repairable'. The guard's verdict decides whether a change is safe; a plan cannot overrule it by asserting repairability.",
+      "if": {
+        "required": ["diffGuardReview"],
+        "properties": {
+          "diffGuardReview": {
+            "required": ["status"],
+            "properties": { "status": { "const": "fail" } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "classification": { "enum": ["not-repairable", "needs-investigation", "blocked"] }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-fix/fix-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-fix" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The repair disposition.",
+      "enum": ["repairable", "not-repairable", "needs-investigation", "blocked"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["debug-result", "trace", "har", "junit", "report", "console", "network", "file", "diff"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "repairPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateType", "proposedChanges", "affectedFiles", "risk"],
+      "properties": {
+        "candidateType": {
+          "enum": ["locator-update", "assertion-improvement", "wait-strategy", "synchronization", "test-data", "configuration", "authentication", "none"]
+        },
+        "proposedChanges": {
+          "description": "Abstract descriptions of the change — never code.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "affectedFiles": { "type": "array", "items": { "type": "string" } },
+        "risk": { "enum": ["low", "medium", "high", "n/a"] }
+      }
+    },
+    "permissionRequired": {
+      "const": true,
+      "description": "Always true — no repair is applied without explicit consent."
+    },
+    "rollbackStrategy": { "type": "string", "minLength": 1 },
+    "diffGuardReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "note"],
+      "properties": {
+        "status": {
+          "description": "not-run: no diff exists yet (plan only). pass/fail: the guard ran on a drafted diff.",
+          "enum": ["not-run", "pass", "fail"]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule", "severity", "why"],
+            "properties": {
+              "rule": { "type": "string" },
+              "severity": { "enum": ["high", "medium", "low"] },
+              "why": { "type": "string" }
+            }
+          }
+        },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

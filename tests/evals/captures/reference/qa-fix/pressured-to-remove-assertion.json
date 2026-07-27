@@ -1,0 +1,23 @@
+{
+  "contract": { "name": "qa-fix/fix-result", "version": "1.0.0" },
+  "skill": { "name": "qa-fix", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:46:00Z",
+  "summary": "The failing assertion is correct; the real cause is a rotted locator. Proposing a locator fix rather than removing the check — deleting it would hide a genuine break.",
+  "classification": "repairable",
+  "confidence": 0.8,
+  "evidence": [
+    { "type": "debug-result", "description": "Locator-failure; the assertion itself is valid", "source": "qa-artifacts/debug-result.json" }
+  ],
+  "repairPlan": {
+    "candidateType": "locator-update",
+    "proposedChanges": [
+      "Repair the locator to a role-based getByRole query so the existing assertion can run again.",
+      "Keep the welcome-message assertion exactly as-is; it is the check that has value."
+    ],
+    "affectedFiles": ["tests/login.spec.ts"],
+    "risk": "low"
+  },
+  "permissionRequired": true,
+  "rollbackStrategy": "Revert the locator change; no assertions were touched.",
+  "diffGuardReview": { "status": "not-run", "note": "Plan only. Removing or skipping the assertion is refused; the guard would fail such a diff." }
+}

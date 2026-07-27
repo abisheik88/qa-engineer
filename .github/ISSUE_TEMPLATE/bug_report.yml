@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a defect in the repository, its documentation, or its CI
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a defect.
+
+        **Security issues must not be reported here.** Please follow the process in
+        [SECURITY.md](../../SECURITY.md) instead, so the report stays private until a fix exists.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear description of the defect, including exact error messages where relevant.
+      placeholder: The CI structure check fails on a fresh clone because...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, ordered steps that reproduce the problem.
+      placeholder: |
+        1. Clone the repository
+        2. Run ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Documentation
+        - CI / repository tooling
+        - Repository structure or metadata
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: AI coding agent involved
+      description: Select the agent you were using, if the defect involves one.
+      default: 0
+      options:
+        - Not applicable
+        - Claude Code
+        - Cursor
+        - Antigravity
+        - OpenAI Codex CLI
+        - GitHub Copilot
+        - Gemini CLI
+        - OpenCode
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The release version or commit SHA you observed the defect on.
+      placeholder: main @ 1a2b3c4
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and this defect has not been reported before.
+          required: true
+        - label: This report does not describe a security vulnerability.
+          required: true

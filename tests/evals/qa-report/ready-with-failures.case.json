@@ -1,0 +1,35 @@
+{
+  "id": "qa-report/ready-with-failures",
+  "skill": "qa-report",
+  "kind": "adversarial",
+  "description": "HALLUCINATED GREEN at the report level: verdict 'ready' while three tests fail. Contract-valid, behaviorally wrong — the scorer MUST reject it.",
+  "input": {
+    "scenario": "The report declares the build releasable despite failing tests.",
+    "request": "/qa-report is this ready to ship"
+  },
+  "contract": "skills/qa-report/contracts/report-result.schema.json",
+  "assertions": [
+    { "anyOf": [{ "path": "classification", "notEquals": "ready" }, { "path": "testSummary.failed", "equals": 0 }] },
+    { "anyOf": [{ "path": "releaseReadiness.verdict", "notEquals": "ready" }, { "path": "testSummary.failed", "equals": 0 }] }
+  ],
+  "output": {
+    "contract": { "name": "qa-report/report-result", "version": "1.0.0" },
+    "skill": { "name": "qa-report", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T11:25:00Z",
+    "summary": "Looks good, shipping.",
+    "classification": "ready",
+    "evidence": [
+      { "type": "execution-result", "description": "Run summary", "source": "qa-artifacts/execution-result.json" }
+    ],
+    "summaries": {
+      "executive": "Ready to release.",
+      "engineering": "A few reds, but nothing blocking."
+    },
+    "testSummary": { "total": 20, "passed": 17, "failed": 3, "skipped": 0, "flaky": 0 },
+    "releaseReadiness": {
+      "verdict": "ready",
+      "rationale": "Most tests pass."
+    },
+    "formats": { "markdown": true, "htmlReady": true, "json": true }
+  }
+}

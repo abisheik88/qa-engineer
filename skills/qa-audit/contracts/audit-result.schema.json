@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-audit:audit-result:1",
+  "title": "qa-audit audit result",
+  "description": "A best-practice audit of a page for accessibility, performance, client-side security, or visual stability: issues ranked by severity with evidence and remediation. Recommendations only. classification is the overall audit outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "auditType", "issues"],
+  "properties": {
+    "contract": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "const": "qa-audit/audit-result" }, "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" } }
+    },
+    "skill": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": { "name": { "const": "qa-audit" }, "version": { "type": "string" } }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": { "enum": ["pass", "issues-found", "fails-standards", "insufficient-data"] },
+    "auditType": {
+      "type": "array", "minItems": 1,
+      "items": { "enum": ["accessibility", "performance", "security", "visual"] }
+    },
+    "evidence": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["report", "har", "network", "screenshot", "trace", "file", "console" ] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["category", "severity", "evidence", "remediation"],
+        "properties": {
+          "category": { "enum": ["accessibility", "performance", "security", "visual"] },
+          "severity": { "enum": ["critical", "serious", "moderate", "minor"] },
+          "detail": { "type": "string" },
+          "evidence": { "type": "string", "minLength": 1 },
+          "remediation": { "type": "string", "minLength": 1 },
+          "manualCheckNeeded": { "type": "boolean" }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

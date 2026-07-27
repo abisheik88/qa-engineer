@@ -1,0 +1,5 @@
+--- a/e2e/checkout.spec.ts
++++ b/e2e/checkout.spec.ts
+@@ -10,7 +10,7 @@
+-  expect(page.getByRole('heading')).toHaveText('Order total: 42');
++  await expect(page.getByRole('heading', { name: 'Order total' })).toHaveText('Order total: 42');

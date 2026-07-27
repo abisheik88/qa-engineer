@@ -1,0 +1,83 @@
+{
+  "name": "qa-automation-pack",
+  "version": "0.9.0",
+  "description": "A vendor-neutral Agent Skills pack that teaches AI coding agents to work like senior QA automation engineers.",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://github.com/qa-automation-pack/qa-automation-pack#readme",
+  "bugs": {
+    "url": "https://github.com/qa-automation-pack/qa-automation-pack/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qa-automation-pack/qa-automation-pack.git"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "bin": {
+    "qa": "packages/installer/bin/qa.mjs",
+    "qa-pack": "packages/installer/bin/qa.mjs",
+    "qa-automation-pack": "packages/installer/bin/qa.mjs"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "files": [
+    "packages/installer/bin",
+    "packages/installer/lib",
+    "packages/installer/schemas",
+    "packages/installer/package.json",
+    "packages/installer/README.md",
+    "skills",
+    "shared/analysis/lib/qa_analysis",
+    "shared/analysis/schemas",
+    "shared/diagnostics/lib/qa_diagnostics",
+    "shared/diagnostics/schemas",
+    "shared/frameworks/registry.json",
+    "shared/frameworks/registry.schema.json",
+    "shared/frameworks/registry.mjs",
+    "shared/frameworks/playwright/lib/playwright_analysis.py",
+    "shared/frameworks/selenium/lib/selenium_analysis.py",
+    "shared/frameworks/cypress/lib/cypress_analysis.py",
+    "shared/frameworks/webdriverio/lib/webdriverio_analysis.py",
+    "COMPATIBILITY.md",
+    "!**/__pycache__",
+    "!**/*.pyc",
+    "!**/tests"
+  ],
+  "scripts": {
+    "qa": "node packages/installer/bin/qa.mjs",
+    "test": "node --test packages/installer/test/*.test.mjs",
+    "validate:skills": "node scripts/validate-skills.mjs",
+    "validate:sync": "node scripts/sync-shared.mjs --check",
+    "validate:keywords": "node scripts/check-keywords.mjs",
+    "validate:knowledge": "node scripts/check-knowledge.mjs",
+    "validate:matrix": "node scripts/check-capability-matrix.mjs",
+    "validate:registry": "node scripts/check-framework-registry.mjs",
+    "validate:architecture": "node scripts/check-architecture-fitness.mjs",
+    "validate:spec-sync": "node scripts/check-spec-code-sync.mjs",
+    "validate:doc-claims": "node scripts/check-doc-claims.mjs",
+    "validate:docs-commands": "node scripts/check-docs-commands.mjs",
+    "validate:context": "cd shared/analysis/lib && python3 -m qa_analysis.cli context --path tests/fixtures/valid-context.md",
+    "validate:python": "python3 shared/analysis/lib/run_tests.py",
+    "validate:bundle": "python3 scripts/bundle_python.py --check",
+    "validate:release": "node scripts/release/validate-release.mjs",
+    "validate:evals": "python3 tests/evals/run_evals.py",
+    "eval:live": "python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json"
+  },
+  "keywords": [
+    "agent-skills",
+    "qa",
+    "test-automation",
+    "playwright",
+    "selenium",
+    "cypress",
+    "webdriverio",
+    "ai-agents",
+    "claude-code"
+  ],
+  "dependencies": {
+    "@clack/prompts": "0.11.0"
+  }
+}

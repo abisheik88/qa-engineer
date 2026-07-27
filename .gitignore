@@ -1,0 +1,60 @@
+# --- Operating system artifacts ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Editors and IDEs ---
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Node.js (installer and tooling packages, Milestone 4+) ---
+node_modules/
+dist/
+coverage/
+.npm/
+
+# --- Python (deterministic analyzers, Milestone 3+) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# --- Test and evaluation artifacts (Milestone 5+) ---
+test-results/
+playwright-report/
+lychee/
+# Live-eval run reports are per-run artifacts; the committed baseline is tracked.
+tests/evals/runs/
+
+# --- Pack runtime artifacts (generated in consumer repos, never committed here) ---
+.qa/
+qa-artifacts/
+
+# --- Local skill test installs (copied during development, never committed) ---
+.claude/skills/
+.agents/
+
+# --- Bundled Python engines (materialized into skills by scripts/bundle_python.py;
+#     canonical source lives in shared/, so the bundle is a build artifact) ---
+skills/*/scripts/lib/
+
+# --- Local agent configuration (machine-specific, never shared) ---
+.claude/settings.local.json
+
+# --- Environment files ---
+.env
+.env.*
+!.env.example

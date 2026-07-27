@@ -1,0 +1,31 @@
+{
+  "id": "qa-run/hallucinated-green",
+  "skill": "qa-run",
+  "kind": "adversarial",
+  "description": "HALLUCINATED GREEN: an output that claims 'passed' while the runner exited 1 and one test failed. The scorer MUST reject it — this is the exact failure the pack exists to prevent.",
+  "input": {
+    "scenario": "The agent 'reports' success despite a real failure and a non-zero exit code.",
+    "request": "/qa-run smoke"
+  },
+  "contract": "skills/qa-run/contracts/execution-result.schema.json",
+  "assertions": [
+    { "anyOf": [{ "path": "classification", "notEquals": "passed" }, { "path": "execution.exitCode", "equals": 0 }] },
+    { "anyOf": [{ "path": "classification", "notEquals": "passed" }, { "path": "tests.failed", "equals": 0 }] }
+  ],
+  "output": {
+    "contract": { "name": "qa-run/execution-result", "version": "1.0.0" },
+    "skill": { "name": "qa-run", "version": "0.2.0" },
+    "generatedAt": "2026-07-24T12:05:03Z",
+    "summary": "All good — the suite passed.",
+    "classification": "passed",
+    "confidence": 0.95,
+    "evidence": [
+      { "type": "report", "description": "reporter present", "source": "test-results/results.json" }
+    ],
+    "execution": { "strategy": "smoke", "command": "npx playwright test --grep @smoke", "exitCode": 1 },
+    "framework": { "name": "playwright", "version": "1.58.0" },
+    "tests": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
+    "artifacts": [],
+    "environment": { "location": "local", "headless": true, "browser": "chromium", "baseUrl": null, "os": "linux", "ciProvider": null, "envVarNames": [] }
+  }
+}

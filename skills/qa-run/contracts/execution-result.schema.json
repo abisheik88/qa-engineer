@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-run:execution-result:1",
+  "title": "qa-run normalized execution result",
+  "description": "The framework-independent record of a completed (or attempted) test run: status, counts, per-test outcomes, collected artifacts, and environment. This is the interface the analysis layer of later milestones consumes; nothing downstream branches on the producing framework. classification is the run status.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "execution", "framework", "tests", "environment", "artifacts"],
+  "allOf": [
+    {
+      "title": "A green claim must be backed by the runner's own numbers",
+      "description": "classification 'passed' requires exit code 0 and zero failing tests. This is the contract-level answer to hallucinated green: an agent cannot emit a valid result that claims success over a non-zero exit code or a failed test.",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "passed" } }
+      },
+      "then": {
+        "properties": {
+          "execution": { "properties": { "exitCode": { "const": 0 } } },
+          "tests": { "properties": { "failed": { "const": 0 } } }
+        }
+      }
+    },
+    {
+      "title": "A failure claim must point at a failing test",
+      "description": "classification 'failed' requires at least one failing test. A run with no failures is 'passed', 'no-tests-run', or 'errored' — never 'failed'.",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "failed" } }
+      },
+      "then": {
+        "properties": { "tests": { "properties": { "failed": { "minimum": 1 } } } }
+      }
+    },
+    {
+      "title": "no-tests-run means nothing executed",
+      "description": "classification 'no-tests-run' requires a zero total. If tests executed, the status is decided by their outcomes.",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "no-tests-run" } }
+      },
+      "then": {
+        "properties": { "tests": { "properties": { "total": { "const": 0 } } } }
+      }
+    }
+  ],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-run/execution-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-run" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The run status, computed from the reporter and exit code — never chosen by feel.",
+      "enum": ["passed", "failed", "errored", "no-tests-run", "blocked"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "description": "The observations that justify the status: the reporter file, the exit code, launch errors.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["report", "command", "log", "file", "artifact"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "command", "exitCode"],
+      "properties": {
+        "strategy": {
+          "enum": ["smoke", "regression", "full-suite", "changed", "single-spec", "targeted", "tag-based", "directory-based", "failed-only", "retry", "dry-run"]
+        },
+        "command": {
+          "type": "string",
+          "description": "The exact command executed, verbatim and secret-free."
+        },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "exitCode": {
+          "type": ["integer", "null"],
+          "description": "Runner process exit code; null when the run was not attempted (blocked)."
+        }
+      }
+    },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["playwright", "selenium", "cypress", "webdriverio"] },
+        "version": { "type": ["string", "null"] }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed", "skipped"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "flaky": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "executed": {
+      "description": "Per-test outcomes, normalized across frameworks.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "status"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "file": { "type": "string" },
+          "status": { "enum": ["passed", "failed", "skipped", "flaky"] },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "retries": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "artifacts": {
+      "description": "Everything the run produced, in the common artifact model, for the analysis layer to consume.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "location", "framework", "timestamp", "ownership"],
+        "properties": {
+          "type": {
+            "enum": ["stdout", "stderr", "console-log", "network-log", "screenshot", "video", "trace", "har", "junit", "html-report", "attachment"]
+          },
+          "location": { "type": "string", "minLength": 1 },
+          "framework": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "mediaType": { "type": "string" },
+          "ownership": { "type": "string" },
+          "testRef": { "type": "string" },
+          "present": {
+            "type": "boolean",
+            "description": "False when the artifact was planned but expected-and-absent."
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "headless"],
+      "properties": {
+        "location": { "enum": ["local", "ci", "remote"] },
+        "headless": { "type": "boolean" },
+        "browser": { "type": ["string", "null"] },
+        "baseUrl": { "type": ["string", "null"] },
+        "os": { "type": "string" },
+        "ciProvider": { "type": ["string", "null"] },
+        "envVarNames": {
+          "type": "array",
+          "description": "Names only of the environment variables the run depended on — never values.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

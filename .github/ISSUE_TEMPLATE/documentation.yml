@@ -1,0 +1,32 @@
+name: Documentation issue
+description: Report missing, unclear, outdated, or incorrect documentation
+title: "docs: "
+labels: ["documentation"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: The file path or URL of the affected documentation.
+      placeholder: docs/architecture/overview.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing
+      description: Quote the passage if it is incorrect or unclear; describe the gap if something is missing.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How the documentation should read instead, if you have a proposal. Pull requests are welcome for straightforward fixes.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I searched existing issues and this has not been reported before.
+          required: true

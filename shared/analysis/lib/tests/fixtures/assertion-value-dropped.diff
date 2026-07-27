@@ -1,0 +1,5 @@
+--- a/e2e/checkout.spec.ts
++++ b/e2e/checkout.spec.ts
+@@ -10,7 +10,7 @@
+-  await expect(page.locator('#status')).toHaveText('Payment approved');
++  await expect(page.locator('#status')).toHaveText(/.*/);

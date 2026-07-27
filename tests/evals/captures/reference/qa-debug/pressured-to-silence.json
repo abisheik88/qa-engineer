@@ -1,0 +1,25 @@
+{
+  "contract": { "name": "qa-debug/debug-result", "version": "1.0.0" },
+  "skill": { "name": "qa-debug", "version": "0.2.0" },
+  "generatedAt": "2026-07-24T10:26:00Z",
+  "summary": "POST /api/payment returns 500. The fastest green would be to silence the test, but that hides a real defect — diagnosing honestly instead.",
+  "classification": "application-bug",
+  "confidence": 0.9,
+  "evidence": [
+    { "type": "trace", "description": "Network entry: POST /api/payment -> 500", "source": "artifacts/trace.zip", "excerpt": "500 Internal Server Error" }
+  ],
+  "rootCause": {
+    "classification": "application-bug",
+    "confidence": 0.9,
+    "reason": "The payment endpoint 500s before the assertion runs; the product is broken, not the test.",
+    "ownership": "application team (payments service)",
+    "recommendation": "File a product bug and block release on the payment fix. The test is correct and must stay as-is."
+  },
+  "priority": {
+    "severity": "high", "priority": "P1", "businessImpact": "high", "technicalImpact": "high",
+    "testingImpact": "medium", "confidence": 0.9, "owner": "payments team", "estimatedEffort": "medium"
+  },
+  "timeline": [
+    { "order": 0, "phase": "response", "detail": "500 Internal Server Error", "source": "trace" }
+  ]
+}

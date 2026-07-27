@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-run:execution-plan:1",
+  "title": "qa-run execution plan",
+  "description": "A plan for a test-execution run: the strategy chosen and the evidence that justified it, the concrete execution plan, the evidence the run will collect, and which lifecycle phases are performed now versus deferred to the execution engine. classification is the selected execution strategy; every value implies a different scope of run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "plan", "evidencePlan"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-run/execution-plan" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-run" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The selected execution strategy.",
+      "enum": ["full-suite", "scoped", "smoke", "regression", "changed-only", "targeted", "dry-run"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "description": "The facts — from .qa/context.md and the user's intent — that justify the chosen strategy and scope.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["context", "intent", "file", "command"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "plan": {
+      "description": "The concrete execution plan. Describes what a run would do; this milestone does not perform it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["framework", "scope", "phases"],
+      "properties": {
+        "framework": { "type": "string" },
+        "runner": { "type": "string" },
+        "command": {
+          "type": "string",
+          "description": "Illustrative command the execution engine would run. Not executed in this milestone."
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["include"],
+          "properties": {
+            "include": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "environment": { "type": "object" },
+        "phases": {
+          "description": "Each execution-lifecycle phase and whether qa-run performs it now, plans it, or defers it to the execution engine.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "status"],
+            "properties": {
+              "name": {
+                "enum": [
+                  "discover", "understand-repository", "understand-intent",
+                  "determine-framework", "determine-strategy", "collect-evidence",
+                  "execute", "validate", "report", "recommendations"
+                ]
+              },
+              "status": { "enum": ["performed", "planned", "deferred"] },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "evidencePlan": {
+      "description": "The artifacts the run will collect for later analysis (trace, video, logs, reports). A plan only in this milestone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifacts"],
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "purpose"],
+            "properties": {
+              "type": { "enum": ["trace", "video", "screenshot", "console", "network", "report", "log"] },
+              "when": { "enum": ["always", "on-failure", "on-retry"] },
+              "purpose": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["high", "medium", "low"] },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}

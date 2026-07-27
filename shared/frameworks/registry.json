@@ -1,0 +1,150 @@
+{
+  "$schema": "./registry.schema.json",
+  "version": 1,
+  "frameworks": [
+    {
+      "id": "playwright",
+      "displayName": "Playwright",
+      "supportLevel": "Production",
+      "adapterDir": "shared/frameworks/playwright",
+      "liveExecution": true,
+      "liveGeneration": true,
+      "detection": {
+        "configFiles": ["playwright.config.ts", "playwright.config.js", "playwright.config.mjs", "playwright.config.cjs"],
+        "configPrefixes": ["playwright.config."],
+        "dependencies": ["@playwright/test", "playwright"],
+        "directories": []
+      },
+      "capabilities": {
+        "detection": "Full",
+        "execution": "Full",
+        "generation": "Full",
+        "artifactMapping": "Full",
+        "normalization": "Full",
+        "analysis": "Full",
+        "diagnostics": "Full",
+        "reporting": "Full"
+      }
+    },
+    {
+      "id": "selenium",
+      "displayName": "Selenium",
+      "supportLevel": "Beta",
+      "adapterDir": "shared/frameworks/selenium",
+      "liveExecution": false,
+      "liveGeneration": false,
+      "detection": {
+        "configFiles": [],
+        "configPrefixes": [],
+        "dependencies": ["selenium-webdriver", "selenium"],
+        "directories": []
+      },
+      "capabilities": {
+        "detection": "Full",
+        "execution": "Adapter-complete",
+        "generation": "Adapter-complete",
+        "artifactMapping": "Full",
+        "normalization": "Full",
+        "analysis": "Full",
+        "diagnostics": "Full",
+        "reporting": "Full"
+      }
+    },
+    {
+      "id": "cypress",
+      "displayName": "Cypress",
+      "supportLevel": "Beta",
+      "adapterDir": "shared/frameworks/cypress",
+      "liveExecution": false,
+      "liveGeneration": false,
+      "detection": {
+        "configFiles": ["cypress.config.js", "cypress.config.ts", "cypress.config.mjs"],
+        "configPrefixes": [],
+        "dependencies": ["cypress"],
+        "directories": ["cypress"]
+      },
+      "capabilities": {
+        "detection": "Full",
+        "execution": "Adapter-complete",
+        "generation": "Adapter-complete",
+        "artifactMapping": "Full",
+        "normalization": "Full",
+        "analysis": "Full",
+        "diagnostics": "Full",
+        "reporting": "Full"
+      }
+    },
+    {
+      "id": "webdriverio",
+      "displayName": "WebdriverIO",
+      "supportLevel": "Beta",
+      "adapterDir": "shared/frameworks/webdriverio",
+      "liveExecution": false,
+      "liveGeneration": false,
+      "detection": {
+        "configFiles": ["wdio.conf.js", "wdio.conf.ts", "wdio.conf.mjs"],
+        "configPrefixes": [],
+        "dependencies": ["webdriverio", "@wdio/cli"],
+        "directories": []
+      },
+      "capabilities": {
+        "detection": "Full",
+        "execution": "Adapter-complete",
+        "generation": "Adapter-complete",
+        "artifactMapping": "Full",
+        "normalization": "Full",
+        "analysis": "Full",
+        "diagnostics": "Full",
+        "reporting": "Full"
+      }
+    },
+    {
+      "id": "robot",
+      "displayName": "Robot Framework",
+      "supportLevel": "Planning",
+      "adapterDir": null,
+      "liveExecution": false,
+      "liveGeneration": false,
+      "detection": {
+        "configFiles": [],
+        "configPrefixes": [],
+        "dependencies": [],
+        "directories": []
+      },
+      "capabilities": {
+        "detection": "Planning",
+        "execution": "—",
+        "generation": "—",
+        "artifactMapping": "—",
+        "normalization": "—",
+        "analysis": "—",
+        "diagnostics": "—",
+        "reporting": "—"
+      }
+    },
+    {
+      "id": "appium",
+      "displayName": "Appium",
+      "supportLevel": "Planning",
+      "adapterDir": null,
+      "liveExecution": false,
+      "liveGeneration": false,
+      "detection": {
+        "configFiles": [],
+        "configPrefixes": [],
+        "dependencies": [],
+        "directories": []
+      },
+      "capabilities": {
+        "detection": "Planning",
+        "execution": "Planning",
+        "generation": "—",
+        "artifactMapping": "—",
+        "normalization": "—",
+        "analysis": "—",
+        "diagnostics": "—",
+        "reporting": "—"
+      }
+    }
+  ]
+}

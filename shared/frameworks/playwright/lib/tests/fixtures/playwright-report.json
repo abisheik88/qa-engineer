@@ -1,0 +1,4 @@
+{"suites":[{"file":"e2e/checkout.spec.ts","specs":[
+  {"title":"completes a purchase","tests":[{"results":[{"status":"failed","duration":8300,"errors":[{"message":"Timeout 30000ms exceeded waiting for locator getByRole('button', name: 'Pay')"}]}]}]},
+  {"title":"shows cart total","tests":[{"results":[{"status":"passed","duration":1200}]}]}
+]}]}

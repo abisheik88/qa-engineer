@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-report:report-result:1",
+  "title": "qa-report report result",
+  "description": "An aggregated QA report over execution, generation, and diagnosis results, with audience-specific summaries and a release-readiness verdict. classification is the release-readiness call. The JSON here is the machine-readable form; Markdown and HTML-ready renderings carry the same content.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence", "summaries", "testSummary", "releaseReadiness", "formats"],
+  "allOf": [
+    {
+      "title": "\"ready\" may not be claimed over failing tests",
+      "description": "classification 'ready' requires zero failing tests. A release verdict that ignores a failure is the reporting equivalent of hallucinated green, so the contract rejects it.",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "ready" } }
+      },
+      "then": {
+        "properties": { "testSummary": { "properties": { "failed": { "const": 0 } } } }
+      }
+    },
+    {
+      "title": "The envelope verdict and the readiness block must agree",
+      "description": "classification 'ready' requires releaseReadiness.verdict 'ready'. A summary that says one thing while the detail says another is not a usable release record.",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "ready" } }
+      },
+      "then": {
+        "properties": { "releaseReadiness": { "properties": { "verdict": { "const": "ready" } } } }
+      }
+    },
+    {
+      "title": "not-ready must be reflected in the readiness block",
+      "if": {
+        "required": ["classification"],
+        "properties": { "classification": { "const": "not-ready" } }
+      },
+      "then": {
+        "properties": { "releaseReadiness": { "properties": { "verdict": { "const": "not-ready" } } } }
+      }
+    }
+  ],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-report/report-result" },
+        "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-report" },
+        "version": { "type": "string" }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string", "minLength": 1 },
+    "classification": {
+      "description": "The release-readiness verdict.",
+      "enum": ["ready", "ready-with-risks", "not-ready", "insufficient-data"]
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": { "enum": ["execution-result", "generation-result", "analysis-result", "debug-result", "file"] },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "summaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executive", "engineering"],
+      "properties": {
+        "executive": { "type": "string", "minLength": 1 },
+        "engineering": { "type": "string", "minLength": 1 }
+      }
+    },
+    "testSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed", "skipped"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "flaky": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "failureSummary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["test", "classification", "reason"],
+        "properties": {
+          "test": { "type": "string" },
+          "classification": { "type": "string" },
+          "reason": { "type": "string" },
+          "owner": { "type": "string" },
+          "recommendation": { "type": "string" }
+        }
+      }
+    },
+    "coverageSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
+    "riskSummary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["classification", "impact"],
+        "properties": {
+          "classification": { "type": "string" },
+          "impact": { "enum": ["high", "medium", "low"] },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "releaseReadiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "rationale"],
+      "properties": {
+        "verdict": { "enum": ["ready", "ready-with-risks", "not-ready", "insufficient-data"] },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "priority"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "priority": { "enum": ["P1", "P2", "P3", "high", "medium", "low"] },
+          "owner": { "type": "string" },
+          "command": { "type": "string" }
+        }
+      }
+    },
+    "formats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["markdown", "htmlReady", "json"],
+      "properties": {
+        "markdown": { "type": "boolean" },
+        "htmlReady": { "type": "boolean" },
+        "json": { "type": "boolean" }
+      }
+    },
+    "trendMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totals", "verdict"],
+      "properties": {
+        "totals": { "type": "object" },
+        "byClassification": { "type": "object" },
+        "verdict": { "type": "string" }
+      }
+    },
+    "metadata": { "type": "object" }
+  }
+}
