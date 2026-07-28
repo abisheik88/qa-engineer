@@ -34,6 +34,7 @@ import {
   footer as brandingFooter, metadata as brandingMetadata,
 } from '../packages/engine/lib/analysis/branding.mjs';
 import { parse as parseContext, MalformedContext } from '../packages/engine/lib/analysis/context.mjs';
+import { checkDiff } from '../packages/engine/lib/analysis/diff-guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const cases = JSON.parse(fs.readFileSync(path.join(root, 'tests/parity/engine-cases.json'), 'utf8'));
@@ -56,7 +57,7 @@ function python(source, payload) {
 // only switched over once its name is here and the gate is green.
 const MODULES = [
   'redaction', 'taxonomy', 'junit', 'contracts', 'har', 'discovery', 'branding',
-  'context',
+  'context', 'diff-guard',
 ];
 
 const problems = [];
@@ -599,6 +600,104 @@ function compare(module, label, expected, actual) {
       hasErrors: parsed.errors.length > 0,
     });
   });
+}
+
+// --- diff guard ----------------------------------------------------------------
+// Every committed diff fixture, plus the cases each rule exists for. The guard is
+// the thing standing between "the suite is green" and "the suite was made green",
+// so a rule that stops firing in one implementation is a safety regression, and a
+// rule that starts crying wolf trains people to override the guard entirely. Both
+// directions are compared, rule for rule and severity for severity.
+{
+  const diffs = fs
+    .readdirSync(fixtures)
+    .filter((name) => name.endsWith('.diff'))
+    .sort()
+    .map((name) => fs.readFileSync(path.join(fixtures, name), 'utf8'));
+
+  const synthetic = [
+    // Nothing at all.
+    '',
+    '--- a/README.md\n+++ b/README.md\n+a documentation line\n',
+    // Removal with no replacement.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(total).toBe(42)\n',
+    // Replaced by something weaker.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(total).toBe(42)\n+expect(total).toBeTruthy()\n',
+    // Same matcher, expected value dropped.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(page.locator("#total")).toHaveText("42")\n+expect(page.locator("#total")).toHaveText(value)\n',
+    // A legitimate locator repair on the same expectation, in the style
+    // Playwright is actually written — the case the committed fixtures missed.
+    '--- a/e2e/c.spec.ts\n+++ b/e2e/c.spec.ts\n-  await expect(page.locator(\'#total\')).toHaveText(\'42\');\n+  await expect(page.getByTestId(\'total\')).toHaveText(\'42\');\n',
+    '--- a/e2e/c.spec.ts\n+++ b/e2e/c.spec.ts\n-  await expect(page.locator(\'#total\')).toHaveText(\'42\');\n+  await expect(page.getByTestId(\'total\')).toHaveText(value);\n',
+    // A legitimate locator repair on the same expectation.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(page.locator("#total")).toHaveText("42")\n+expect(page.getByTestId("total")).toHaveText("42")\n',
+    // Hard assertion swapped for a soft one.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(total).toBe(42)\n+expect.soft(total).toBe(42)\n',
+    // A move, not a change.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-expect(total).toBe(42)\n+expect(total).toBe(42)\n',
+    // Skips and forced passes.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+test.skip("checkout", async () => {})\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+test.only("checkout", async () => {})\n',
+    '--- a/t_test.py\n+++ b/t_test.py\n+@pytest.mark.skip\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+expect(true).toBe(true)\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+  return;\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+  if (!ready) return;\n',
+    '--- a/src/app.ts\n+++ b/src/app.ts\n+  return;\n',
+    // Config-level and pipeline-level evasion.
+    '--- a/playwright.config.ts\n+++ b/playwright.config.ts\n+  testIgnore: ["**/checkout.spec.ts"],\n',
+    '--- a/package.json\n+++ b/package.json\n+    "test": "playwright test || true"\n',
+    '--- a/.github/workflows/ci.yml\n+++ b/.github/workflows/ci.yml\n+        continue-on-error: true\n',
+    '--- a/jest.config.js\n+++ b/jest.config.js\n+  testPathIgnorePatterns: ["checkout"],\n',
+    // Swallowed failures.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+  try { await expect(x).toBe(1) } catch {}\n',
+    '--- a/t_test.py\n+++ b/t_test.py\n+    except AssertionError: pass\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+  } catch (error) {\n',
+    // Waits and timeouts.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-  await page.waitForSelector("#total")\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-  timeout: 5000\n+  timeout: 30000\n',
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-  timeout: 5000\n+  timeout: 6000\n',
+    '--- a/playwright.config.ts\n+++ b/playwright.config.ts\n-  retries: 1\n+  retries: 5\n',
+    // Empty bodies.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n+test("checkout", async () => {})\n',
+    '--- a/t_test.py\n+++ b/t_test.py\n+def test_checkout(): pass\n',
+    // A deleted test file, and a deleted non-test file.
+    '--- a/tests/checkout.spec.ts\n+++ /dev/null\n-expect(total).toBe(42)\n',
+    '--- a/src/helper.ts\n+++ /dev/null\n-export const x = 1\n',
+    // Mass deletion, just under and just over the threshold.
+    `--- a/t.spec.ts\n+++ b/t.spec.ts\n${Array.from({ length: 14 }, (_, i) => `-line ${i}`).join('\n')}\n`,
+    `--- a/t.spec.ts\n+++ b/t.spec.ts\n${Array.from({ length: 20 }, (_, i) => `-line ${i}`).join('\n')}\n`,
+    // Locator changed.
+    '--- a/t.spec.ts\n+++ b/t.spec.ts\n-  const el = page.locator("#old")\n+  const el = page.locator(".new")\n',
+  ];
+
+  const documents = [...diffs, ...synthetic];
+  const expected = python(
+    'import json,sys\n' +
+      'from qa_analysis import diff_guard\n' +
+      'print(json.dumps([diff_guard.check_diff(d) for d in json.load(sys.stdin)]))\n',
+    documents,
+  );
+  documents.forEach((diff, index) => {
+    compare('diff-guard', diff.slice(0, 80), expected[index], checkDiff(diff));
+  });
+
+  // Every rule the guard can emit must be exercised by the corpus above, or a rule
+  // could be broken in both implementations and this gate would still pass.
+  const emitted = new Set(expected.flat().map((issue) => issue.rule));
+  const declared = [
+    'removed-assertion', 'weakened-assertion', 'assertion-modified', 'removed-wait',
+    'added-skip-or-only', 'forced-pass', 'empty-test-body', 'conditional-skip',
+    'suite-exclusion', 'forced-pass-command', 'swallowed-failure', 'added-error-handling',
+    'test-file-deleted', 'timeout-inflation', 'unsafe-retry-increase',
+    'suspicious-locator-change', 'mass-deletion',
+  ];
+  const unexercised = declared.filter((rule) => !emitted.has(rule));
+  if (unexercised.length > 0) {
+    problems.push(
+      `diff-guard: the corpus never triggers ${unexercised.join(', ')} — ` +
+        'a rule nothing exercises is a rule this gate cannot protect',
+    );
+  }
 }
 
 if (problems.length) {

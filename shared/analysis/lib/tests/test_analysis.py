@@ -215,6 +215,64 @@ class DiffGuardTests(unittest.TestCase):
         rules, _ = self._rules("unsafe.diff")
         self.assertIn("removed-wait", rules)
 
+    def test_an_inline_locator_repair_is_not_a_weakened_assertion(self):
+        """The canonical `/qa-fix` repair, in the style Playwright is actually written.
+
+        The committed fixtures both keep the selector string, so this went unnoticed:
+        scanning the whole line for literals treated `'#total'` — the assertion's
+        *subject* — as an expected value, and reported its replacement as
+        `weakened-assertion` at `high`. The assertion itself is unchanged.
+        """
+        issues = diff_guard.check_diff(
+            "--- a/e2e/checkout.spec.ts\n+++ b/e2e/checkout.spec.ts\n"
+            "-  await expect(page.locator('#total')).toHaveText('42');\n"
+            "+  await expect(page.getByTestId('total')).toHaveText('42');\n"
+        )
+        self.assertFalse(self._highs(issues), issues)
+        self.assertIn("assertion-modified", {i["rule"] for i in issues})
+
+    def test_dropping_the_real_expected_value_is_still_high(self):
+        # The scoping must not blind the rule to what it exists for.
+        issues = diff_guard.check_diff(
+            "--- a/e2e/checkout.spec.ts\n+++ b/e2e/checkout.spec.ts\n"
+            "-  await expect(page.locator('#total')).toHaveText('42');\n"
+            "+  await expect(page.getByTestId('total')).toHaveText(value);\n"
+        )
+        self.assertTrue(self._highs(issues))
+        self.assertIn("weakened-assertion", {i["rule"] for i in issues})
+
+    def test_a_realistic_retry_increase_is_flagged(self):
+        """The second unreachable rule, found by the Node port's parity gate.
+
+        Both rules read their number from a shared `\\d{2,}` scan of the line — two
+        or more digits — so `retries: 1` to `retries: 5` produced no number at all
+        and the rule could not fire below ten. Nobody configures ten retries; the
+        rule was dead for every value a real config carries.
+        """
+        issues = diff_guard.check_diff(
+            "--- a/playwright.config.ts\n+++ b/playwright.config.ts\n"
+            "-  retries: 1\n+  retries: 5\n"
+        )
+        self.assertIn("unsafe-retry-increase", {i["rule"] for i in issues})
+
+    def test_a_modest_retry_increase_is_not_flagged(self):
+        # The rule is "substantially increased", not "changed": 1 -> 2 doubles but
+        # 2 -> 3 does not, and flagging every bump would be noise.
+        issues = diff_guard.check_diff(
+            "--- a/playwright.config.ts\n+++ b/playwright.config.ts\n"
+            "-  retries: 2\n+  retries: 3\n"
+        )
+        self.assertNotIn("unsafe-retry-increase", {i["rule"] for i in issues})
+
+    def test_the_inflation_rules_read_their_own_number_not_any_number(self):
+        # `timeout: 5000, port: 8080` used to compare 8080, because the scan took
+        # the largest number on the line rather than the one the rule matched.
+        issues = diff_guard.check_diff(
+            "--- a/c.ts\n+++ b/c.ts\n"
+            "-  { timeout: 5000, port: 8080 }\n+  { timeout: 6000, port: 8080 }\n"
+        )
+        self.assertNotIn("timeout-inflation", {i["rule"] for i in issues})
+
     # --- job 2: a real repair must not read as an unsafe change --------------
 
     def test_locator_repair_keeping_the_assertion_is_not_high_severity(self):
