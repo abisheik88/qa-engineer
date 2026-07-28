@@ -66,7 +66,7 @@ const pythonSrc = fs.readFileSync(
   'utf8',
 );
 const jsSrc = fs.readFileSync(
-  path.join(root, 'packages/installer/lib/core/schema-validate.mjs'),
+  path.join(root, 'packages/engine/lib/analysis/contracts.mjs'),
   'utf8',
 );
 
@@ -84,7 +84,7 @@ const pythonKeywords = keywordsFrom(pythonSrc, 'SUPPORTED_KEYWORDS = frozenset({
 const jsKeywords = keywordsFrom(jsSrc, 'const SUPPORTED = new Set([');
 
 if (!pythonKeywords) problems.push('contracts.py: could not read SUPPORTED_KEYWORDS');
-if (!jsKeywords) problems.push('schema-validate.mjs: could not read SUPPORTED');
+if (!jsKeywords) problems.push('contracts.mjs: could not read SUPPORTED');
 if (pythonKeywords && jsKeywords) {
   const onlyPython = pythonKeywords.filter((k) => !jsKeywords.includes(k));
   const onlyJs = jsKeywords.filter((k) => !pythonKeywords.includes(k));

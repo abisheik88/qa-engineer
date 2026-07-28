@@ -30,17 +30,27 @@ def parse_har(path, slow_ms=1000):
     except (KeyError, TypeError) as exc:
         raise MalformedArtifact(f"not a HAR document at {path}") from exc
 
+    # The shape has to be checked, not assumed. `log.entries` being a *string*
+    # satisfies the subscripting above, and iterating it then yields characters,
+    # so the parser died on `'str' object has no attribute 'get'` — an
+    # AttributeError, which the CLI does not catch, so the caller got a traceback
+    # instead of the documented exit 2. Found by the Node port's parity gate.
+    if not isinstance(raw_entries, list):
+        raise MalformedArtifact(f"HAR log.entries is not a list at {path}")
+
     entries = []
     for item in raw_entries:
-        request = item.get("request", {})
-        response = item.get("response", {})
+        if not isinstance(item, dict):
+            raise MalformedArtifact(f"HAR log.entries contains a non-object at {path}")
+        request = item.get("request") or {}
+        response = item.get("response") or {}
         status = _int(response.get("status"))
         entry = {
             "method": request.get("method", ""),
             # Redaction strips any credentials embedded in the URL.
             "url": redact_text(request.get("url", "")),
             "status": status,
-            "durationMs": int(round(float(item.get("time", 0) or 0))),
+            "durationMs": _millis(item.get("time"), path),
             "requestHeaders": redact_headers(request.get("headers", [])),
             "responseHeaders": redact_headers(response.get("headers", [])),
         }
@@ -56,3 +66,22 @@ def _int(value, default=0):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _millis(raw, path):
+    """HAR `time` is already milliseconds, rounded to a whole number.
+
+    A value that is present but not a number raises rather than becoming 0 — the
+    same rule as the JUnit parser, and for the same reason: a fabricated duration
+    makes a malformed document look like a clean measurement. Before this, the
+    bare `float()` escaped as a ValueError and reached the caller as a traceback.
+    """
+    if raw is None or raw == "":
+        return 0
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        raise MalformedArtifact(f"entry time={raw!r} is not a number at {path}") from None
+    if value != value or value in (float("inf"), float("-inf")):
+        raise MalformedArtifact(f"entry time={raw!r} is not a finite number at {path}")
+    return int(round(value))

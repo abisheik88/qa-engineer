@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIG_FILE } from '../constants.mjs';
 import { QaError, usageError } from './errors.mjs';
-import { validate } from './schema-validate.mjs';
+import { validate } from '../../../engine/lib/analysis/contracts.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = path.join(here, '..', '..', 'schemas', 'qa.config.schema.json');
