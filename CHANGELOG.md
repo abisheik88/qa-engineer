@@ -8,6 +8,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.9.3] — 2026-07-28
+
+### Fixed: 0.9.2 was broken for every command — install this instead
+
+`0.9.2` shipped a package that could not run. Moving the JSON Schema validator
+into `packages/engine/` did not come with adding that directory to the `files`
+allowlist, so the published tarball contained a `lockfile.mjs` importing a file
+that was not in it. Every command failed on `ERR_MODULE_NOT_FOUND`, `--version`
+included:
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module
+  '…/qa-engineer/packages/engine/lib/analysis/contracts.mjs'
+  imported from …/packages/installer/lib/core/lockfile.mjs
+```
+
+**If you installed `0.9.2`, upgrade:** `npm install -g qa-engineer@latest`. There
+is nothing to undo — it never got far enough to write anything.
+
+- **Fixed** the `files` allowlist so `packages/engine/` ships.
+- **Changed** `validate-release` to unpack the tarball and *run the CLI out of
+  it* — `--version` and `doctor --json`, with `node_modules` linked in so
+  dependencies resolve and everything the package owns can only come from the
+  tarball. Every check before this one inspected a file *listing* against paths
+  the script already knew to look for, which can only catch omissions somebody
+  predicted; it had no idea the new import existed and reported OK. Verified by
+  removing `packages/engine` from `files` again and watching the gate reproduce
+  the user-facing crash.
+- **Verified** by installing the tarball globally and running `--version`,
+  `install`, `verify`, `doctor`, and `uninstall` — the path the failure was
+  reported on, rather than a checkout.
+
+Everything in `0.9.2` below is in this release too.
+
 ## [0.9.2] — 2026-07-28
 
 ### The report explains itself to a reader who was not there

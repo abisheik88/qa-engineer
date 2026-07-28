@@ -1,6 +1,6 @@
 {
   "name": "qa-engineer",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "A vendor-neutral Agent Skills pack that teaches AI coding agents to work like senior QA automation engineers.",
   "license": "MIT",
   "type": "module",
@@ -29,6 +29,8 @@
     "packages/installer/schemas",
     "packages/installer/package.json",
     "packages/installer/README.md",
+    "packages/engine/lib",
+    "packages/engine/package.json",
     "skills",
     "shared/analysis/lib/qa_analysis",
     "shared/analysis/schemas",
