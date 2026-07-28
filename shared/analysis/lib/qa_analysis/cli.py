@@ -14,6 +14,7 @@ Usage:
   python -m qa_analysis.cli classify "<error message>" [--http-status N]
   python -m qa_analysis.cli context [--root DIR] [--path .qa/context.md]
   python -m qa_analysis.cli branding [--format html|markdown|text]
+  python -m qa_analysis.cli report-html <result.json> [--out report.html]
 """
 
 import argparse
@@ -23,6 +24,7 @@ import sys
 
 from . import junit, har, discovery, diff_guard, redaction, contracts, taxonomy
 from . import branding as branding_module
+from . import report_html as report_html_module
 from . import context as context_module
 from .context import MalformedContext
 from .junit import MalformedArtifact
@@ -61,6 +63,8 @@ def main(argv=None):
     p = sub.add_parser("validate"); p.add_argument("instance"); p.add_argument("schema")
     p = sub.add_parser("classify"); p.add_argument("message"); p.add_argument("--http-status", type=int, default=None)
     p = sub.add_parser("context"); p.add_argument("--root", default="."); p.add_argument("--path", default=None)
+    p = sub.add_parser("report-html")
+    p.add_argument("path"); p.add_argument("--out"); p.add_argument("--title")
     p = sub.add_parser("branding")
     p.add_argument("--format", default="text", choices=list(branding_module.FORMATS) + ["pdf", "md", "txt"])
     p.add_argument("--metadata", action="store_true", help="emit the branding metadata as JSON instead")
@@ -110,6 +114,17 @@ def main(argv=None):
                 _emit(branding_module.metadata())
             else:
                 sys.stdout.write(branding_module.footer(args.format))
+        elif args.command == "report-html":
+            document = report_html_module.render_file(args.path, title=args.title)
+            if args.out:
+                with open(args.out, "w", encoding="utf-8") as handle:
+                    handle.write(document)
+                _emit({"written": args.out, "bytes": len(document)})
+            else:
+                sys.stdout.write(document)
+    except report_html_module.ReportError as exc:
+        _emit({"error": "report-error", "detail": str(exc)})
+        return 2
     except branding_module.BrandingError as exc:
         _emit({"error": "branding-error", "detail": str(exc)})
         return 2

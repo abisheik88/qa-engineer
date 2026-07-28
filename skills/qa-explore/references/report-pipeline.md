@@ -11,6 +11,12 @@ For run id `R`:
 - `qa-artifacts/explore-R/explore-result.json`
 - `qa-artifacts/explore-R/screenshots/…`
 
+## Order of production
+
+`explore-result.json` is written **first** and validated; the Markdown and HTML are
+renderings of it. Producing the prose first and the JSON afterwards is how the two
+drift, and the reader gets the weaker one.
+
 ## Markdown structure
 
 ```markdown
@@ -44,19 +50,51 @@ For run id `R`:
 
 Keep branding **neutral** — no org-specific colors or hosting assumptions. Local files are the product; optional publish is the user's choice.
 
-## HTML
-
-Produce a self-contained HTML summary:
-
-- Simple readable typography; high-contrast text; no dependency on external CSS CDNs required for core reading.
-- Prefer inlining small screenshots as data URIs when practical; otherwise relative links to `screenshots/` beside the HTML file.
-- Include the same sections as Markdown.
-
-A short standard-library Python or Node snippet written into the run folder is fine for md→html; do not require DeJoule or labs hosting.
-
 ## JSON
 
-Write `explore-result.json` matching `contracts/explore-result.schema.json`. Validate before completion.
+Write `explore-result.json` matching `contracts/explore-result.schema.json`. Validate before completion:
+
+```bash
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate \
+  qa-artifacts/explore-R/explore-result.json \
+  <SKILL_DIR>/contracts/explore-result.schema.json
+```
+
+## HTML
+
+Render it from the validated JSON. Do not write it by hand and do not write a
+throwaway md→html script:
+
+```bash
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html \
+  qa-artifacts/explore-R/explore-result.json \
+  --out qa-artifacts/explore-R/explore-report.html
+```
+
+The renderer produces one self-contained file — no CDN, no external stylesheet, no
+web font — with, for every finding: severity, the defect, **current behaviour**,
+**expected behaviour**, reproduction, fix direction, and each evidence entry
+(screenshots as `<img>`, everything else as a captioned excerpt). Severity ordering,
+the summary counts, the test-case table, data-validation comparisons, fix order, and
+the attribution footer come with it.
+
+So the HTML is complete only insofar as the JSON is. A finding whose `expected` says
+"should work" renders a card that says "should work". Write the fields for a reader
+who has never seen the app:
+
+| Field | Not this | This |
+| --- | --- | --- |
+| `actual` | "Login fails" | "Two identical `POST /graphql` requests are sent; the second returns 401 and the form clears" |
+| `expected` | "Should not fail" | "One request per submit; the button is disabled while in flight" |
+| `repro` | "Double-click login" | "1. Open /login  2. Enter valid credentials  3. Double-click **Sign in** within 300 ms  4. Watch the Network panel" |
+| `fixDirection` | "Fix the handler" | "Disable the submit button on the first click and re-enable it in the request's finally block" |
+
+Screenshots are referenced as paths relative to the HTML file (`screenshots/finding-01.png`),
+so the run folder stays portable as a whole.
+
+For an evidence excerpt that could carry a token or credential, run it through
+`qa_tool.py analysis redact` before it goes into the JSON — the renderer escapes
+markup, it does not redact secrets.
 
 ## Versioning
 

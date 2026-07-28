@@ -8,6 +8,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.9.2] — 2026-07-28
+
+### The HTML report is rendered, not typed
+
+The first live `/qa-explore` run produced a valid artifact and a lossy report. The
+`explore-result` contract requires `actual`, `expected`, `repro`, and `fixDirection`
+on every finding; the hand-written HTML collapsed all four into one sentence — three
+findings had no body text at all — and omitted the attribution footer entirely. Both
+failures had one cause: the page was typed by the model rather than rendered from the
+artifact.
+
+- **Added** `qa_analysis.report_html` and the `report-html` subcommand, which render
+  `explore-result` and `report-result` as one self-contained HTML document. Each
+  finding is a card stating, in this order: the defect, **current behaviour**,
+  **expected behaviour**, numbered reproduction steps, fix direction, and every
+  evidence entry — screenshots as images, everything else as a captioned excerpt.
+  Severity ordering, summary tiles, the test-case table with each failure linked to
+  the finding it raised, the evidence index, data-validation comparisons, fix order,
+  and the footer come with it. No stylesheet, script, font, or remote asset: the
+  report opens from an email attachment offline.
+- **Changed** `/qa-explore` to write and validate the JSON first and render the HTML
+  from it, with a `## Tooling` section and the bundled launcher. `/qa-report` renders
+  its HTML the same way. The instruction that permitted "a short md→html snippet" is
+  gone.
+- **Added** `qa_analysis` to `/qa-explore`'s bundle in both bundlers, so the renderer
+  is present where the skill runs.
+- **Added** `command` to the `explore-result` evidence type enum. The new Tooling
+  section tells the agent to run a tool and cite it, and without this the citation
+  would not have validated — caught by `check-doc-claims`, not by review.
+- **Added** 26 renderer tests that read the contract's own `required` list, so adding
+  a required finding field fails the suite until the renderer renders it. The bundle
+  smoke test now renders a report from inside the bundle rather than importing the
+  module. Both verified by deleting `expected` from the renderer and confirming they
+  go red.
+- **Fixed** the footer instruction in `evidence-and-reporting`, which still used the
+  POSIX-only `QA_LIB`/`PYTHONPATH=` recipe that the launcher replaced everywhere
+  else — the one command the report skills were told to run was the one that would
+  have failed on Windows.
+
 ## [0.9.1] — 2026-07-28
 
 ### Renamed: the product is QA Engineer Pack

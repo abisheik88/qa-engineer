@@ -94,7 +94,8 @@
               "har",
               "db",
               "file",
-              "report"
+              "report",
+              "command"
             ]
           },
           "description": { "type": "string", "minLength": 1 },
@@ -162,7 +163,8 @@
                     "console",
                     "dom",
                     "har",
-                    "db"
+                    "db",
+                    "command"
                   ]
                 },
                 "source": { "type": "string", "minLength": 1 },

@@ -41,7 +41,7 @@ Do not investigate failures here (that is `/qa-debug`) or plan repairs (`/qa-fix
 2. **Aggregate deterministically.** Run the engine's summarize step (see Tooling) to compute the test totals, the by-classification breakdown, the ranked findings and recommendations, and the release-readiness verdict.
 3. **Frame for audiences.** Write the executive summary (shippability in a paragraph and a verdict) and the engineering summary (what broke, why, who owns it, in priority order) from the same aggregated data.
 4. **Detail.** Fill the test, failure, coverage, and risk sections; mark coverage unavailable rather than inventing it when there is no coverage data.
-5. **Render.** Produce the report in Markdown, an HTML-ready structure, and the JSON result — the same content in three forms. Append the rendered attribution footer (see Tooling) to the Markdown and HTML renderings only; the JSON result is an interface and carries no footer.
+5. **Render.** Write the JSON result first and validate it; the Markdown and HTML are renderings of it, not parallel drafts. Render the HTML with the report renderer (see Tooling) rather than typing it. Append the rendered attribution footer to the Markdown; the renderer embeds it in the HTML, and the JSON result is an interface and carries no footer.
 6. **Report.** Emit the report result and present the Markdown.
 
 ## Guardrails
@@ -61,7 +61,8 @@ Invoke the bundled engine through its launcher, as documented in [references/det
 | Report aggregator | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
 | One-shot pipeline | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
 | Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
-| Attribution footer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown` (or `html`) | The exact footer bytes to append to the **rendered** report | Omit the footer; never retype it |
+| HTML report renderer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html <report-result.json> --out report.html` | The self-contained HTML rendering of the validated result, footer included | Write the HTML by hand from the contract fields and say it was not machine-rendered |
+| Attribution footer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown` | The exact footer bytes to append to the **Markdown** rendering (`report-html` already embeds it) | Omit the footer; never retype it |
 
 A missing `qa_tool.py` means the engine is not installed.
 
