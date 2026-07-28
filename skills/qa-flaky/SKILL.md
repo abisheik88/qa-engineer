@@ -53,18 +53,14 @@ Do not use it to run tests (`/qa-run`) or to fix a deterministic failure (`/qa-d
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-flaky/scripts/lib .claude/skills/qa-flaky/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-flaky` or `.claude/skills/qa-flaky`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Diagnostic engine | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli diagnose --execution-result <path>` | Deterministic flaky classification and prioritized causes (retry counts drive the `flaky` classification) | Reason over the flakiness module manually and mark the verdict degraded |
-| JUnit normalizer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli junit <report.xml>` | Per-test retries and final status across runs — the input the flake rate is computed from | Read the reporter and state that the flake rate is unmeasured |
+| Diagnostic engine | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics diagnose --execution-result <path>` | Deterministic flaky classification and prioritized causes (retry counts drive the `flaky` classification) | Reason over the flakiness module manually and mark the verdict degraded |
+| JUnit normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis junit <report.xml>` | Per-test retries and final status across runs — the input the flake rate is computed from | Read the reporter and state that the flake rate is unmeasured |
 
-Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, and mark the verdict degraded. A flake rate is computed from observed runs or reported as `null` — never estimated.
+A missing `qa_tool.py` means the engine is not installed. A flake rate is computed from observed runs or reported as `null` — never estimated.
 
 ## Output
 

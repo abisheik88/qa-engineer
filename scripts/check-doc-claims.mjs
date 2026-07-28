@@ -133,11 +133,20 @@ for (const skill of skills) {
     );
   }
   if (inManifest) {
-    // The invocation must be concrete: an agent should never have to guess.
-    if (!/PYTHONPATH="\$QA_LIB" python3 -m /.test(body)) {
+    // The invocation must be concrete AND portable: an agent should never have to
+    // guess, and the command must not depend on POSIX shell features. The previous
+    // recipe used `$(ls -d …)` and a `PYTHONPATH=` prefix, which failed on Windows
+    // and silently pushed every skill onto its manual fallback.
+    if (!/python3 <SKILL_DIR>\/scripts\/qa_tool\.py /.test(body)) {
       problems.push(
-        `skills/${skill}/SKILL.md must document a concrete invocation ` +
-          '(PYTHONPATH="$QA_LIB" python3 -m …), not a prose reference to a package',
+        `skills/${skill}/SKILL.md must document a concrete, portable invocation ` +
+          '(python3 <SKILL_DIR>/scripts/qa_tool.py …), not a prose reference or a shell recipe',
+      );
+    }
+    if (/QA_LIB|PYTHONPATH=/.test(body)) {
+      problems.push(
+        `skills/${skill}/SKILL.md uses a POSIX-only shell recipe (QA_LIB / PYTHONPATH=) — ` +
+          'it fails on Windows, where a failed tool call degrades the skill silently',
       );
     }
     if (!/references\/deterministic-tooling\.md/.test(body)) {
@@ -198,10 +207,10 @@ if (!/untrusted/i.test(read('SECURITY.md'))) {
 // qa-fix is the guard's consumer; if it promises the guard gates a change, the
 // guard must be reachable from that skill.
 const fixBody = read('skills/qa-fix/SKILL.md');
-if (/diff guard/i.test(fixBody) && !/qa_analysis\.cli diff-guard/.test(fixBody)) {
+if (/diff guard/i.test(fixBody) && !/qa_tool\.py analysis diff-guard/.test(fixBody)) {
   problems.push(
     'skills/qa-fix/SKILL.md claims the diff guard gates changes but never documents ' +
-      'how to run it (qa_analysis.cli diff-guard)',
+      'how to run it (qa_tool.py analysis diff-guard)',
   );
 }
 

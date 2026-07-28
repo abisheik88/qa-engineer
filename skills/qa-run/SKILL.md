@@ -71,20 +71,16 @@ Follow the execution lifecycle. Perform each phase in order; stop and explain th
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-run/scripts/lib .claude/skills/qa-run/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-run` or `.claude/skills/qa-run`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Playwright report normalizer | `PYTHONPATH="$QA_LIB" python3 -m playwright_analysis report <results.json>` | `{tests, executed}` — the counts and per-test outcomes the result requires | None: without it, classify `errored` and say the reporter could not be normalized |
-| JUnit normalizer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli junit <report.xml>` | The same shape from a JUnit reporter | None: as above |
-| Artifact discovery | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli discover --root <dir>` | Which artifacts the run produced, by type, with presence flags | List artifacts from the reporter's own paths only |
-| Contract self-check | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli validate <result.json> <schema.json>` | `{valid, errors}` before the result is declared complete | None: an unvalidated result is not complete |
+| Playwright report normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py playwright report <results.json>` | `{tests, executed}` — the counts and per-test outcomes the result requires | None: without it, classify `errored` and say the reporter could not be normalized |
+| JUnit normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis junit <report.xml>` | The same shape from a JUnit reporter | None: as above |
+| Artifact discovery | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis discover --root <dir>` | Which artifacts the run produced, by type, with presence flags | List artifacts from the reporter's own paths only |
+| Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <result.json> <schema.json>` | `{valid, errors}` before the result is declared complete | None: an unvalidated result is not complete |
 
-Empty `QA_LIB` means the normalizer is not installed: classify the run honestly from the exit code alone, state that normalization was unavailable, and recommend `qa repair`. A run whose numbers could not be normalized is never reported `passed`.
+A missing `qa_tool.py` means the engine is not installed. A run whose numbers could not be normalized is never reported `passed`.
 
 ## Output
 

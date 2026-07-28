@@ -60,20 +60,16 @@ Do not propose or make code changes here — that is `/qa-fix`, which consumes t
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-debug/scripts/lib .claude/skills/qa-debug/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-debug` or `.claude/skills/qa-debug`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Diagnostic engine | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli diagnose --execution-result <path> [--analysis-result <path>]` | The deterministic diagnosis: root causes, timeline, prioritization, recommendations | Reason over the referenced modules manually and mark the diagnosis degraded |
-| JUnit normalizer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli junit <report.xml>` | Normalized counts and per-test outcomes to feed the engine | Read the reporter and mark the diagnosis degraded |
-| Playwright trace | `PYTHONPATH="$QA_LIB" python3 -m playwright_analysis trace <trace.zip>` | Actions, console/network counts, errors, classification | State that no trace was analyzable; non-Playwright runs have no trace-grade depth |
-| Error classifier | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli classify "<message>" [--http-status N]` | Taxonomy classification with confidence and reason | Classify from the failure-taxonomy module and lower confidence |
+| Diagnostic engine | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics diagnose --execution-result <path> [--analysis-result <path>]` | The deterministic diagnosis: root causes, timeline, prioritization, recommendations | Reason over the referenced modules manually and mark the diagnosis degraded |
+| JUnit normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis junit <report.xml>` | Normalized counts and per-test outcomes to feed the engine | Read the reporter and mark the diagnosis degraded |
+| Playwright trace | `python3 <SKILL_DIR>/scripts/qa_tool.py playwright trace <trace.zip>` | Actions, console/network counts, errors, classification | State that no trace was analyzable; non-Playwright runs have no trace-grade depth |
+| Error classifier | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis classify "<message>" [--http-status N]` | Taxonomy classification with confidence and reason | Classify from the failure-taxonomy module and lower confidence |
 
-Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, use the fallback, and mark the diagnosis degraded. Never hand-compute a classification a tool could have produced.
+A missing `qa_tool.py` means the engine is not installed. Never hand-compute a classification a tool could have produced.
 
 ## Output
 

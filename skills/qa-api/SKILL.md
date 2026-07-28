@@ -53,19 +53,15 @@ Do not use it to generate API tests (`/qa-generate`) or to run a suite (`/qa-run
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-api/scripts/lib .claude/skills/qa-api/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-api` or `.claude/skills/qa-api`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| HAR analyzer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli har <file.har> [--slow-ms N]` | Redacted request/response summary, failures, slow calls | Assess the tests without traffic and say so |
-| Error classifier | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli classify "<message>" --http-status <N>` | Taxonomy classification for a failing call | Classify from the REST/GraphQL modules and lower confidence |
-| Redaction | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli redact <file>` | The file's text with credentials masked, before anything is quoted | Do not quote captured traffic at all |
+| HAR analyzer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis har <file.har> [--slow-ms N]` | Redacted request/response summary, failures, slow calls | Assess the tests without traffic and say so |
+| Error classifier | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis classify "<message>" --http-status <N>` | Taxonomy classification for a failing call | Classify from the REST/GraphQL modules and lower confidence |
+| Redaction | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis redact <file>` | The file's text with credentials masked, before anything is quoted | Do not quote captured traffic at all |
 
-Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, and mark the assessment degraded. Never paste raw captured traffic into a report — redaction is deterministic and must not be undone.
+A missing `qa_tool.py` means the engine is not installed. Never paste raw captured traffic into a report — redaction is deterministic and must not be undone.
 
 ## Output
 

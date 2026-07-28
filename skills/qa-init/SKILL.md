@@ -56,18 +56,14 @@ Do not run or generate tests here — that is `/qa-run` and `/qa-generate`. This
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-init/scripts/lib .claude/skills/qa-init/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-init` or `.claude/skills/qa-init`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Context validator | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli context --root .` | The parsed frontmatter plus `{valid, errors}`; exit 1 when the file breaks its contract, exit 2 when it cannot be parsed | Re-read the file against the template field by field and say that automated validation was unavailable |
-| Artifact discovery | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli discover --root .` | Existing test artifacts, by type — evidence for `existingAutomation` | Detect from the directory listing only |
+| Context validator | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis context --root .` | The parsed frontmatter plus `{valid, errors}`; exit 1 when the file breaks its contract, exit 2 when it cannot be parsed | Re-read the file against the template field by field and say that automated validation was unavailable |
+| Artifact discovery | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis discover --root .` | Existing test artifacts, by type — evidence for `existingAutomation` | Detect from the directory listing only |
 
-Empty `QA_LIB` means the validator is not installed: say so, recommend `qa repair`, and state that the context file is unvalidated.
+A missing `qa_tool.py` means the engine is not installed.
 
 The frontmatter is a deliberately small YAML subset — nested mappings, block sequences, empty `[]`/`{}`, and plain scalars. Anything outside it (block scalars, anchors, inline lists) is rejected by the parser rather than guessed at, so keep generated files inside the subset the template demonstrates.
 

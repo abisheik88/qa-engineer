@@ -58,6 +58,11 @@ MODULE_SOURCES = {
     "playwright_analysis": ROOT / "shared/frameworks/playwright/lib/playwright_analysis.py",
 }
 
+# The launcher every bundling skill carries, one level above lib/. It resolves its
+# own lib/ path, so the documented invocation needs no shell features and works
+# identically on Windows.
+LAUNCHER_SOURCE = ROOT / "shared/tooling/qa_tool.py"
+
 # Which skills bundle what. qa-review is knowledge-only (it reviews code by
 # judgment against the knowledge base) and bundles nothing.
 MANIFEST = {
@@ -92,11 +97,19 @@ def _copy_module(name, dest_dir):
     shutil.copyfile(src, dest_dir / src.name)
 
 
+def _copy_launcher(scripts_dir):
+    if not LAUNCHER_SOURCE.exists():
+        raise FileNotFoundError(f"launcher missing: {LAUNCHER_SOURCE}")
+    shutil.copyfile(LAUNCHER_SOURCE, scripts_dir / LAUNCHER_SOURCE.name)
+
+
 def _materialize(entry, lib):
     for name in entry["packages"]:
         _copy_package(name, lib)
     for name in entry["modules"]:
         _copy_module(name, lib)
+    # The launcher sits beside lib/, not inside it.
+    _copy_launcher(lib.parent)
 
 
 def _payload_names(entry):
@@ -185,6 +198,17 @@ def check():
                 env={"PYTHONPATH": str(lib), "PATH": ""},
                 capture_output=True, text=True,
             )
+            if result.returncode == 0:
+                # The launcher is what skills actually invoke, and it must work with
+                # NO PYTHONPATH set — that is the whole point of it.
+                launcher = subprocess.run(
+                    [sys.executable, str(lib.parent / "qa_tool.py"), "--list"],
+                    env={"PATH": ""}, capture_output=True, text=True,
+                )
+                if launcher.returncode != 0:
+                    print(f"FAIL {skill}: launcher failed\n{launcher.stderr.strip()}")
+                    status = 1
+                    continue
             if result.returncode == 0:
                 print(f"ok   {skill}: bundles and runs {', '.join(names)}")
             else:

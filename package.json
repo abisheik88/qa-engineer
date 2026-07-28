@@ -34,6 +34,7 @@
     "shared/analysis/schemas",
     "shared/diagnostics/lib/qa_diagnostics",
     "shared/diagnostics/schemas",
+    "shared/tooling/qa_tool.py",
     "shared/frameworks/registry.json",
     "shared/frameworks/registry.schema.json",
     "shared/frameworks/registry.mjs",

@@ -14,6 +14,7 @@ This directory holds the project's long-form documentation. Quick-start material
 | [capability-matrix.md](capability-matrix.md) | **Canonical** source for what the pack does and how far each capability is proven — every other doc derives capability claims from it | Active |
 | [release-readiness.md](release-readiness.md) | Release/production checklists, known limitations, experimental features, support policy, and the blockers before public preview | Active |
 | [troubleshooting.md](troubleshooting.md) | Symptoms → causes → fixes for install, skills, verification, results, and the context file, with real exit codes | Active |
+| [preview-tester-guide.md](preview-tester-guide.md) | A 20-minute script for preview testers, and what feedback is most useful | Active |
 | [evaluation-platform.md](evaluation-platform.md) | The two-layer eval platform: deterministic gate + live-agent runner, providers, scenarios, benchmark reports, regression detection, and cross-model drift | Active |
 | [architecture/](architecture/README.md) | Architecture overview, ADRs, and the core-engine specifications (context contract, execution lifecycle, skill interactions, extension points) | Active |
 | [skills/](skills/README.md) | The skill platform: `SKILL.md` specification, anatomy, authoring guide, output contracts, quality checklists | Active |

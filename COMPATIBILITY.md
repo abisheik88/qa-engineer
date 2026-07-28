@@ -48,6 +48,22 @@ The tier column in the matrix above is the **planned** tier — the level each a
 | Python 3.8+ | Required for analysis | The deterministic analysis toolkit (`shared/analysis/lib/`) and framework analyzers — standard library only, no packages |
 | Node.js 18+ | Required for the installer CLI | `npx qa-engineer` / `qa install` / `qa doctor` / `qa self-test` (interactive onboarding uses `--yes` / `--ci` in non-TTY and CI) |
 
+## Operating systems
+
+| OS | Status |
+| --- | --- |
+| Linux | Verified — every CI job runs on Ubuntu |
+| macOS | Expected to work; not covered by CI |
+| Windows | Expected to work; **not yet verified end to end** |
+
+The installer uses Node's platform-independent path handling, and the skills
+invoke their bundled engine through a launcher (`scripts/qa_tool.py`) that needs
+no shell features — the command shape is identical in bash, zsh, PowerShell, and
+cmd.exe. The one difference on Windows is the interpreter name: use `python` where
+`python3` is not on PATH.
+
+Until a Windows run is confirmed, that row says "expected", not "supported".
+
 The analysis toolkit is standard-library-only Python, so it runs on any Python 3.8+ interpreter with nothing to install. Requirements are declared per skill via the specification's `compatibility` frontmatter field, and the pack degrades gracefully: skills describe a manual fallback whenever a runtime or optional integration (such as an MCP server) is unavailable.
 
 ## Reporting compatibility problems

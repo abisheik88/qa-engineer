@@ -54,18 +54,14 @@ This milestone plans repairs; it does not write or apply code. It never edits a 
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-fix/scripts/lib .claude/skills/qa-fix/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-fix` or `.claude/skills/qa-fix`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Repair planner | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli plan-repairs --diagnosis <path>` | A repair plan per diagnosis entry, escalations included | Reason over the repair-strategy module manually and mark the plan degraded |
-| Diff guard | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli diff-guard <diff-file>` | `{issues, safe}` — `safe:false` means the change is unsafe | None: without the guard, record `diffGuardReview.status` as `not-run` and never claim a diff is safe |
+| Repair planner | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics plan-repairs --diagnosis <path>` | A repair plan per diagnosis entry, escalations included | Reason over the repair-strategy module manually and mark the plan degraded |
+| Diff guard | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis diff-guard <diff-file>` | `{issues, safe}` — `safe:false` means the change is unsafe | None: without the guard, record `diffGuardReview.status` as `not-run` and never claim a diff is safe |
 
-Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, and mark the plan degraded.
+A missing `qa_tool.py` means the engine is not installed.
 
 **The diff guard is not advisory.** Whenever a diff exists — drafted here or supplied by the user — run it through the guard and record the verdict in `diffGuardReview`. A `fail` verdict forbids the disposition `repairable`; the contract rejects that combination, so escalate instead. A plan that carries no diff records `not-run` and claims nothing about safety.
 

@@ -47,6 +47,14 @@ export const BUNDLE_MODULE_SOURCES = Object.freeze({
   playwright_analysis: 'shared/frameworks/playwright/lib/playwright_analysis.py',
 });
 
+// The launcher every bundling skill carries, one level above lib/. It resolves
+// its own lib/ path, so the documented invocation needs no shell features and
+// works identically in PowerShell and cmd.exe.
+export const BUNDLE_LAUNCHER = Object.freeze({
+  from: 'shared/tooling/qa_tool.py',
+  to: 'scripts/qa_tool.py',
+});
+
 // Where bundled code lands inside an installed skill.
 export const BUNDLE_DEST = 'scripts/lib';
 

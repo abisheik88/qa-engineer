@@ -54,20 +54,16 @@ Do not investigate failures here (that is `/qa-debug`) or plan repairs (`/qa-fix
 
 ## Tooling
 
-Resolve the bundled library once, then invoke as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md):
-
-```bash
-QA_LIB="$(ls -d .agents/skills/qa-report/scripts/lib .claude/skills/qa-report/scripts/lib 2>/dev/null | head -1)"
-```
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-report` or `.claude/skills/qa-report`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Report aggregator | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
-| One-shot pipeline | `PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
-| Contract self-check | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
-| Attribution footer | `PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format markdown` (or `html`) | The exact footer bytes to append to the **rendered** report | Omit the footer; never retype it |
+| Report aggregator | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
+| One-shot pipeline | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
+| Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
+| Attribution footer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown` (or `html`) | The exact footer bytes to append to the **rendered** report | Omit the footer; never retype it |
 
-Empty `QA_LIB` means the engine is not installed: say so, recommend `qa repair`, and mark the report degraded.
+A missing `qa_tool.py` means the engine is not installed.
 
 The release verdict is the engine's, not a judgment call: `releaseReadiness` comes from `summarize`. The contract rejects `ready` over any failing test, so a green verdict must be backed by zero failures.
 

@@ -457,6 +457,7 @@ Nothing below is required to use the pack.
 
 | Document | What it answers |
 | --- | --- |
+| [docs/preview-tester-guide.md](docs/preview-tester-guide.md) | **Testing this preview for me?** Start here — 20 minutes, and what to send back |
 | [docs/faq.md](docs/faq.md) | Why prompts and not a plugin? Does it work offline? Can I fork it? |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Longer troubleshooting, with exit codes |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How the pieces fit and which boundaries hold them apart |

@@ -6,6 +6,60 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Preview-testing readiness
+
+Three changes for a private preview, each closing a gap a tester would have hit.
+
+**Fixed: the documented tool invocation was POSIX-only.** Every skill told the
+agent to run
+
+```bash
+QA_LIB="$(ls -d .agents/skills/qa-run/scripts/lib … | head -1)"
+PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli junit report.xml
+```
+
+Command substitution, `ls -d | head -1`, and the `VAR=value command` prefix are
+all POSIX-only, so on Windows PowerShell every deterministic call failed. A
+failed call does not stop a skill — it falls back to its manual path and marks
+the result degraded. Windows users would therefore have got the *guessing*
+behaviour this project exists to replace, while believing the tooling ran.
+
+- **Added** `shared/tooling/qa_tool.py`, bundled into every skill as
+  `<skill>/scripts/qa_tool.py`. It resolves its own `lib/` directory, so the
+  shell does no work:
+
+  ```bash
+  python3 .agents/skills/qa-run/scripts/qa_tool.py analysis junit report.xml
+  ```
+
+  Identical in bash, zsh, PowerShell, and cmd.exe. The only platform difference
+  left is `python` instead of `python3` where the latter is not on PATH.
+- **Changed** all eight bundling skills and the shared invocation contract to the
+  portable form; `check-doc-claims` now **fails** on a `QA_LIB`/`PYTHONPATH=`
+  recipe, so it cannot come back.
+- **Changed** `bundle_python.py --check` to execute the launcher with no
+  `PYTHONPATH` set, which is the condition that matters.
+
+**Added: an honest message when no supported framework is found.** A Jest, Vitest,
+or pytest project previously installed all thirteen skills with no comment, and
+`/qa-run` then stopped and recommended `/qa-init` — which the user had already
+run. That loop reads as a broken install. Install now says which commands work in
+this project and which need an end-to-end framework, and names the unit-test case
+explicitly.
+
+**Added** [docs/preview-tester-guide.md](docs/preview-tester-guide.md) — a
+20-minute script for preview testers, including how to try to catch the assistant
+lying, and what feedback is worth sending back.
+
+**Changed** `doctor` to render failing *optional* checks as warnings rather than
+errors. A healthy install previously greeted new users with two red lines ("not a
+git repository", "no assistant markers") directly above hints calling them
+optional.
+
+**Added** an operating-system table to [COMPATIBILITY.md](COMPATIBILITY.md), which
+had never stated one: Linux verified in CI, macOS and Windows expected but not
+verified end to end. "Expected", not "supported", until someone runs it.
+
 ### Renamed: the package and CLI are now `qa-engineer`
 
 Installing the pack should read like hiring one, so the published package and the

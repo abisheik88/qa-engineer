@@ -20,6 +20,51 @@ import { createLogger } from '../core/logger.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
 import { validateInstall } from '../core/validate-install.mjs';
 import { INSTALL_STEPS, progressBar } from '../ui/progress.mjs';
+import { detectFrameworks } from '../detect/frameworks.mjs';
+import { getFramework } from '../../../../shared/frameworks/registry.mjs';
+
+/**
+ * Say plainly which commands this project can actually use.
+ *
+ * A project with no supported end-to-end framework still gets all thirteen
+ * skills, and `/qa-run` will then stop and recommend `/qa-init` — which the user
+ * has already run. That loop reads as a broken install. Unit-test-only projects
+ * (Jest, Vitest, pytest) are common, so the honest thing is to say up front which
+ * commands work here and which do not, rather than let the user discover it by
+ * hitting a dead end.
+ */
+function reportFrameworkFit(root, logger) {
+  let detected = [];
+  try {
+    // detectFrameworks returns ids; the registry is the source of truth for
+    // whether an id can actually execute live.
+    detected = (detectFrameworks(root).frameworks ?? []).map(
+      (id) => getFramework(id) ?? { id, name: id, liveExecution: false },
+    );
+  } catch {
+    return; // detection is best-effort; never fail an install over it
+  }
+
+  if (detected.length > 0) {
+    const live = detected.filter((f) => f.liveExecution).map((f) => f.name ?? f.id);
+    const gated = detected.filter((f) => !f.liveExecution).map((f) => f.name ?? f.id);
+    if (live.length > 0) {
+      logger.step(`detected ${live.join(', ')} — /qa-run and /qa-generate work here`);
+    }
+    if (gated.length > 0) {
+      logger.step(
+        `detected ${gated.join(', ')} — results are understood, but running and ` +
+          'generating tests live is Playwright-only today',
+      );
+    }
+    return;
+  }
+
+  logger.warn('no supported end-to-end framework detected (Playwright, Selenium, Cypress, WebdriverIO)');
+  logger.info('  → /qa-run and /qa-generate need one; they will tell you so rather than guess');
+  logger.info('  → these work without one: /qa-review, /qa-api, /qa-report, /qa-audit, /qa-explore');
+  logger.info('  → unit tests only (Jest, Vitest, pytest)? That is expected — see the README');
+}
 
 /**
  * Core install implementation shared by install / onboard / repair / update.
@@ -205,6 +250,7 @@ export async function executeInstall({
   } else if (!json) {
     logger.ok(`installed ${unique.length} file(s); lockfile ${lockPath(root)}`);
     for (const step of INSTALL_STEPS) logger.ok(step.label);
+    reportFrameworkFit(root, logger);
   }
 
   return {

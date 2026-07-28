@@ -9,56 +9,68 @@ output. Hand-normalizing a reporter, hand-counting failures, or hand-classifying
 an error message is a boundary violation, not a shortcut — see the pack's
 *Deterministic Execution Boundary* architecture document.
 
-## 1. Locate the bundled library
+## 1. One command shape, every platform
 
-The engine is bundled inside the installed skill, at `scripts/lib/`. The skill
-lives under whichever discovery path the host agent uses, so resolve it once and
-reuse it:
+The engine is bundled inside the installed skill, and a launcher beside it
+resolves its own location. There is nothing to set up and no shell features are
+involved:
 
 ```bash
-QA_LIB="$(ls -d .agents/skills/<skill>/scripts/lib .claude/skills/<skill>/scripts/lib 2>/dev/null | head -1)"
+python3 <skill-dir>/scripts/qa_tool.py <tool> <subcommand> [args]
 ```
 
-Replace `<skill>` with the running skill's name (`qa-debug`, `qa-run`, …). If
-`QA_LIB` is empty the engine is not installed: say so, recommend
+`<skill-dir>` is wherever the host installed this skill — usually
+`.agents/skills/<skill>` or, for Claude Code, `.claude/skills/<skill>`. Use
+whichever exists.
+
+```bash
+python3 .agents/skills/qa-run/scripts/qa_tool.py analysis junit test-results/results.xml
+```
+
+That line is identical in bash, zsh, PowerShell, and cmd.exe. **On Windows, use
+`python` if `python3` is not on PATH** — that is the only platform difference.
+
+An earlier version of this contract used a shell recipe
+(`QA_LIB="$(ls -d … | head -1)"` with a `PYTHONPATH=` prefix). It was POSIX-only,
+so on Windows every deterministic call failed, each skill fell back to its manual
+path, and the user silently got guesswork while believing the tooling had run.
+Never reintroduce a shell-dependent invocation.
+
+If `qa_tool.py` is missing, the engine is not installed: say so, recommend
 `qa repair`, use the skill's documented fallback, and mark the result degraded.
 
-Every invocation below is then:
-
-```bash
-PYTHONPATH="$QA_LIB" python3 -m <module> <subcommand> [args]
-```
-
-Standard-library Python 3.8+ only — nothing to install. Every tool writes JSON to
-stdout. Exit `0` means success; exit `2` means unreadable input, malformed JSON,
-or a payload that failed its contract, and the JSON body carries `error` and
+Every tool writes JSON to stdout. Exit `0` means success; exit `1` means an
+invalid contract; exit `2` means unreadable input, a malformed artifact, or a
+payload that failed its seam contract, and the JSON body carries `error` and
 `detail`. Treat a non-zero exit as missing evidence, never as a value to guess.
 
-## 2. Analysis core — `qa_analysis.cli`
+Standard-library Python 3.8+ only — nothing to install.
+
+## 2. Analysis core — `qa_tool.py analysis`
 
 Framework-agnostic parsing, redaction, and validation.
 
 | Subcommand | Invocation | Returns |
 | --- | --- | --- |
-| `junit` | `python3 -m qa_analysis.cli junit <report.xml>` | `{tests: {...}, executed: [...]}` normalized counts and per-test outcomes |
-| `har` | `python3 -m qa_analysis.cli har <file.har> [--slow-ms N]` | Redacted request/response summary, failures, slow calls |
-| `discover` | `python3 -m qa_analysis.cli discover [--root DIR] [--path P]` | Artifacts found, by type, with presence flags |
-| `diff-guard` | `python3 -m qa_analysis.cli diff-guard <diff-file>` | `{issues: [...], safe: bool}` — `safe:false` blocks the change |
-| `redact` | `python3 -m qa_analysis.cli redact <file>` | The file's text with credentials masked |
-| `validate` | `python3 -m qa_analysis.cli validate <instance.json> <schema.json>` | `{valid: bool, errors: [...]}`; exit 1 when invalid |
-| `classify` | `python3 -m qa_analysis.cli classify "<error message>" [--http-status N]` | `{classification, confidence, reason}` from the shared taxonomy |
-| `context` | `python3 -m qa_analysis.cli context [--root DIR] [--path .qa/context.md]` | The parsed, schema-validated project context as JSON |
+| `junit` | `python3 <skill-dir>/scripts/qa_tool.py analysis junit <report.xml>` | `{tests: {...}, executed: [...]}` normalized counts and per-test outcomes |
+| `har` | `python3 <skill-dir>/scripts/qa_tool.py analysis har <file.har> [--slow-ms N]` | Redacted request/response summary, failures, slow calls |
+| `discover` | `python3 <skill-dir>/scripts/qa_tool.py analysis discover [--root DIR] [--path P]` | Artifacts found, by type, with presence flags |
+| `diff-guard` | `python3 <skill-dir>/scripts/qa_tool.py analysis diff-guard <diff-file>` | `{issues: [...], safe: bool}` — `safe:false` blocks the change |
+| `redact` | `python3 <skill-dir>/scripts/qa_tool.py analysis redact <file>` | The file's text with credentials masked |
+| `validate` | `python3 <skill-dir>/scripts/qa_tool.py analysis validate <instance.json> <schema.json>` | `{valid: bool, errors: [...]}`; exit 1 when invalid |
+| `classify` | `python3 <skill-dir>/scripts/qa_tool.py analysis classify "<error message>" [--http-status N]` | `{classification, confidence, reason}` from the shared taxonomy |
+| `context` | `python3 <skill-dir>/scripts/qa_tool.py analysis context [--root DIR] [--path .qa/context.md]` | The parsed, schema-validated project context as JSON |
 
-## 3. Diagnostic engine — `qa_diagnostics.cli`
+## 3. Diagnostic engine — `qa_tool.py diagnostics`
 
 One engine, consumed by the diagnostic skills. Reasoning lives here once.
 
 | Subcommand | Invocation | Returns |
 | --- | --- | --- |
-| `diagnose` | `python3 -m qa_diagnostics.cli diagnose --execution-result <path> [--analysis-result <path>]` | `{entries: [...], timeline: [...], recommendations: [...]}` |
-| `plan-repairs` | `python3 -m qa_diagnostics.cli plan-repairs --diagnosis <path>` | `{plans: [...]}` — one plan per entry, escalations included |
-| `summarize` | `python3 -m qa_diagnostics.cli summarize --execution-result <path> --diagnosis <path>` | `{totals, byClassification, topPriority, releaseReadiness}` |
-| `report` | `python3 -m qa_diagnostics.cli report --execution-result <path> [--analysis-result <path>]` | `{diagnosis, plans, summary}` — all three in one call |
+| `diagnose` | `python3 <skill-dir>/scripts/qa_tool.py diagnostics diagnose --execution-result <path> [--analysis-result <path>]` | `{entries: [...], timeline: [...], recommendations: [...]}` |
+| `plan-repairs` | `python3 <skill-dir>/scripts/qa_tool.py diagnostics plan-repairs --diagnosis <path>` | `{plans: [...]}` — one plan per entry, escalations included |
+| `summarize` | `python3 <skill-dir>/scripts/qa_tool.py diagnostics summarize --execution-result <path> --diagnosis <path>` | `{totals, byClassification, topPriority, releaseReadiness}` |
+| `report` | `python3 <skill-dir>/scripts/qa_tool.py diagnostics report --execution-result <path> [--analysis-result <path>]` | `{diagnosis, plans, summary}` — all three in one call |
 
 **Inputs.** `--execution-result` takes a `qa-run` execution result, or the minimal
 subset (`tests` counts plus `executed[]` entries carrying `status`).
@@ -86,7 +98,7 @@ contract names:
 
 This mapping is not busywork: the strictness is what stops a skill from shipping a
 result whose shape nobody checked. Validate before completion —
-`python3 -m qa_analysis.cli validate <result.json> <schema.json>` — and fix the
+`python3 <skill-dir>/scripts/qa_tool.py analysis validate <result.json> <schema.json>` — and fix the
 result, never the claim.
 
 ## 4. Framework adapters
@@ -96,11 +108,11 @@ a `--framework` flag.
 
 | Adapter | Invocation | Returns |
 | --- | --- | --- |
-| Playwright report | `python3 -m playwright_analysis report <results.json>` | The same `{tests, executed}` shape as `junit` |
-| Playwright trace | `python3 -m playwright_analysis trace <trace.zip>` | Actions, console/network counts, errors, classification |
+| Playwright report | `python3 <skill-dir>/scripts/qa_tool.py playwright report <results.json>` | The same `{tests, executed}` shape as `junit` |
+| Playwright trace | `python3 <skill-dir>/scripts/qa_tool.py playwright trace <trace.zip>` | Actions, console/network counts, errors, classification |
 
 For Selenium, Cypress, and WebdriverIO, normalize through
-`qa_analysis.cli junit` — those adapters have no richer artifact than JUnit, and
+`qa_tool.py analysis junit` — those adapters have no richer artifact than JUnit, and
 the skill says so rather than implying trace-grade depth.
 
 ## 5. Reporting what ran

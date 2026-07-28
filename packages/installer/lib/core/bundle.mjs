@@ -17,6 +17,7 @@ import {
   BUNDLE_SOURCES,
   BUNDLE_PACKAGE_DATA,
   BUNDLE_MODULE_SOURCES,
+  BUNDLE_LAUNCHER,
   BUNDLE_DEST,
 } from './manifest.mjs';
 import { listFilesRelative } from './paths.mjs';
@@ -53,6 +54,13 @@ export function bundleFilesForSkill(sourceRoot, skill) {
       }
     }
   }
+
+  // The launcher: the documented entry point, beside lib/ rather than inside it.
+  const launcherSrc = path.join(sourceRoot, BUNDLE_LAUNCHER.from);
+  if (!fs.existsSync(launcherSrc)) {
+    throw new Error(`bundled launcher missing: ${BUNDLE_LAUNCHER.from} (needed by ${skill})`);
+  }
+  entries.push({ rel: BUNDLE_LAUNCHER.to, content: fs.readFileSync(launcherSrc) });
 
   for (const mod of entry.modules) {
     const src = path.join(sourceRoot, BUNDLE_MODULE_SOURCES[mod]);
