@@ -142,9 +142,37 @@ def _tokens(text):
     return {t.lower() for t in _IDENTIFIER.findall(text)}
 
 
+def _expected_part(text):
+    """The part of an assertion that carries its expected value.
+
+    `expect(page.locator('#total')).toHaveText('42')` has two literals, and only
+    one of them is an expectation: `'#total'` is the *subject* — which element to
+    look at — and `'42'` is what the test claims about it. Scanning the whole line
+    treated the selector as an expected value, so the canonical `/qa-fix` repair
+
+        -expect(page.locator('#total')).toHaveText('42')
+        +expect(page.getByTestId('total')).toHaveText('42')
+
+    was reported as `weakened-assertion` at `high` severity for "dropping" the
+    selector, even though the assertion is unchanged. That is a false positive on
+    the exact case this module's second job exists to protect, and the committed
+    fixtures missed it because neither of them changes the selector string.
+
+    So literals are read from the matcher call onward. A line with no recognized
+    matcher falls back to the whole text.
+    """
+    earliest = None
+    for pattern in (_STRONG_MATCHERS, _WEAK_MATCHERS):
+        match = pattern.search(text)
+        if match and (earliest is None or match.start() < earliest):
+            earliest = match.start()
+    return text if earliest is None else text[earliest:]
+
+
 def _literals(text):
-    strings = {m.group(2) for m in _STRING_LITERAL.finditer(text)}
-    numbers = set(_NUMBER_LITERAL.findall(text))
+    scope = _expected_part(text)
+    strings = {m.group(2) for m in _STRING_LITERAL.finditer(scope)}
+    numbers = set(_NUMBER_LITERAL.findall(scope))
     return strings, numbers
 
 
@@ -306,9 +334,24 @@ def check_diff(diff_text):
 
 
 def _flag_numeric_inflation(pattern, removed, added, rule, severity, why, flag):
+    """Compare the number each rule's own pattern captured, before and after.
+
+    This used to scan the line for `\\d{2,}` — any number of two or more digits —
+    which had two consequences. It made `unsafe-retry-increase` unreachable for
+    every realistic retry count, because `retries: 1` to `retries: 5` is all single
+    digits: a declared safety rule that could not fire below ten. And on a line
+    carrying more than one number (`timeout: 5000, port: 8080`) it compared the
+    wrong one. Reading the value out of the rule's own capture groups fixes both.
+    Found by the Node port's parity gate, which requires every rule to be
+    exercised by the corpus.
+    """
     def max_number(text):
-        nums = [int(n) for n in re.findall(r"\d{2,}", text)]
-        return max(nums) if nums else None
+        values = []
+        for match in pattern.finditer(text):
+            for group in match.groups():
+                if group is not None and group.isdigit():
+                    values.append(int(group))
+        return max(values) if values else None
 
     removed_by_file = {}
     for file, text in removed:
