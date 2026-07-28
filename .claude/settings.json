@@ -12,7 +12,8 @@
       "Bash(node --test packages/engine/test/context.test.mjs)",
       "Bash(node --test packages/engine/test/diff-guard.test.mjs)",
       "Bash(node -e ' *)",
-      "Read(//home/abisheik/.npm-global/lib/node_modules/qa-engineer/packages/**)"
+      "Read(//home/abisheik/.npm-global/lib/node_modules/qa-engineer/packages/**)",
+      "Bash(npm view *)"
     ]
   }
 }
