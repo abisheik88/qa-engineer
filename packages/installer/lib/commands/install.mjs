@@ -226,6 +226,30 @@ export async function executeInstall({
     tx.write(entry.path, entry.content);
   }
 
+  // Files the previous install owned that this one does not: remove them.
+  //
+  // Without this, anything that leaves the pack between versions stays on disk
+  // forever, and `verify` cannot see it — verify checks that lockfile entries are
+  // present and unmodified, and an orphan is in no lockfile. Upgrading 0.9.1 to
+  // 0.9.3, which replaced the Python engine with a Node one, left 154 dead Python
+  // files in the user's repository, reported as a clean install and ready to be
+  // committed.
+  //
+  // Only files the pack itself wrote are touched: the candidates come from the
+  // prior lockfile, which is the record of what this installer created. Each goes
+  // through the same Transaction as a write, so it is backed up first and restored
+  // if any later step fails.
+  const orphans = [];
+  if (priorLock && !dryRun) {
+    const stillOwned = new Set(unique.map((entry) => entry.path));
+    for (const previous of priorLock.files ?? []) {
+      if (previous.path === LOCKFILE || stillOwned.has(previous.path)) continue;
+      if (!fs.existsSync(path.join(root, previous.path))) continue;
+      orphans.push(previous.path);
+      tx.delete(previous.path);
+    }
+  }
+
   reportProgress(INSTALL_STEPS[1].label, 2);
   reportProgress(INSTALL_STEPS[2].label, 3);
 
@@ -275,6 +299,9 @@ export async function executeInstall({
     if (!json) logger.ok(`dry run: would write ${summary.written} file(s)`);
   } else if (!json) {
     logger.ok(`installed ${unique.length} file(s); lockfile ${lockPath(root)}`);
+    if (orphans.length > 0) {
+      logger.ok(`removed ${orphans.length} file(s) the previous version owned and this one does not`);
+    }
     for (const step of INSTALL_STEPS) logger.ok(step.label);
     reportInvocation(agents, logger);
     reportFrameworkFit(root, logger);
@@ -288,6 +315,7 @@ export async function executeInstall({
     skills: skills.length,
     files: unique.length,
     lockfile: dryRun ? null : LOCKFILE,
+    removed: orphans,
     validation,
   };
 }

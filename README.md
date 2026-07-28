@@ -2,13 +2,13 @@
 
 > Teach your AI coding assistant to work like a senior QA engineer — and stop it from telling you tests pass when they don't.
 
-[![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.10.0-blue.svg)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-public%20preview-orange.svg)](docs/release/v0.9-release-checklist.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisite)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-spec--native-6E56CF.svg)](https://agentskills.io)
 [![CI](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#how-this-is-verified)
+[![Tests](https://img.shields.io/badge/tests-165%20passing-success.svg)](#how-this-is-verified)
 
 **This page is everything you need.** Install, first run, every command, and what to do when something breaks — no other document required.
 

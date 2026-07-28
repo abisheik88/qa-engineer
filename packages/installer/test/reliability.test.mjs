@@ -246,3 +246,79 @@ test(`the planner is deterministic across ${DETERMINISM_ITERATIONS} iterations`,
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('an update removes files the previous version owned and this one does not', () => {
+  // Found while testing the 0.9.1 → 0.9.3 upgrade, which replaced a Python engine
+  // with a Node one: the update left 154 dead Python files in the project, reported
+  // a clean install, and `verify` passed — because verify checks that lockfile
+  // entries are present and unmodified, and an orphan is in no lockfile. The user's
+  // next commit would have carried them.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-orphan-'));
+  try {
+    const first = spawnSync(process.execPath, [cli, 'install', '--yes', '--project', root], {
+      encoding: 'utf8',
+      env: { ...process.env, QA_LOG_LEVEL: 'error' },
+    });
+    assert.equal(first.status, 0, first.stderr);
+
+    // Stand in for a file that existed in the previous version and is gone from
+    // this one: add it to the lockfile as pack-owned, and put it on disk.
+    const lockFile = path.join(root, 'qa-lock.json');
+    const lock = JSON.parse(fs.readFileSync(lockFile, 'utf8'));
+    const gone = '.agents/skills/qa-debug/scripts/lib/removed_in_this_version.py';
+    const absolute = path.join(root, gone);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, '# a file the pack used to ship\n');
+    lock.files.push({
+      path: gone,
+      sha256: 'f'.repeat(64),
+      bytes: 33,
+      owner: 'skill',
+      skill: 'qa-debug',
+      agent: 'agent-skills',
+    });
+    fs.writeFileSync(lockFile, `${JSON.stringify(lock, null, 2)}\n`);
+
+    const update = spawnSync(process.execPath, [cli, 'update', '--yes', '--json', '--project', root], {
+      encoding: 'utf8',
+      env: { ...process.env, QA_LOG_LEVEL: 'error' },
+    });
+    assert.equal(update.status, 0, update.stderr);
+
+    assert.ok(!fs.existsSync(absolute), 'the orphaned file is still on disk after an update');
+    const reported = JSON.parse(update.stdout).install.removed;
+    assert.ok(reported.includes(gone), `the removal was not reported: ${JSON.stringify(reported)}`);
+
+    // It was backed up, not simply destroyed — the same guarantee every write has.
+    const backups = path.join(root, '.qa', 'backups');
+    const found = fs.existsSync(backups)
+      && fs.readdirSync(backups).some((stamp) =>
+        fs.existsSync(path.join(backups, stamp, gone)));
+    assert.ok(found, 'a removed file must be recoverable from the backup directory');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('an update never removes a file the pack does not own', () => {
+  // The candidates come from the prior lockfile, which is the record of what this
+  // installer wrote. A user's own file inside the same directory must survive.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-orphan-safe-'));
+  try {
+    spawnSync(process.execPath, [cli, 'install', '--yes', '--project', root], {
+      encoding: 'utf8',
+      env: { ...process.env, QA_LOG_LEVEL: 'error' },
+    });
+    const mine = path.join(root, '.agents', 'skills', 'qa-debug', 'MY-NOTES.md');
+    fs.writeFileSync(mine, '# my own notes, in the skills directory\n');
+
+    const update = spawnSync(process.execPath, [cli, 'update', '--yes', '--project', root], {
+      encoding: 'utf8',
+      env: { ...process.env, QA_LOG_LEVEL: 'error' },
+    });
+    assert.equal(update.status, 0, update.stderr);
+    assert.ok(fs.existsSync(mine), 'an update deleted a file the pack never wrote');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

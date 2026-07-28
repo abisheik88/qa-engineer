@@ -8,7 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
-## [0.9.3] — 2026-07-28
+## [0.10.0] — 2026-07-28
+
+A minor version rather than a patch, deliberately. `0.9.3` was the number this
+started as — a one-line fix for a broken tarball — and it would have understated
+what shipped: a runtime requirement removed, the bundle layout changed, and every
+skill's tooling invocation rewritten. Nothing breaks for a user (they gain a
+requirement they no longer need to satisfy), but `0.9.2 → 0.9.3` reads as a bugfix
+and this is not one. `0.9.3` was never published, so the number is simply unused.
 
 ### One runtime: the deterministic engine is Node, and Python is gone
 
@@ -86,7 +93,7 @@ frozen in `packages/engine/test/corpus/expected.json`, recorded while parity was
 and defended by a snapshot test. That baseline is trustworthy because it was proven
 against a second independent implementation, not merely recorded from the only one.
 
-### Fixed: 0.9.2 was broken for every command — install this instead
+### Also fixed: 0.9.2 was broken for every command
 
 `0.9.2` shipped a package that could not run. Moving the JSON Schema validator
 into `packages/engine/` did not come with adding that directory to the `files`
@@ -101,7 +108,9 @@ Error [ERR_MODULE_NOT_FOUND]: Cannot find module
 ```
 
 **If you installed `0.9.2`, upgrade:** `npm install -g qa-engineer@latest`. There
-is nothing to undo — it never got far enough to write anything.
+is nothing to undo — it never got far enough to write anything. If you are on
+`0.9.0` or `0.9.1`, `qa update` now also removes the files those versions owned and
+this one does not; before that fix an upgrade left 154 dead Python files behind.
 
 - **Fixed** the `files` allowlist so `packages/engine/` ships.
 - **Changed** `validate-release` to unpack the tarball and *run the CLI out of
@@ -115,6 +124,22 @@ is nothing to undo — it never got far enough to write anything.
 - **Verified** by installing the tarball globally and running `--version`,
   `install`, `verify`, `doctor`, and `uninstall` — the path the failure was
   reported on, rather than a checkout.
+
+### Fixed: an update left behind every file the previous version owned
+
+Found by testing the `0.9.1 → 0.10.0` upgrade before publishing. `qa update` wrote
+the new file set and rewrote the lockfile, but never removed files the *previous*
+lockfile owned that the new install does not — so upgrading across the Python
+removal left **154 dead Python files** in the project, reported a clean install, and
+passed `verify`. Verify checks that lockfile entries are present and unmodified, and
+an orphan is in no lockfile, so it was invisible. The user's next commit would have
+carried them.
+
+Any file dropped between any two versions had this problem; the engine change is
+just what made it obvious. Removals now go through the same transaction as writes —
+backed up first, restored if a later step fails — and are reported rather than
+silent. Only files the prior lockfile lists are candidates, so a file the pack never
+wrote is never touched; both directions are tested.
 
 Everything in `0.9.2` below is in this release too.
 
