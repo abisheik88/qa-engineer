@@ -102,7 +102,7 @@ Rubric trends are reviewed, not gated. Results are published with each release, 
 
 - The deterministic scorer [`run-evals.mjs`](run-evals.mjs) (contract validity + assertions), run via `npm run validate:evals`.
 - Golden + adversarial cases for the six core skills (`qa-init`, `qa-generate`, `qa-run`, `qa-debug`, `qa-fix`, `qa-report`), including the marquee anti-"hallucinated-green" cases.
-- The **live-agent runner** [`run_live.py`](run_live.py) with a `replay` provider (recorded outputs) and a `command` provider (any agent CLI), the [scenarios dataset](scenarios/), the [reference captures](captures/), a committed [baseline](baselines/reference.json), and **regression detection** — run via `npm run eval:live`. See [docs/evaluation-platform.md](../../docs/evaluation-platform.md).
+- The **live-agent runner** [`run_live.py`](run-live.mjs) with a `replay` provider (recorded outputs) and a `command` provider (any agent CLI), the [scenarios dataset](scenarios/), the [reference captures](captures/), a committed [baseline](baselines/reference.json), and **regression detection** — run via `npm run eval:live`. See [docs/evaluation-platform.md](../../docs/evaluation-platform.md).
 
 **Operational / not yet shipped:**
 

@@ -18,16 +18,17 @@ indent_size = 2
 trim_trailing_whitespace = false
 indent_size = unset
 
-# Python uses 4-space indentation, but the indent-size check is disabled:
-# PEP 8 aligned continuations are not multiples of the indent width, and the
-# interpreter enforces indentation correctness. Trailing-whitespace, final-
-# newline, and charset checks still apply.
-[*.py]
+# Test fixtures are opaque recorded data (HAR, XML, diffs); their byte content is
+# fixed by what a tool actually produced, so indentation is not enforced. Matched
+# on the directory name alone: the exemption previously said `tests/fixtures` and
+# stopped applying the moment the fixtures moved to `test/fixtures`, which failed
+# CI on files whose whole purpose is to be byte-exact.
+[**/fixtures/**]
 indent_size = unset
 
-# Test fixtures are opaque recorded data (HAR, XML, diffs); their byte content
-# is fixed by what a tool actually produced, so indentation is not enforced.
-[**/tests/fixtures/**]
+# The recorded corpus is generated output compared byte-for-byte by a snapshot
+# test; reformatting it would be a false diff.
+[**/corpus/**]
 indent_size = unset
 
 [Makefile]

@@ -43,7 +43,7 @@ import * as junitFrameworks from '../lib/frameworks/junit-frameworks.mjs';
 const USAGE = `usage: qa-engine <tool> <subcommand> [args]
 
   analysis     parse artifacts, classify errors, validate contracts, diff-guard,
-               read .qa/context.md, render an HTML report, print the footer
+              read .qa/context.md, render an HTML report, print the footer
   diagnostics  root cause, timeline, priority, repair plans, release readiness
   playwright   normalize a Playwright report or summarize a trace
 

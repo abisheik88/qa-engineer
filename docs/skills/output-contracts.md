@@ -77,7 +77,7 @@ Each contract defines its own closed enum, chosen so that every value implies a 
 The pack validates contracts with two dependency-free validators — Python
 ([`the contract validator`](../../packages/engine/lib/analysis/contracts.mjs)) for
 output contracts, JavaScript
-([`schema-validate.mjs`](../../packages/installer/lib/core/schema-validate.mjs)) for
+([`schema-validate.mjs`](../../packages/engine/lib/analysis/contracts.mjs)) for
 installer config. Both implement exactly this subset, and nothing else:
 
 `$id`, `$schema`, `additionalProperties`, `allOf`, `const`, `default`, `description`, `else`, `enum`, `examples`, `format`, `if`, `items`, `maxItems`, `maxLength`, `maximum`, `minItems`, `minLength`, `minimum`, `pattern`, `properties`, `required`, `then`, `title`, `type`

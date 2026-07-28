@@ -1,6 +1,6 @@
 # Analysis Toolkit (`analysis`)
 
-The Python implementation of the [analysis platform](../README.md). Standard library only, deterministic, framework-agnostic. Framework adapters ([Playwright](../../frameworks/playwright/README.md), [Selenium](../../frameworks/selenium/README.md)) depend on this package for the evidence model, taxonomy, redaction, and contract validation.
+The Python implementation of the [analysis platform](../README.md). Standard library only, deterministic, framework-agnostic. Framework adapters ([Playwright](../../shared/frameworks/playwright/README.md), [Selenium](../../shared/frameworks/selenium/README.md)) depend on this package for the evidence model, taxonomy, redaction, and contract validation.
 
 ## Layout
 
@@ -39,7 +39,7 @@ python3 -m qa-engine analysis context [--root DIR] [--path .qa/context.md]
 ```
 
 Skills invoke these through one shared recipe — see
-[deterministic-tooling.md](../../execution/deterministic-tooling.md), which is the
+[deterministic-tooling.md](../../shared/execution/deterministic-tooling.md), which is the
 single documented invocation contract every skill's Tooling section points at.
 
 ## The diff guard's two jobs
@@ -65,7 +65,7 @@ claim; `medium` and `low` mean confirm and explain. Every fixture in
 
 - **Python 3.8+, standard library only.** No third-party dependencies, ever — this package is bundled into skills that run in users' repositories.
 - **Deterministic.** Same input, same output. No network, no model inference, no time-dependent conclusions.
-- **Redact at the boundary.** Any artifact text is redacted before it appears in output ([redaction policy](../redaction-policy.md)).
+- **Redact at the boundary.** Any artifact text is redacted before it appears in output ([redaction policy](../../shared/analysis/redaction-policy.md)).
 - **Raise, do not guess.** A malformed artifact raises `MalformedArtifact`; it is never parsed past into a fabricated result.
 
 When a diagnostic skill is built (a later milestone), this package is bundled into that skill's `scripts/lib/`, and framework adapters travel with their framework — the source of truth stays here.

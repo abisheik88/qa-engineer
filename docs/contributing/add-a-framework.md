@@ -104,7 +104,7 @@ each `tests/` directory for discovery. Add both entries.
 ## Step 5 — Prove parity, not just presence
 
 The cross-framework test is what makes the boundary real. Add your framework to
-[`packages/engine/test/test_compat.py`](../../packages/engine/test/test_compat.py),
+[`packages/engine/test/test_compat.py`](../../packages/engine/test/analysis.test.mjs),
 which asserts every framework produces an **identical normalized shape and
 classification** from equivalent input. A framework that needs a special case
 downstream has not been integrated; it has been bolted on.
