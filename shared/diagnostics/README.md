@@ -2,7 +2,7 @@
 
 One shared diagnostic engine, consumed by three skills. `qa-debug`, `qa-fix`, and `qa-report` do not each reason about failures their own way — they call this engine, and differ only in what they present. Root-cause reasoning, timeline reconstruction, prioritization, and repair planning exist here once.
 
-Like the analysis platform it builds on, this is knowledge **and** code: the modules specify the workflow and contracts; the Python package under [lib/](lib/README.md) implements the deterministic reasoning. The engine orchestrates the [execution](../execution/README.md), [generation](../generation/README.md), and [analysis](../analysis/README.md) platforms — it adds no parsing or classification of its own, it composes theirs. The decision is recorded in [ADR-0011](../../docs/architecture/ADR-0011-diagnostic-platform.md).
+Like the analysis platform it builds on, this is knowledge **and** code: the modules specify the workflow and contracts; the Python package under [lib/](../../packages/engine/README.md) implements the deterministic reasoning. The engine orchestrates the [execution](../execution/README.md), [generation](../generation/README.md), and [analysis](../analysis/README.md) platforms — it adds no parsing or classification of its own, it composes theirs. The decision is recorded in [ADR-0011](../../docs/architecture/ADR-0011-diagnostic-platform.md).
 
 ## The workflow
 

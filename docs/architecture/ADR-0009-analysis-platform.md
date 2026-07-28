@@ -21,7 +21,7 @@ The pack builds a **deterministic analysis platform, implemented in code**, fram
 - **Framework-agnostic core, framework adapters.** Formats that are standards (JUnit, HAR, plain text) are parsed by the core and serve every framework. Only genuinely framework-specific artifacts (a Playwright trace) get a framework adapter, and even those reuse the core for evidence, taxonomy, redaction, and validation.
 - **Never guess past a bad artifact.** A malformed artifact raises; it is not parsed into a fabricated result. Insufficient signals yield `unknown` at low confidence with an honest reason.
 - **Redact at the boundary.** Secrets and PII are masked as artifacts are read, enforced in the evidence model so it cannot be bypassed ([redaction policy](../../shared/analysis/redaction-policy.md)).
-- **The platform recommends, never fixes.** Analysis produces findings and safe recommendations; editing is a later skill's job, with the [diff guard](../../shared/analysis/lib/README.md) between any edit and a success claim.
+- **The platform recommends, never fixes.** Analysis produces findings and safe recommendations; editing is a later skill's job, with the [diff guard](../../packages/engine/README.md) between any edit and a success claim.
 
 The specification lives in `shared/analysis/*.md`; the implementation lives in `shared/analysis/lib/`; the two are kept consistent because the docs describe what the tested code does.
 

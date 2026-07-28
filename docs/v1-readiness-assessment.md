@@ -12,7 +12,7 @@ now on adding architecture.** Almost every recommendation below is to *finish*,
 *prove*, *publish*, or *simplify* — not to build.
 
 > **Update (release-engineering pass).** Since this review was first written, the
-> **deterministic behavioral eval harness** ([`tests/evals/run_evals.py`](../tests/evals/run_evals.py))
+> **deterministic behavioral eval harness** (``tests/evals/run_evals.py``)
 > has been built and made **mandatory in CI**: golden cases assert correct
 > behavior and adversarial cases prove the scorer rejects the pack's headline
 > failure modes (a run reported `passed` with a non-zero exit code; a "fix" that
@@ -20,7 +20,7 @@ now on adding architecture.** Almost every recommendation below is to *finish*,
 > largely closed. Grades and risks below are annotated where this changed them.
 >
 > **Update 2 (Milestone 11).** The **live-agent layer** is now built too
-> ([`tests/evals/run_live.py`](../tests/evals/run_live.py)): a provider-agnostic
+> (``tests/evals/run_live.py``): a provider-agnostic
 > runner (`replay` for CI/reproducibility, `command` for any real agent CLI), a
 > scenarios dataset (golden + temptation), a committed baseline, and **regression
 > detection** — all gating CI via the replay provider. R1b is now largely closed;
@@ -80,10 +80,10 @@ problem, not an architecture one. Everything left is finishing work.
 ## Top 20 risks (evidence · impact · likelihood · mitigation · priority)
 
 **R1 — Behavioral evals were entirely unbuilt. → Largely mitigated.**
-*Original evidence:* `tests/evals/` was nine README stubs; no runner, fixtures, or cases. *Now:* the deterministic scorer ([`run_evals.py`](../tests/evals/run_evals.py)) runs in CI with golden + adversarial cases for the six core skills, and the adversarial cases prove it rejects hallucinated-green and unsafe outputs. *Remaining:* the live-agent layer (measuring what a real agent *produces*) — tracked as R1b. *Priority:* **Closed** for the deterministic gate; **Critical** for the live layer (R1b). *Confidence:* high.
+*Original evidence:* `tests/evals/` was nine README stubs; no runner, fixtures, or cases. *Now:* the deterministic scorer (``run_evals.py``) runs in CI with golden + adversarial cases for the six core skills, and the adversarial cases prove it rejects hallucinated-green and unsafe outputs. *Remaining:* the live-agent layer (measuring what a real agent *produces*) — tracked as R1b. *Priority:* **Closed** for the deterministic gate; **Critical** for the live layer (R1b). *Confidence:* high.
 
 **R1b — Live-agent measurement: runner built; real-agent runs are operational. → Largely mitigated (M11).**
-*Evidence:* [`run_live.py`](../tests/evals/run_live.py) runs scenarios through a provider (`replay`/`command`) into the frozen scorer, with a committed baseline and regression gate, all in CI via replay. *Remaining:* running the `command` provider against *paid hosted agents* to publish an accuracy number. *Impact:* the end-to-end number isn't published yet. *Likelihood of harm:* low (the mechanism exists and the deterministic + replay gates catch the worst failures). *Mitigation:* schedule real-agent runs with API access. *Priority:* **Required for a published-benchmark 1.0** (not blocking a preview). *Confidence:* high.
+*Evidence:* ``run_live.py`` runs scenarios through a provider (`replay`/`command`) into the frozen scorer, with a committed baseline and regression gate, all in CI via replay. *Remaining:* running the `command` provider against *paid hosted agents* to publish an accuracy number. *Impact:* the end-to-end number isn't published yet. *Likelihood of harm:* low (the mechanism exists and the deterministic + replay gates catch the worst failures). *Mitigation:* schedule real-agent runs with API access. *Priority:* **Required for a published-benchmark 1.0** (not blocking a preview). *Confidence:* high.
 
 **R2 — Model drift: mechanism now in place.**
 *Evidence:* skills are prompts; behavior depends on the agent/model. *Now:* the deterministic gate rejects drifted-bad outputs, and `run_live.py` supports **cross-model drift** directly — baseline one model, run another with `--baseline` and any regression is reported. *Remaining:* run it on real models on a schedule. *Impact:* silent quality regression across models. *Likelihood:* low-medium (down from high). *Mitigation:* scheduled cross-model runs on model bumps. *Priority:* **Medium.** *Confidence:* high.

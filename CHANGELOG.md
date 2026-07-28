@@ -101,7 +101,7 @@ allowlist, so the published tarball contained a `lockfile.mjs` importing a file
 that was not in it. Every command failed on `ERR_MODULE_NOT_FOUND`, `--version`
 included:
 
-```
+```text
 Error [ERR_MODULE_NOT_FOUND]: Cannot find module
   '…/qa-engineer/packages/engine/lib/analysis/contracts.mjs'
   imported from …/packages/installer/lib/core/lockfile.mjs
@@ -400,7 +400,7 @@ diagnosis against its internal schemas, but those schemas were never bundled, so
 "run the bundled `qa_diagnostics` package" with no command, no `PYTHONPATH`, and
 no input shape; `qa_diagnostics` had no CLI at all.
 
-- **Added** [`qa_diagnostics.cli`](shared/diagnostics/lib/qa_diagnostics/cli.py)
+- **Added** ``qa_diagnostics.cli``
   (`diagnose`, `plan-repairs`, `summarize`, `report`) with inputs and outputs
   validated against the internal seam contracts, and a CLI for the Playwright
   adapter (`python -m playwright_analysis report|trace`).
@@ -424,7 +424,7 @@ schema accepted `classification: passed` alongside a non-zero exit code.
 - **Added** `allOf`/`if`/`then`/`else` support to both validators; the Python
   validator now **reports** unsupported keywords instead of silently ignoring
   them, and both share one RFC 3339 `date-time` rule.
-- **Added** [tests/parity/validator-cases.json](tests/parity/validator-cases.json) —
+- **Added** `tests/parity/validator-cases.json` —
   44 cases run through both validators, with a CI gate that fails if the two
   keyword sets or verdicts drift apart.
 
@@ -432,7 +432,7 @@ schema accepted `classification: passed` alongside a non-zero exit code.
 artifact is YAML frontmatter, and nothing in the repository parsed it; CI checked
 a hand-written JSON fixture instead.
 
-- **Added** [`qa_analysis.context`](shared/analysis/lib/qa_analysis/context.py):
+- **Added** ``qa_analysis.context``:
   a deterministic parser for the documented YAML subset, plus
   `qa_analysis.cli context`. `qa-init` now validates what it writes before
   reporting completion.
@@ -562,7 +562,7 @@ capability claim demonstrably true and the documentation internally consistent.
   - The shared [analysis platform](shared/analysis/README.md) under `shared/analysis/`: ten specification modules (analyzer contract, artifact discovery and validation, evidence model, finding classification, failure taxonomy, confidence model, redaction policy, recommendation guidelines) plus a tested, standard-library-only Python core (`shared/analysis/lib/qa_analysis/`): credential/PII redaction, the evidence and finding model, the failure-taxonomy classifier, artifact discovery with integrity classification, framework-agnostic JUnit and HAR parsers, a JSON-Schema-subset contract validator, and the diff guard.
   - The [Playwright analyzers](shared/frameworks/playwright/README.md) — trace and JSON-report parsers — as the framework adapter, reusing the core.
   - The [Selenium reference adapter](shared/frameworks/selenium/README.md) — the pack's second framework — with detection, execution and generation planning, artifact mapping, conventions, and a thin analysis adapter that reuses the shared JUnit parser.
-  - The machine-validatable [`.qa/context.md` schema](shared/analysis/schemas/context.schema.json).
+  - The machine-validatable ``.qa/context.md` schema`.
   - A cross-framework compatibility test proving Playwright and Selenium produce identical contracts through the shared core, and 29 Python unit tests covering redaction, parsing, discovery, contract validation, the diff guard, the taxonomy, and the evidence model.
   - The diff guard: deterministic detection of unsafe test changes (removed assertions and waits, added skips, forced passes, timeout inflation, suspicious locator changes, mass deletions, empty bodies, unsafe retries), each flag explaining why it is unsafe.
   - ADR-0009 (a deterministic, framework-agnostic analysis platform, in code) and ADR-0010 (the multi-framework foundation, proven by Selenium).

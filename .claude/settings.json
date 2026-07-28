@@ -29,7 +29,16 @@
       "Bash(node --test packages/engine/test/corpus.test.mjs)",
       "Bash(git ls-files *)",
       "Bash(node packages/installer/bin/qa.mjs install --help)",
-      "Bash(node packages/installer/bin/qa.mjs --help)"
+      "Bash(node packages/installer/bin/qa.mjs --help)",
+      "Bash(node packages/installer/bin/qa.mjs verify --project /home/abisheik/Development/Walkzero/walkzero_be --json)",
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(git rebase *)",
+      "Bash(grep -v \"qa-tool.mjs\\\\|multiple of 2\\\\|^\\\\s*$\")",
+      "Bash(npx --yes editorconfig-checker packages/engine/bin/qa-engine.mjs)",
+      "Bash(awk 'NR>=52 && NR<=70' packages/engine/bin/qa-engine.mjs)",
+      "Bash(npx --yes lychee --offline --no-progress --include-verbatim \"**/*.md\")",
+      "Bash(git commit -q -m ' *)"
     ]
   }
 }

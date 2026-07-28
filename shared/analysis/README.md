@@ -2,7 +2,7 @@
 
 The deterministic infrastructure that turns raw test artifacts into structured, evidence-backed findings. Every future diagnostic skill — `qa-debug`, `qa-fix`, `qa-report` — is built on this platform, so that a diagnostic decision is never a guess when an artifact can be parsed. The platform is framework-agnostic; framework specifics live in [shared/frameworks/](../frameworks/README.md) and depend on it.
 
-Unlike the pack's other platforms, this one is knowledge **and** code. The modules here specify the contracts; the Python package under [lib/](lib/README.md) implements them, deterministically and with standard library only. The decisions behind it are recorded in [ADR-0009](../../docs/architecture/ADR-0009-analysis-platform.md) and [ADR-0010](../../docs/architecture/ADR-0010-multi-framework-foundation.md).
+Unlike the pack's other platforms, this one is knowledge **and** code. The modules here specify the contracts; the Python package under [lib/](../../packages/engine/README.md) implements them, deterministically and with standard library only. The decisions behind it are recorded in [ADR-0009](../../docs/architecture/ADR-0009-analysis-platform.md) and [ADR-0010](../../docs/architecture/ADR-0010-multi-framework-foundation.md).
 
 ## Principles
 
@@ -27,7 +27,7 @@ Unlike the pack's other platforms, this one is knowledge **and** code. The modul
 
 ## Implementation
 
-The [lib/](lib/README.md) directory holds `analysis` (the framework-agnostic core) and its tests. Framework adapters ([Playwright](../frameworks/playwright/README.md), [Selenium](../frameworks/selenium/README.md)) add only what is framework-specific and reuse this core for the evidence model, taxonomy, redaction, and contract validation.
+The [lib/](../../packages/engine/README.md) directory holds `analysis` (the framework-agnostic core) and its tests. Framework adapters ([Playwright](../frameworks/playwright/README.md), [Selenium](../frameworks/selenium/README.md)) add only what is framework-specific and reuse this core for the evidence model, taxonomy, redaction, and contract validation.
 
 ## Boundaries
 
