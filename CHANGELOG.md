@@ -2,9 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) as specified in [ADR-0003](docs/architecture/ADR-0003-versioning-strategy.md). Until the first tagged release, all changes accumulate under `Unreleased`.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) as specified in [ADR-0003](docs/architecture/ADR-0003-versioning-strategy.md). Unreleased changes accumulate at the top; each release moves them under its own version heading.
 
 ## [Unreleased]
+
+Nothing yet.
+
+## [0.9.0] — 2026-07-28
+
+First public release: a preview. Everything below shipped in this version.
+
+**What this release is.** Twelve QA skills any Agent Skills–compatible AI
+assistant can read, a deterministic Python engine that produces the facts those
+skills report, and output contracts that reject a result contradicting its own
+numbers. Playwright runs live; Selenium, Cypress, and WebdriverIO are detected and
+their results understood, but not executed.
+
+**What it is not.** Behaviourally benchmarked across AI models. Both evaluation
+layers score committed artifacts, and the four real agent-produced captures are
+one model in one session. The harness supports real agents and cross-model drift;
+running it needs API access. Stated here rather than discovered later —
+[docs/release/v1-excellence-audit.md](docs/release/v1-excellence-audit.md) declines
+to claim an accuracy number, and [the preview checklist](docs/release/v0.9-release-checklist.md)
+lists every known limitation.
+
+Verified before release: 235 automated tests, 20 repository gates, a clean-room
+install from the real tarball, and the runnable example executed end to end with a
+genuine Playwright browser.
 
 ### Preview-testing readiness
 
