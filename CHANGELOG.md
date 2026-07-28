@@ -10,6 +10,82 @@ Nothing yet.
 
 ## [0.9.3] — 2026-07-28
 
+### One runtime: the deterministic engine is Node, and Python is gone
+
+**You no longer need Python.** Node — which you already had, because the install uses
+`npx` — is now the only requirement. Nothing to `pip install`, no interpreter to find,
+and no `python3`-not-on-PATH problem on Windows.
+
+That last one was not a theoretical inconvenience. When a skill's deterministic tool
+call failed, the skill did not stop: it fell back to its documented manual path and
+marked the result *degraded*. So a missing interpreter produced **model guesswork
+presented as a QA result** — the exact thing this project exists to replace — and it
+did so quietly. [ADR-0012](docs/architecture/ADR-0012-node-engine.md) records the
+decision, including the fact that ADR-0009 never argued for Python in the first place:
+the language was assumed, and the assumption cost users a second runtime.
+
+- **Ported** the whole engine — 13 analysis modules, the 6-module diagnostics engine,
+  the framework adapters, the CLI and the launcher — to dependency-free Node in
+  `packages/engine/`. Still zero third-party dependencies: the two things Python's
+  standard library provided are written out rather than depended on, an XML reader for
+  JUnit and a ZIP reader for Playwright traces (the latter over the built-in `zlib`).
+- **Changed** every skill's documented command to
+  `node <SKILL_DIR>/scripts/qa-tool.mjs <tool> <subcommand>` — identical in bash, zsh,
+  PowerShell and cmd.exe, with no platform difference at all.
+- **Removed** the Python CI job and its version matrix; added an engine job across
+  Node 18, 20 and 22, the range `engines.node` actually declares.
+- **Changed** `qa doctor` and install validation to *execute* the bundled engine
+  rather than look for an interpreter. A bundle that copied cleanly and cannot run was
+  always the failure worth catching.
+
+#### The pack is now installable by the wider Agent Skills ecosystem
+
+`npx skills add <owner>/<repo>` — and any other tool that just copies a skill
+directory — now produces a working skill. It did not before: `scripts/lib/` is
+git-ignored because our installer generates it, so a file-copy install shipped
+Markdown and no tooling, and every documented command failed silently.
+
+- **Added** a committed launcher (`skills/*/scripts/qa-tool.mjs`, kept in step by
+  `sync-shared`) that resolves the engine from the bundle, from `node_modules`, or via
+  `npx` — and reports which, because "missing" and "being fetched" are different
+  problems. `node qa-tool.mjs --where` answers that question.
+- **Added** a test that copies exactly what git tracks for a skill, with the installer
+  never involved, and runs the documented command. It failed the first time: the
+  launchers were not yet tracked by git.
+
+#### How the port was made safe, and what it found
+
+Both engines ran side by side behind a parity gate that compared them over a shared
+corpus and failed on any difference — module output, whole rendered HTML documents
+byte-for-byte, and the CLI's stdout and exit codes. No module was switched over before
+its row was green; Python was deleted only when all thirteen were, at 367 comparisons.
+
+**The gate found six defects in the shipped Python**, four of them in code the existing
+tests passed against:
+
+- A non-numeric JUnit `time` escaped as a bare `ValueError` — a traceback and exit 1
+  where the CLI documents exit 2 with `{error, detail}`.
+- Redacting a header rewrote CRLF line endings to LF, so Windows runner logs and raw
+  HTTP captures came back with mixed endings.
+- A HAR whose `log.entries` was a string crashed on `'str' object has no attribute
+  'get'`.
+- A mapping key sharing indentation with a sequence entry was silently reinterpreted,
+  so `.qa/context.md` — the file every skill reads to learn what the project is —
+  could be misread into a plausible shape that YAML itself rejects.
+- `unsafe-retry-increase` could not fire below ten retries: a declared safety rule,
+  dead for every value a real config carries.
+- `weakened-assertion` fired on the canonical `/qa-fix` locator repair, flagging the
+  repair it exists to permit. A guard that flags legitimate work teaches everyone to
+  override it.
+
+The last two were found by an assertion added to the gate — *every rule the guard can
+emit must be triggered by the corpus* — not by comparing outputs.
+
+When the last Python module went, the gate went with it. Its corpus did not: it is
+frozen in `packages/engine/test/corpus/expected.json`, recorded while parity was green,
+and defended by a snapshot test. That baseline is trustworthy because it was proven
+against a second independent implementation, not merely recorded from the only one.
+
 ### Fixed: 0.9.2 was broken for every command — install this instead
 
 `0.9.2` shipped a package that could not run. Moving the JSON Schema validator

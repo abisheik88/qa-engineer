@@ -138,16 +138,26 @@ for (const skill of skills) {
     // guess, and the command must not depend on POSIX shell features. The previous
     // recipe used `$(ls -d …)` and a `PYTHONPATH=` prefix, which failed on Windows
     // and silently pushed every skill onto its manual fallback.
-    if (!/python3 <SKILL_DIR>\/scripts\/qa_tool\.py /.test(body)) {
+    if (!/node <SKILL_DIR>\/scripts\/qa-tool\.mjs /.test(body)) {
       problems.push(
         `skills/${skill}/SKILL.md must document a concrete, portable invocation ` +
-          '(python3 <SKILL_DIR>/scripts/qa_tool.py …), not a prose reference or a shell recipe',
+          '(node <SKILL_DIR>/scripts/qa-tool.mjs …), not a prose reference or a shell recipe',
       );
     }
+    // Two invocation contracts have already failed this way. A POSIX-only shell
+    // recipe failed outright on Windows, and a Python one needed an interpreter the
+    // user never agreed to install; in both cases the skill fell back to guesswork
+    // and said nothing. Neither may come back.
     if (/QA_LIB|PYTHONPATH=/.test(body)) {
       problems.push(
         `skills/${skill}/SKILL.md uses a POSIX-only shell recipe (QA_LIB / PYTHONPATH=) — ` +
           'it fails on Windows, where a failed tool call degrades the skill silently',
+      );
+    }
+    if (/python3? /.test(body)) {
+      problems.push(
+        `skills/${skill}/SKILL.md invokes Python — the engine is Node (ADR-0012), and a ` +
+          'second runtime the install never provided is a silent degradation waiting to happen',
       );
     }
     if (!/references\/deterministic-tooling\.md/.test(body)) {
@@ -208,10 +218,10 @@ if (!/untrusted/i.test(read('SECURITY.md'))) {
 // qa-fix is the guard's consumer; if it promises the guard gates a change, the
 // guard must be reachable from that skill.
 const fixBody = read('skills/qa-fix/SKILL.md');
-if (/diff guard/i.test(fixBody) && !/qa_tool\.py analysis diff-guard/.test(fixBody)) {
+if (/diff guard/i.test(fixBody) && !/qa-tool\.mjs analysis diff-guard/.test(fixBody)) {
   problems.push(
     'skills/qa-fix/SKILL.md claims the diff guard gates changes but never documents ' +
-      'how to run it (qa_tool.py analysis diff-guard)',
+      'how to run it (qa-tool.mjs analysis diff-guard)',
   );
 }
 

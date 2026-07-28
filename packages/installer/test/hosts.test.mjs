@@ -158,3 +158,64 @@ test('an undetected project is told the path works in every supported host', () 
   assert.match(run.stderr, /Cursor, Codex, OpenCode, Antigravity/);
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('a plain file-copy install produces a working skill, with no installer involved', () => {
+  // This is what `npx skills add <owner>/<repo>` does: copy the skill directory out
+  // of git and stop. Nothing is generated, nothing is bundled, our installer never
+  // runs. Under the Python engine this produced 19 Markdown files and no tooling at
+  // all — every documented command failed and all nine skills silently fell back to
+  // guesswork. It is the reason the launcher is a committed file.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-copy-'));
+  try {
+    const source = path.resolve(here, '..', '..', '..');
+    const skillDir = path.join(root, '.agents', 'skills', 'qa-debug');
+    fs.mkdirSync(skillDir, { recursive: true });
+    // Copy exactly what git tracks for this skill — no more.
+    const tracked = execFileSync('git', ['ls-files', 'skills/qa-debug'], {
+      cwd: source,
+      encoding: 'utf8',
+    }).trim().split('\n');
+    for (const rel of tracked) {
+      const target = path.join(skillDir, rel.replace('skills/qa-debug/', ''));
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.copyFileSync(path.join(source, rel), target);
+    }
+
+    // The launcher must be there, because it is committed rather than generated.
+    const launcher = path.join(skillDir, 'scripts', 'qa-tool.mjs');
+    assert.ok(fs.existsSync(launcher), 'a file-copy install has no entry point');
+
+    // And it must resolve an engine. Here there is no bundle and no node_modules, so
+    // the honest answer is npx — reported rather than guessed at.
+    const where = spawnSync(process.execPath, [launcher, '--where'], { encoding: 'utf8' });
+    assert.equal(where.status, 0, where.stderr);
+    assert.equal(JSON.parse(where.stdout).resolved, 'npx');
+
+    // With the pack present in node_modules, it resolves offline instead. Simulated
+    // by linking this checkout in, which is what `npm install qa-engineer` produces.
+    const modules = path.join(root, 'node_modules');
+    fs.mkdirSync(modules, { recursive: true });
+    fs.symlinkSync(source, path.join(modules, 'qa-engineer'), 'dir');
+    const resolved = spawnSync(process.execPath, [launcher, '--where'], {
+      encoding: 'utf8',
+      cwd: root,
+    });
+    assert.equal(JSON.parse(resolved.stdout).resolved, 'node_modules');
+
+    // Then the documented command has to actually work, which is the whole claim.
+    const execution = path.join(root, 'execution-result.json');
+    fs.writeFileSync(execution, JSON.stringify({
+      tests: { total: 1, passed: 0, failed: 1, skipped: 0 },
+      executed: [{ title: 'checkout', status: 'failed', message: 'no such element: #cart', file: 'a.spec.ts', retries: 0 }],
+    }));
+    const run = spawnSync(
+      process.execPath,
+      [launcher, 'diagnostics', 'report', '--execution-result', execution],
+      { encoding: 'utf8', cwd: root },
+    );
+    assert.equal(run.status, 0, `file-copy install could not run the engine: ${run.stderr}`);
+    assert.equal(JSON.parse(run.stdout).diagnosis.entries[0].rootCause.classification, 'locator-failure');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

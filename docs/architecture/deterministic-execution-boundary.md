@@ -16,11 +16,11 @@ unit tests, seam tests, eval adversarial cases, and
 | Normalized execution result shape | Adapter + `execution-result` contract | Fabricating `tests.passed` / `executed[]` |
 | File hashes, lockfile integrity | Installer (`hash.mjs`, `verify`) | Claiming verify passed without running it |
 | Framework identity | Framework registry + detectors | Asserting "Playwright project" without markers |
-| Parsed JUnit / HAR / trace fields | `qa_analysis` | Inventing HTTP status codes or failure messages |
-| Taxonomy classification from signals | `qa_diagnostics` / `qa_analysis.taxonomy` | Relabeling a product bug as flake without evidence |
+| Parsed JUnit / HAR / trace fields | `analysis` | Inventing HTTP status codes or failure messages |
+| Taxonomy classification from signals | `diagnostics` / `the shared taxonomy` | Relabeling a product bug as flake without evidence |
 | Diff / overwrite safety | `diff_guard` | "Healing" by deleting assertions |
 | Contract validity | Schema validators | Emitting a result that fails its own schema |
-| Eval scores | `run_evals.py` | Marking a case PASS by editing the capture |
+| Eval scores | `run-evals.mjs` | Marking a case PASS by editing the capture |
 
 ## What the LLM may do
 
@@ -47,9 +47,9 @@ User / Agent
     │
     ├─► Shell / Playwright CLI  ──facts──► raw artifacts
     │                                         │
-    ├─► qa_analysis (parse)     ──facts──► findings / evidence
+    ├─► analysis (parse)      ──facts──► findings / evidence
     │                                         │
-    ├─► qa_diagnostics          ──facts──► classification, plans
+    ├─► diagnostics             ──facts──► classification, plans
     │                                         │
     └─► Skill (LLM)             ──reason──► summary, recommendations
                                             (must cite facts above)

@@ -1,0 +1,1287 @@
+{
+  "redaction": [
+    {
+      "redacted": "",
+      "found": []
+    },
+    {
+      "redacted": "nothing sensitive here at all",
+      "found": []
+    },
+    {
+      "redacted": "Authorization: [REDACTED:auth-header]",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 0,
+          "end": 33
+        },
+        {
+          "type": "bearer",
+          "start": 15,
+          "end": 33
+        }
+      ]
+    },
+    {
+      "redacted": "authorization: [REDACTED:auth-header]",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 0,
+          "end": 30
+        },
+        {
+          "type": "bearer",
+          "start": 15,
+          "end": 30
+        }
+      ]
+    },
+    {
+      "redacted": "AUTHORIZATION = [REDACTED:auth-header]",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 0,
+          "end": 32
+        }
+      ]
+    },
+    {
+      "redacted": "  Proxy-Authorization: [REDACTED:auth-header]",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 0,
+          "end": 41
+        }
+      ]
+    },
+    {
+      "redacted": "Set-Cookie: [REDACTED:cookie-header]",
+      "found": [
+        {
+          "type": "cookie-header",
+          "start": 0,
+          "end": 36
+        }
+      ]
+    },
+    {
+      "redacted": "cookie: [REDACTED:cookie-header]",
+      "found": [
+        {
+          "type": "cookie-header",
+          "start": 0,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "redacted": "token=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 85
+        },
+        {
+          "type": "jwt",
+          "start": 6,
+          "end": 85
+        }
+      ]
+    },
+    {
+      "redacted": "[REDACTED:aws-access-key]",
+      "found": [
+        {
+          "type": "aws-access-key",
+          "start": 0,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "redacted": "[REDACTED:github-token]",
+      "found": [
+        {
+          "type": "github-token",
+          "start": 0,
+          "end": 40
+        }
+      ]
+    },
+    {
+      "redacted": "[REDACTED:slack-token]",
+      "found": [
+        {
+          "type": "slack-token",
+          "start": 0,
+          "end": 26
+        }
+      ]
+    },
+    {
+      "redacted": "[REDACTED:openai-key]",
+      "found": [
+        {
+          "type": "openai-key",
+          "start": 0,
+          "end": 39
+        }
+      ]
+    },
+    {
+      "redacted": "password: [REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "redacted": "password=[REDACTED:secret]&next=/home",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "redacted": "PASSWORD: \"[REDACTED:secret]\"",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "redacted": "api_key: '[REDACTED:secret]'",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "redacted": "api-key=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 16
+        }
+      ]
+    },
+    {
+      "redacted": "client_secret: [REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 0,
+          "end": 22
+        }
+      ]
+    },
+    {
+      "redacted": "secret: abc",
+      "found": []
+    },
+    {
+      "redacted": "https://user:[REDACTED:credential]@example.com/path",
+      "found": [
+        {
+          "type": "url-credential",
+          "start": 5,
+          "end": 18
+        },
+        {
+          "type": "email",
+          "start": 13,
+          "end": 29
+        }
+      ]
+    },
+    {
+      "redacted": "postgres://admin:[REDACTED:credential]@db.internal:5432/app",
+      "found": [
+        {
+          "type": "url-credential",
+          "start": 8,
+          "end": 24
+        },
+        {
+          "type": "email",
+          "start": 17,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "redacted": "https://api.example.com/v1?token=[REDACTED:secret]&page=2",
+      "found": [
+        {
+          "type": "query-secret",
+          "start": 26,
+          "end": 39
+        },
+        {
+          "type": "assigned-secret",
+          "start": 27,
+          "end": 39
+        }
+      ]
+    },
+    {
+      "redacted": "https://api.example.com/v1?api_key=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "query-secret",
+          "start": 26,
+          "end": 41
+        },
+        {
+          "type": "assigned-secret",
+          "start": 27,
+          "end": 46
+        }
+      ]
+    },
+    {
+      "redacted": "contact me at [REDACTED:email] please",
+      "found": [
+        {
+          "type": "email",
+          "start": 14,
+          "end": 33
+        }
+      ]
+    },
+    {
+      "redacted": "[REDACTED:email]",
+      "found": [
+        {
+          "type": "email",
+          "start": 0,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "redacted": "not.an.email@localhost",
+      "found": []
+    },
+    {
+      "redacted": "two secrets: password=[REDACTED:secret] and token=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 13,
+          "end": 29
+        },
+        {
+          "type": "assigned-secret",
+          "start": 34,
+          "end": 47
+        }
+      ]
+    },
+    {
+      "redacted": "Authorization: [REDACTED:auth-header]\nCookie: [REDACTED:cookie-header]\npassword=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 0,
+          "end": 25
+        },
+        {
+          "type": "bearer",
+          "start": 15,
+          "end": 25
+        },
+        {
+          "type": "cookie-header",
+          "start": 26,
+          "end": 37
+        },
+        {
+          "type": "assigned-secret",
+          "start": 38,
+          "end": 55
+        }
+      ]
+    },
+    {
+      "redacted": "a line\r\nAuthorization: [REDACTED:auth-header]\r\nanother line",
+      "found": [
+        {
+          "type": "auth-header",
+          "start": 8,
+          "end": 33
+        },
+        {
+          "type": "bearer",
+          "start": 23,
+          "end": 33
+        }
+      ]
+    },
+    {
+      "redacted": "$1 is a literal dollar-one and password=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 31,
+          "end": 44
+        }
+      ]
+    },
+    {
+      "redacted": "$& and $` and $' with password=[REDACTED:secret]",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 22,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "redacted": "unicode ✓ password=[REDACTED:secret] ✓",
+      "found": [
+        {
+          "type": "assigned-secret",
+          "start": 10,
+          "end": 23
+        }
+      ]
+    },
+    {
+      "redacted": "eyJ-only-two.parts",
+      "found": []
+    },
+    {
+      "redacted": "Bearer",
+      "found": []
+    },
+    {
+      "redacted": "[REDACTED:bearer]",
+      "found": [
+        {
+          "type": "bearer",
+          "start": 0,
+          "end": 29
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "Authorization": "[REDACTED:header]",
+      "X-Api-Key": "[REDACTED:header]",
+      "Accept": "application/json"
+    },
+    [
+      {
+        "name": "Cookie",
+        "value": "[REDACTED:header]"
+      },
+      {
+        "name": "Accept",
+        "value": "text/html"
+      }
+    ]
+  ],
+  "classify": [
+    {
+      "classification": "unknown",
+      "confidence": 0.2,
+      "reason": "No classification rule matched the available signals; manual review needed."
+    },
+    {
+      "classification": "unknown",
+      "confidence": 0.2,
+      "reason": "No classification rule matched the available signals; manual review needed."
+    },
+    {
+      "classification": "locator-failure",
+      "confidence": 0.8,
+      "reason": "Error indicates the target element could not be found or resolved."
+    },
+    {
+      "classification": "locator-failure",
+      "confidence": 0.8,
+      "reason": "Error indicates the target element could not be found or resolved."
+    },
+    {
+      "classification": "locator-failure",
+      "confidence": 0.8,
+      "reason": "Error indicates the target element could not be found or resolved."
+    },
+    {
+      "classification": "assertion-failure",
+      "confidence": 0.8,
+      "reason": "Error shows a concrete expected-versus-received comparison, so the assertion did not hold."
+    },
+    {
+      "classification": "assertion-failure",
+      "confidence": 0.8,
+      "reason": "Error shows a concrete expected-versus-received comparison, so the assertion did not hold."
+    },
+    {
+      "classification": "assertion-failure",
+      "confidence": 0.8,
+      "reason": "Error shows a concrete expected-versus-received comparison, so the assertion did not hold."
+    },
+    {
+      "classification": "timeout",
+      "confidence": 0.75,
+      "reason": "Error indicates an operation exceeded its time budget."
+    },
+    {
+      "classification": "timeout",
+      "confidence": 0.75,
+      "reason": "Error indicates an operation exceeded its time budget."
+    },
+    {
+      "classification": "authentication",
+      "confidence": 0.85,
+      "reason": "Error indicates an authentication failure — the identity could not be established."
+    },
+    {
+      "classification": "authentication",
+      "confidence": 0.85,
+      "reason": "Error indicates an authentication failure — the identity could not be established."
+    },
+    {
+      "classification": "authorization",
+      "confidence": 0.85,
+      "reason": "Error indicates an authorization failure — the identity lacked permission."
+    },
+    {
+      "classification": "authorization",
+      "confidence": 0.85,
+      "reason": "Error indicates an authorization failure — the identity lacked permission."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.8,
+      "reason": "Error indicates a network or upstream service failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.8,
+      "reason": "Error indicates a network or upstream service failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.8,
+      "reason": "Error indicates a network or upstream service failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.8,
+      "reason": "Error indicates a network or upstream service failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.8,
+      "reason": "Error indicates a network or upstream service failure."
+    },
+    {
+      "classification": "assertion-failure",
+      "confidence": 0.7,
+      "reason": "Error indicates an assertion did not hold."
+    },
+    {
+      "classification": "assertion-failure",
+      "confidence": 0.7,
+      "reason": "Error indicates an assertion did not hold."
+    },
+    {
+      "classification": "test-data",
+      "confidence": 0.7,
+      "reason": "Error indicates a test-data problem."
+    },
+    {
+      "classification": "configuration",
+      "confidence": 0.7,
+      "reason": "Error indicates a configuration problem."
+    },
+    {
+      "classification": "configuration",
+      "confidence": 0.7,
+      "reason": "Error indicates a configuration problem."
+    },
+    {
+      "classification": "environment",
+      "confidence": 0.6,
+      "reason": "Error indicates an environment problem such as a missing base URL or unreachable local service."
+    },
+    {
+      "classification": "environment",
+      "confidence": 0.6,
+      "reason": "Error indicates an environment problem such as a missing base URL or unreachable local service."
+    },
+    {
+      "classification": "infrastructure",
+      "confidence": 0.7,
+      "reason": "Error indicates an infrastructure problem such as a crash or resource exhaustion."
+    },
+    {
+      "classification": "infrastructure",
+      "confidence": 0.7,
+      "reason": "Error indicates an infrastructure problem such as a crash or resource exhaustion."
+    },
+    {
+      "classification": "infrastructure",
+      "confidence": 0.7,
+      "reason": "Error indicates an infrastructure problem such as a crash or resource exhaustion."
+    },
+    {
+      "classification": "framework-failure",
+      "confidence": 0.6,
+      "reason": "Error indicates a fault in the test framework or driver itself."
+    },
+    {
+      "classification": "authentication",
+      "confidence": 0.9,
+      "reason": "HTTP 401 indicates an authentication failure."
+    },
+    {
+      "classification": "authorization",
+      "confidence": 0.9,
+      "reason": "HTTP 403 indicates an authorization failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.85,
+      "reason": "HTTP 500 indicates an upstream server failure."
+    },
+    {
+      "classification": "network",
+      "confidence": 0.85,
+      "reason": "HTTP 599 indicates an upstream server failure."
+    },
+    {
+      "classification": "timeout",
+      "confidence": 0.75,
+      "reason": "Error indicates an operation exceeded its time budget."
+    },
+    {
+      "classification": "timeout",
+      "confidence": 0.75,
+      "reason": "Error indicates an operation exceeded its time budget."
+    }
+  ],
+  "junit": [
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "f.spec.ts",
+            "status": "passed",
+            "durationMs": 1500
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "boom"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "text body"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "crashed"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 1
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "skipped",
+            "durationMs": 0,
+            "message": "why"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 1
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "skipped",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "password=[REDACTED:secret]"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 2
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": false
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "<script>",
+            "file": "a&b",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "quote\"inside",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "raw < & > text"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 2,
+          "passed": 1,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          },
+          {
+            "title": "b",
+            "file": "",
+            "status": "failed",
+            "durationMs": 0,
+            "message": "x"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": []
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": []
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "unicode ✓",
+            "file": "",
+            "status": "passed",
+            "durationMs": 0
+          }
+        ]
+      }
+    },
+    {
+      "ok": false
+    },
+    {
+      "ok": false
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 1000000
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": -250
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 2
+          }
+        ]
+      }
+    },
+    {
+      "ok": false
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "a",
+            "file": "",
+            "status": "passed",
+            "durationMs": 500
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 2,
+          "passed": 1,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "completes a purchase",
+            "file": "checkout",
+            "status": "failed",
+            "durationMs": 7400,
+            "message": "Timed out retrying: expected [data-cy=pay]: element not found in the DOM"
+          },
+          {
+            "title": "shows cart total",
+            "file": "checkout",
+            "status": "passed",
+            "durationMs": 1100
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 2,
+          "passed": 1,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "completes a purchase",
+            "file": "e2e/checkout.spec.ts",
+            "status": "failed",
+            "durationMs": 8300,
+            "message": "Timeout 30000ms exceeded waiting for locator getByRole('button', name: 'Pay')"
+          },
+          {
+            "title": "shows cart total",
+            "file": "e2e/checkout.spec.ts",
+            "status": "passed",
+            "durationMs": 1200
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 2,
+          "passed": 1,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "completesPurchase",
+            "file": "com.example.CheckoutTest",
+            "status": "failed",
+            "durationMs": 6100,
+            "message": "NoSuchElementException: no such element: Unable to locate element {css selector}"
+          },
+          {
+            "title": "showsCartTotal",
+            "file": "com.example.CheckoutTest",
+            "status": "passed",
+            "durationMs": 900
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "value": {
+        "tests": {
+          "total": 2,
+          "passed": 1,
+          "failed": 1,
+          "skipped": 0
+        },
+        "executed": [
+          {
+            "title": "completes a purchase",
+            "file": "checkout.e2e.ts",
+            "status": "failed",
+            "durationMs": 6800,
+            "message": "element (\"~pay-button\") still not existing after 10000ms — no such element"
+          },
+          {
+            "title": "shows cart total",
+            "file": "checkout.e2e.ts",
+            "status": "passed",
+            "durationMs": 800
+          }
+        ]
+      }
+    }
+  ],
+  "junitMalformed": [
+    "refused",
+    "refused",
+    "refused",
+    "refused",
+    "refused",
+    "refused",
+    "refused"
+  ],
+  "diffGuard": [
+    [
+      {
+        "rule": "weakened-assertion",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An assertion kept its matcher but dropped the expected value(s) ['Payment approved']; it no longer pins down what it used to.",
+        "sample": "await expect(page.locator('#status')).toHaveText(/.*/);"
+      },
+      {
+        "rule": "suspicious-locator-change",
+        "severity": "low",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A locator was changed; confirm it targets the same element and was not loosened to pass.",
+        "sample": "await expect(page.locator('#status')).toHaveText(/.*/);"
+      }
+    ],
+    [
+      {
+        "rule": "weakened-assertion",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An assertion was replaced by a weaker one (existence or truthiness instead of a specific value or state); the test can now pass without the behaviour being correct.",
+        "sample": "expect(total).toBeDefined();"
+      }
+    ],
+    [
+      {
+        "rule": "conditional-skip",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An unconditional or condition-guarded early return was added to a test; the test exits before verifying anything, which is a skip in disguise.",
+        "sample": "if (process.env.CI) { return; }"
+      }
+    ],
+    [
+      {
+        "rule": "forced-pass-command",
+        "severity": "high",
+        "file": "package.json",
+        "why": "The test command was made to succeed regardless of the result (`|| true`, `exit 0`, `--passWithNoTests`, `continue-on-error`); the suite can no longer fail a pipeline.",
+        "sample": "\"test:e2e\": \"playwright test || true\""
+      }
+    ],
+    [
+      {
+        "rule": "assertion-modified",
+        "severity": "low",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An assertion was rewritten with equal or greater strength and the same expected values — consistent with a legitimate repair. Confirm it still targets the same behaviour.",
+        "sample": "await expect(page.getByRole('heading', { name: 'Order total' })).toHaveText('Order total: 42');"
+      },
+      {
+        "rule": "suspicious-locator-change",
+        "severity": "low",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A locator was changed; confirm it targets the same element and was not loosened to pass.",
+        "sample": "await expect(page.getByRole('heading', { name: 'Order total' })).toHaveText('Order total: 42');"
+      }
+    ],
+    [],
+    [
+      {
+        "rule": "suite-exclusion",
+        "severity": "high",
+        "file": "playwright.config.ts",
+        "why": "Specs were excluded from the run (ignore pattern, exclusion list, or empty spec list); coverage is dropped without any test file changing.",
+        "sample": "testIgnore: ['**/payment.spec.ts', '**/checkout.spec.ts'],"
+      }
+    ],
+    [
+      {
+        "rule": "weakened-assertion",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An assertion was replaced by a weaker one (existence or truthiness instead of a specific value or state); the test can now pass without the behaviour being correct.",
+        "sample": "await expect.soft(page.locator('#total')).toHaveText('42');"
+      },
+      {
+        "rule": "swallowed-failure",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A failure is caught and discarded; an assertion inside a swallowed catch cannot fail the test.",
+        "sample": "} catch (error) {}"
+      },
+      {
+        "rule": "suspicious-locator-change",
+        "severity": "low",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A locator was changed; confirm it targets the same element and was not loosened to pass.",
+        "sample": "await expect.soft(page.locator('#total')).toHaveText('42');"
+      }
+    ],
+    [
+      {
+        "rule": "test-file-deleted",
+        "severity": "high",
+        "file": "e2e/payment.spec.ts",
+        "why": "A test file was deleted outright; every case it held stops running, regardless of the file's size.",
+        "sample": "e2e/payment.spec.ts"
+      }
+    ],
+    [
+      {
+        "rule": "removed-assertion",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "An assertion or expectation was removed with nothing replacing it; a test that no longer asserts proves nothing.",
+        "sample": "await expect(page.getByText('Order confirmed')).toBeVisible();"
+      },
+      {
+        "rule": "removed-wait",
+        "severity": "medium",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A wait/synchronization was removed, which can mask a real failure or introduce flakiness.",
+        "sample": "await page.waitForResponse('**/api/pay');"
+      },
+      {
+        "rule": "added-skip-or-only",
+        "severity": "high",
+        "file": "e2e/checkout.spec.ts",
+        "why": "A skip/ignore/only marker was added; skipping or narrowing hides failures instead of fixing them.",
+        "sample": "test.skip();"
+      },
+      {
+        "rule": "timeout-inflation",
+        "severity": "medium",
+        "file": "playwright.config.ts",
+        "why": "A timeout was increased substantially, which can paper over a real slowness or hang.",
+        "sample": "timeout: 120000,"
+      }
+    ]
+  ],
+  "reportHtml": {
+    "ok": true,
+    "value": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\"/>\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>\n<title>QA report — localhost:4201/login</title>\n<style>\n*,*::before,*::after{box-sizing:border-box}\nbody{margin:0;background:#f7f8fa;color:#1a1d21;\n  font:16px/1.6 -apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;\n  -webkit-font-smoothing:antialiased}\n.page{max-width:60rem;margin:0 auto;padding:2.5rem 1.5rem 3rem}\n.card{background:#fff;border:1px solid #e4e7ec;border-radius:12px;\n  box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:1.25rem;overflow:hidden}\n.card-body{padding:1.5rem}\nheader.masthead{margin-bottom:1.75rem}\n.eyebrow{font-size:.6875rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#667085}\nh1{margin:.35rem 0 .5rem;font-size:1.875rem;line-height:1.25;letter-spacing:-.02em}\nh2{margin:2rem 0 .875rem;font-size:1.125rem;letter-spacing:-.01em}\nh3{margin:0;font-size:1.0625rem;letter-spacing:-.01em}\n.meta{color:#667085;font-size:.8125rem}\n.meta strong{color:#344054;font-weight:600}\n.lead{margin:0 0 .25rem;font-size:1.0625rem;color:#475467;max-width:52rem}\n.intro p{margin:0 0 .75rem;max-width:52rem}\n.intro p:last-child{margin-bottom:0}\n.objective{margin:0 0 .875rem;max-width:52rem}\n.objective:last-child{margin-bottom:0}\n.verdict{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;\n  padding:1rem 1.25rem;border-radius:10px;font-weight:600;margin:1.25rem 0}\n.counts{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.25rem 0}\n.count{flex:1 1 7rem;background:#fff;border:1px solid #e4e7ec;border-radius:10px;\n  padding:.75rem .875rem;text-align:center}\n.count .n{display:block;font-size:1.5rem;font-weight:700;line-height:1.2}\n.count .l{font-size:.6875rem;text-transform:uppercase;letter-spacing:.07em;color:#667085}\n.badge{display:inline-block;padding:.1875rem .5rem;border-radius:6px;\n  font-size:.6875rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;\n  border:1px solid currentColor}\n.chip{display:inline-block;padding:.1875rem .5rem;border-radius:6px;background:#f2f4f7;\n  color:#475467;font-size:.75rem;font-weight:500}\n.finding-head{display:flex;gap:.75rem;align-items:flex-start;\n  padding:1.125rem 1.5rem;border-bottom:1px solid #eef0f3}\n.finding-head .grow{flex:1;min-width:0}\n.finding-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;color:#667085}\ndl.behaviour{margin:0;display:grid;grid-template-columns:minmax(8.5rem,auto) 1fr;gap:.625rem 1.25rem}\ndl.behaviour dt{font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;padding-top:.15rem}\ndl.behaviour dd{margin:0}\n.now{border-left:3px solid #b3261e;padding-left:.75rem}\n.want{border-left:3px solid #116149;padding-left:.75rem}\n.fix{border-left:3px solid #3538cd;padding-left:.75rem}\ntable{border-collapse:collapse;width:100%;font-size:.875rem}\nth,td{text-align:left;padding:.5625rem .75rem;border-bottom:1px solid #eef0f3;vertical-align:top}\nth{font-size:.6875rem;text-transform:uppercase;letter-spacing:.06em;color:#667085;\n  background:#fafbfc;font-weight:700}\ntbody tr:last-child td{border-bottom:0}\ncode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875em;\n  background:#f2f4f7;padding:.1rem .3rem;border-radius:4px}\npre{margin:0;background:#1a1d21;color:#e4e7ec;padding:1rem;border-radius:8px;\n  overflow-x:auto;font-size:.8125rem;line-height:1.55}\nfigure{margin:.875rem 0 0}\nfigure img{display:block;max-width:100%;height:auto;border:1px solid #e4e7ec;border-radius:8px}\nfigcaption{margin-top:.4rem;font-size:.75rem;color:#667085}\nul.clean{margin:0;padding-left:1.125rem}\nul.clean li{margin:.3rem 0}\nol.steps{margin:0;padding-left:1.25rem}\nol.steps li{margin:.15rem 0}\nol.order{margin:0;padding-left:1.25rem}\nol.order li{margin:.4rem 0}\n.empty{color:#667085;font-style:italic}\n@media print{body{background:#fff}.card{box-shadow:none;break-inside:avoid}.page{padding:0}}\n@media (max-width:34rem){dl.behaviour{grid-template-columns:1fr;gap:.25rem}\n  dl.behaviour dt{padding-top:.5rem}}\n</style>\n</head>\n<body>\n<div class=\"page\">\n<header class=\"masthead\">\n  <div class=\"eyebrow\">Exploratory QA report</div>\n  <h1>localhost:4201/login</h1>\n  <p class=\"meta\"><strong>Target</strong> <code>http://localhost:4201/login</code> &middot; <strong>Generated</strong> 2026-07-28T00:00:00Z &middot; <strong>Browser</strong> playwright-mcp &middot; <strong>Report</strong> v1.0</p>\n</header>\n<p class=\"lead\">Login page QA — negative and edge handling is solid; double-submit and input hygiene need fixes; positive login is blocked pending user sign-in.</p>\n<div class=\"verdict\" style=\"color:#a15c00;background:#fdf6ec\">Issues found</div>\n<div class=\"counts\"><div class=\"count\"><span class=\"n\" style=\"color:#8b0018\">0</span><span class=\"l\">Critical</span></div><div class=\"count\"><span class=\"n\" style=\"color:#b3261e\">1</span><span class=\"l\">High</span></div><div class=\"count\"><span class=\"n\" style=\"color:#a15c00\">2</span><span class=\"l\">Medium</span></div><div class=\"count\"><span class=\"n\" style=\"color:#4a5568\">3</span><span class=\"l\">Low</span></div></div>\n<div class=\"counts\"><div class=\"count\"><span class=\"n\" style=\"color:#344054\">18</span><span class=\"l\">Total</span></div><div class=\"count\"><span class=\"n\" style=\"color:#116149\">15</span><span class=\"l\">Passed</span></div><div class=\"count\"><span class=\"n\" style=\"color:#b3261e\">2</span><span class=\"l\">Failed</span></div><div class=\"count\"><span class=\"n\" style=\"color:#a15c00\">1</span><span class=\"l\">Blocked</span></div><div class=\"count\"><span class=\"n\" style=\"color:#667085\">0</span><span class=\"l\">Skipped</span></div></div>\n<h2>About this report</h2>\n<div class=\"card intro\"><div class=\"card-body\"><p>This is an <strong>exploratory QA report</strong>. An AI QA engineer opened the application in a real browser driven by Playwright, worked through 18 test cases, and captured proof for every defect it reports.</p><p>Each finding below says what happens today, what should happen instead, and how to see it for yourself — so nothing here has to be taken on trust.</p></div></div>\n<h2>What was tested</h2>\n<div class=\"card\"><div class=\"card-body\"><p class=\"objective\">Check whether a first-time user can sign in to the admin console, and whether the login form behaves correctly when they get it wrong — bad password, unknown email, empty fields, pasted whitespace, and a slip of the mouse.</p><ul class=\"clean\"><li>The sign-in form at /login: email field, password field, password visibility toggle, Login button, and the Forgot Password link</li><li>Every way a sign-in can fail: wrong password, unknown email, empty fields, malformed email, and text pasted with surrounding spaces</li><li>The GraphQL authentication request the page sends, and the error message it returns</li><li>Hostile input in both fields: SQL-injection strings and an XSS payload</li><li>The form on a 375px-wide mobile screen, and with the keyboard alone</li><li>What the browser downloads on a first, uncached visit to the page</li></ul></div></div><div class=\"card\"><table><thead><tr><th>Area checked</th><th>What that means</th></tr></thead><tbody><tr><td><strong>Functionality</strong></td><td>Does the feature do what it is supposed to do, including when the input is wrong?</td></tr><tr><td><strong>API</strong></td><td>The network requests the page makes — whether they are correct, and how the page handles a bad response</td></tr><tr><td><strong>Performance</strong></td><td>How much the page downloads and how quickly it becomes usable</td></tr><tr><td><strong>Security (client-side)</strong></td><td>Client-side exposure only: where credentials and tokens are stored, what leaks into URLs and error messages</td></tr><tr><td><strong>UI</strong></td><td>Layout and visual states — empty, loading, error — including a narrow mobile screen</td></tr><tr><td><strong>UX</strong></td><td>Whether the flow makes sense to a person using it, and whether the wording helps them</td></tr></tbody></table></div>\n<h2>Not covered in this run</h2><div class=\"card\"><div class=\"card-body\"><ul class=\"clean\"><li>Signing in successfully. Doing so needs real credentials, which a QA run must never enter on the user&#x27;s behalf — so everything behind the login wall is untested.</li><li>Password reset beyond confirming the link navigates: no email was sent or received.</li><li>Security headers. This run hit a local development server, where they are absent by design; they must be re-checked against the deployed environment.</li><li>Rate limiting and account lockout after repeated failures, which would have locked the test account.</li><li>Data was not examined — whether the numbers and text on screen match the system of record behind them</li><li>Could not be run: TC-1 (Valid credentials lead to a successful login and redirect)</li></ul></div></div>\n<h2>How to read the findings</h2>\n<div class=\"card\"><table><thead><tr><th>Severity</th><th>What it means</th></tr></thead><tbody><tr><td><span class=\"badge\" style=\"color:#8b0018;background:#fdf0f2\">Critical</span></td><td>Blocks release. Data loss, a security hole, or a core flow that cannot be completed.</td></tr><tr><td><span class=\"badge\" style=\"color:#b3261e;background:#fdf1f0\">High</span></td><td>Fix before release. A user hits this on a normal path and the product does the wrong thing.</td></tr><tr><td><span class=\"badge\" style=\"color:#a15c00;background:#fdf6ec\">Medium</span></td><td>Fix soon. Real but survivable — a workaround exists, or the path is less common.</td></tr><tr><td><span class=\"badge\" style=\"color:#4a5568;background:#f4f5f7\">Low</span></td><td>Worth fixing. Polish, hygiene, or a measurement that needs confirming before it is acted on.</td></tr></tbody></table></div>\n<h2>Findings</h2>\n<article class=\"card\" id=\"f-EXP-1\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#b3261e;background:#fdf1f0\">High</span>\n    <div class=\"grow\">\n      <h3>Double-click on Login fires two GraphQL auth requests</h3>\n      <div class=\"finding-id\">EXP-1</div>\n    </div>\n    <span class=\"chip\">functional</span>\n    <span class=\"chip\">Confirmed</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">Two identical POST requests are sent to https://admin.f2finterview.com/graphql for one submit. The button stays enabled while the first request is in flight.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">One authentication request per submit. The Login button is disabled from the first click until the request settles.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Open http://localhost:4201/login</li><li>Enter a valid-format email and any password</li><li>Double-click Login within ~300 ms</li><li>Watch the Network panel</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Disable the submit control on click and re-enable it in the request&#x27;s finally/completion handler; ignore submits while a request is pending.</dd>\n    </dl>\n    <figure>\n      <img src=\"screenshots/TC-16-double.png\" alt=\"Screenshot\"/>\n      <figcaption>Screenshot · <code>screenshots/TC-16-double.png</code></figcaption>\n    </figure>\n    <figure>\n      <pre>POST /graphql 200  (t=0ms)\nPOST /graphql 200  (t=118ms)  &lt;- duplicate, identical body</pre>\n      <figcaption>Network capture · <code>network/TC-16.json</code></figcaption>\n    </figure>\n  </div>\n</article>\n<article class=\"card\" id=\"f-EXP-2\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#a15c00;background:#fdf6ec\">Medium</span>\n    <div class=\"grow\">\n      <h3>Password field uses autocomplete=new-password on a sign-in form</h3>\n      <div class=\"finding-id\">EXP-2</div>\n    </div>\n    <span class=\"chip\">ux</span>\n    <span class=\"chip\">Confirmed</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">The password input declares autocomplete=&quot;new-password&quot;, and the email input is type=&quot;text&quot; with no autocomplete hint.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">On a sign-in form the password input declares autocomplete=&quot;current-password&quot; and the email input is type=&quot;email&quot; autocomplete=&quot;username&quot;, so saved credentials are offered and mobile keyboards show the right layout.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Open /login</li><li>Inspect the email and password inputs in the DOM</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Set autocomplete=&quot;current-password&quot; on the password field; set type=&quot;email&quot; autocomplete=&quot;username&quot; on the email field.</dd>\n    </dl>\n    <figure>\n      <pre>&lt;input name=&quot;inputTxt&quot; type=&quot;text&quot;&gt;\n&lt;input name=&quot;inputTxt&quot; type=&quot;password&quot; autocomplete=&quot;new-password&quot;&gt;</pre>\n      <figcaption>DOM snapshot · <code>dom/login-inputs.html</code></figcaption>\n    </figure>\n  </div>\n</article>\n<article class=\"card\" id=\"f-EXP-3\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#a15c00;background:#fdf6ec\">Medium</span>\n    <div class=\"grow\">\n      <h3>No maximum length on email or password</h3>\n      <div class=\"finding-id\">EXP-3</div>\n    </div>\n    <span class=\"chip\">security</span>\n    <span class=\"chip\">Confirmed</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">Both values are accepted and sent to the API unchanged; the form shows no length validation.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">Client-side maximum lengths (e.g. 254 for email per RFC 5321, a documented bound for password) reject over-long input before a request is made.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Open /login</li><li>Paste a 312-character email and a 502-character password</li><li>Submit</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Add maxlength attributes and matching form-control validators; mirror the bounds server-side so the client is not the only check.</dd>\n    </dl>\n    <figure>\n      <img src=\"screenshots/TC-13-long.png\" alt=\"Screenshot\"/>\n      <figcaption>Screenshot · <code>screenshots/TC-13-long.png</code></figcaption>\n    </figure>\n  </div>\n</article>\n<article class=\"card\" id=\"f-EXP-4\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#4a5568;background:#f4f5f7\">Low</span>\n    <div class=\"grow\">\n      <h3>Leading and trailing spaces in the email are not trimmed</h3>\n      <div class=\"finding-id\">EXP-4</div>\n    </div>\n    <span class=\"chip\">ux</span>\n    <span class=\"chip\">Confirmed</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">The untrimmed value is validated and submitted, so a copy-paste with a trailing space reads as an invalid email.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">The email is trimmed before validation and before the request, so surrounding whitespace does not change the outcome.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Open /login</li><li>Type &quot;  user@example.com  &quot; with surrounding spaces</li><li>Submit</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Trim the email on blur and again before submit; keep the raw value only for display.</dd>\n    </dl>\n    <figure>\n      <img src=\"screenshots/TC-10-spaces.png\" alt=\"Screenshot\"/>\n      <figcaption>Screenshot · <code>screenshots/TC-10-spaces.png</code></figcaption>\n    </figure>\n  </div>\n</article>\n<article class=\"card\" id=\"f-EXP-5\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#4a5568;background:#f4f5f7\">Low</span>\n    <div class=\"grow\">\n      <h3>Both inputs share name=&quot;inputTxt&quot;</h3>\n      <div class=\"finding-id\">EXP-5</div>\n    </div>\n    <span class=\"chip\">ui</span>\n    <span class=\"chip\">Confirmed</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">The email and password inputs both use name=&quot;inputTxt&quot;, so they are indistinguishable to password managers, autofill, and any test selecting by name.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">Each input has a distinct, meaningful name (email, password) matching its autocomplete role.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Open /login</li><li>Inspect the name attribute on both inputs</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Rename the inputs to email and password and update any bindings or selectors that relied on inputTxt.</dd>\n    </dl>\n    <figure>\n      <pre>name=&quot;inputTxt&quot; (x2)</pre>\n      <figcaption>DOM snapshot · <code>dom/login-inputs.html</code></figcaption>\n    </figure>\n  </div>\n</article>\n<article class=\"card\" id=\"f-EXP-6\">\n  <div class=\"finding-head\">\n    <span class=\"badge\" style=\"color:#4a5568;background:#f4f5f7\">Low</span>\n    <div class=\"grow\">\n      <h3>Development main.js is ~16 MB on a cold load</h3>\n      <div class=\"finding-id\">EXP-6</div>\n    </div>\n    <span class=\"chip\">performance</span>\n    <span class=\"chip\">Partially reproduced</span>\n  </div>\n  <div class=\"card-body\">\n    <dl class=\"behaviour\">\n      <dt>Current behaviour</dt>\n      <dd class=\"now\">main.js transfers at roughly 16 MB cold, because this is an unoptimised ng serve development build.</dd>\n      <dt>Expected behaviour</dt>\n      <dd class=\"want\">A production build ships a bundle an order of magnitude smaller; this figure is not a production measurement and must be re-measured against a built artifact.</dd>\n      <dt>Reproduction</dt>\n      <dd><ol class=\"steps\"><li>Hard-reload http://localhost:4201/login with an empty cache</li><li>Read the transfer size of main.js in the Network panel</li></ol></dd>\n      <dt>Fix direction</dt>\n      <dd class=\"fix\">Re-measure against ng build --configuration production before treating bundle size as a defect; if it remains large, budget it in angular.json.</dd>\n    </dl>\n    <figure>\n      <pre>main.js  16.0 MB  (development build, ng serve)</pre>\n      <figcaption>Network capture · <code>network/cold-load.json</code></figcaption>\n    </figure>\n  </div>\n</article>\n<h2>Test case coverage</h2>\n<div class=\"card\"><table><thead><tr><th>ID</th><th>Test case</th><th>Result</th><th>Finding</th></tr></thead><tbody><tr><td><code>TC-13</code></td><td>Extremely long email and password</td><td style=\"color:#b3261e;font-weight:600\">Failed</td><td><a href=\"#f-EXP-3\"><code>EXP-3</code></a></td></tr><tr><td><code>TC-16</code></td><td>Rapid double-click submit</td><td style=\"color:#b3261e;font-weight:600\">Failed</td><td><a href=\"#f-EXP-1\"><code>EXP-1</code></a></td></tr><tr><td><code>TC-1</code></td><td>Valid credentials lead to a successful login and redirect</td><td style=\"color:#a15c00;font-weight:600\">Blocked</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-2</code></td><td>Password visibility toggle works</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-3</code></td><td>Forgot Password link navigates correctly</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-4</code></td><td>Empty email and empty password trigger client validation</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-5</code></td><td>Valid-format email with a wrong password shows a clear error</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-6</code></td><td>Unknown email and password show a clear error</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-7</code></td><td>Invalid email format is rejected by validation</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-8</code></td><td>Email only, empty password triggers validation</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-9</code></td><td>Password only, empty email triggers validation</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-10</code></td><td>Leading and trailing spaces in the email</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><a href=\"#f-EXP-4\"><code>EXP-4</code></a></td></tr><tr><td><code>TC-11</code></td><td>SQL injection strings in both fields</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-12</code></td><td>XSS payload in the email field</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-14</code></td><td>Email case variation is accepted by the UI</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-15</code></td><td>Enter key submits the form</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-17</code></td><td>Mobile viewport at 375px</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><span class=\"empty\">—</span></td></tr><tr><td><code>TC-18</code></td><td>Keyboard, autocomplete, and accessibility attributes</td><td style=\"color:#116149;font-weight:600\">Passed</td><td><a href=\"#f-EXP-2\"><code>EXP-2</code></a></td></tr></tbody></table></div>\n<h2>Data validation</h2>\n<div class=\"card\"><div class=\"card-body\">Not in scope: no data-store access was provided for this run.</div></div>\n<h2>Suggested fix order</h2>\n<div class=\"card\"><div class=\"card-body\"><ol class=\"order\"><li>EXP-1 — one auth request per submit (a duplicate login attempt is user-visible and can trip rate limiting)</li><li>EXP-3 — bound the input lengths on both client and server</li><li>EXP-2 — correct the autocomplete and input types so credential managers work</li><li>EXP-5 — give the inputs distinct names</li><li>EXP-4 — trim the email before validation</li><li>EXP-6 — re-measure the bundle against a production build before acting</li></ol></div></div>\n<h2>Recommendations</h2>\n<div class=\"card\"><table><thead><tr><th>Action</th><th>Priority</th></tr></thead><tbody><tr><td>Guard the submit handler against concurrent requests, then re-run TC-16</td><td>high</td></tr><tr><td>Add maxlength bounds to both fields and mirror them server-side</td><td>medium</td></tr><tr><td>Ask the user to sign in once so TC-1 (positive login) can be unblocked</td><td>medium</td></tr><tr><td>Re-check security headers against the deployed environment, not ng serve</td><td>low</td></tr></tbody></table></div>\n<h2>Verified working</h2>\n<div class=\"card\"><div class=\"card-body\"><ul class=\"clean\"><li>Empty required fields keep Login disabled and show &quot;This field is required&quot;</li><li>An invalid email format shows &quot;Please enter valid Email&quot; and blocks submit</li><li>Wrong or unknown credentials stay on /login with an &quot;Invalid login credentials&quot; banner</li><li>The password visibility toggle switches the input between password and text</li><li>&quot;Forgot Password?&quot; navigates to /forgot-password</li><li>An XSS payload in the email field does not execute; it is treated as an invalid email</li><li>A SQLi-style password does not bypass authentication; the page stays on login with an error</li><li>The 375px mobile layout has no horizontal overflow and the form remains usable</li></ul></div></div>\n<h2>Evidence index</h2>\n<div class=\"card\"><table><thead><tr><th>Kind</th><th>Shows</th><th>File</th></tr></thead><tbody><tr><td>Screenshot</td><td>Two auth requests from one double-click</td><td><code>screenshots/TC-16-double.png</code></td></tr><tr><td>Screenshot</td><td>312-character email and 502-character password accepted</td><td><code>screenshots/TC-13-long.png</code></td></tr><tr><td>Screenshot</td><td>Email with surrounding spaces rejected as invalid</td><td><code>screenshots/TC-10-spaces.png</code></td></tr><tr><td>Screenshot</td><td>Invalid-credentials error state</td><td><code>screenshots/TC-5-wrong-password.png</code></td></tr><tr><td>DOM snapshot</td><td>Login form input attributes as rendered</td><td><code>dom/login-inputs.html</code></td></tr><tr><td>Network capture</td><td>Cold-load transfer sizes for the development build</td><td><code>network/cold-load.json</code></td></tr><tr><td>Report</td><td>Run metadata and API error copy</td><td><code>run-notes.json</code></td></tr></tbody></table></div>\n<footer class=\"qa-pack-attribution\" style=\"margin-top:2.5rem;padding-top:1rem;border-top:1px solid rgba(128,128,128,0.25);font-size:0.75rem;line-height:1.6;color:#6b7280;text-align:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;\">\n  <div>Powered by <strong>QA Engineer Pack</strong></div>\n  <div>AI-First Deterministic QA Engineering Platform</div>\n  <div>Designed &amp; Developed by <a href=\"https://abisheik.dev\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"color:inherit;text-decoration:underline;\">Abisheik</a></div>\n</footer>\n</div>\n</body>\n</html>\n"
+  }
+}

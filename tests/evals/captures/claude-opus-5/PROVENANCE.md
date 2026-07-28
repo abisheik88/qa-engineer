@@ -20,13 +20,13 @@ Each artifact was produced by following the named skill's documented procedure:
 read the project, build one fully specified command, execute it, normalize the
 reporter **with the bundled tool** (never by reading it), then emit and self-validate
 the artifact. Every number in these files traces to a real command's output — exit
-codes from the runner, counts from `python3 -m playwright_analysis report`,
-classifications from `python3 -m qa_diagnostics.cli report`.
+codes from the runner, counts from `qa-engine playwright report`,
+classifications from `python3 -m qa-engine diagnostics report`.
 
 Reproduce the scoring:
 
 ```bash
-python3 tests/evals/run_live.py --provider replay --captures claude-opus-5
+node tests/evals/run-live.mjs --provider replay --captures claude-opus-5
 ```
 
 ## What it is not
@@ -66,7 +66,7 @@ and both were fixed rather than worked around:
    `check-doc-claims.mjs` now fails if a tooling-bearing skill's contract omits it.
 
 2. **The diagnostic engine's `rootCause` carries a key the public contract
-   forbids.** `qa_diagnostics` returns per-cause `evidence` inside `rootCause`;
+   forbids.** `diagnostics` returns per-cause `evidence` inside `rootCause`;
    `debug-result.schema.json` sets `additionalProperties: false`. Copying the engine
    object wholesale — which the shared tooling module's wording invited — is
    rejected. The module now states that public contracts are a *projection* of the

@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-19
+- **Superseded in part by [ADR-0012](ADR-0012-node-engine.md):** the engine is Node, and it is bundled as one dependency-free package rather than as Python packages with separately copied package data. The architecture this record establishes — one engine, consumed by the diagnostic skills, bundled into each rather than referenced across directories — is unchanged.
 
 ## Context
 

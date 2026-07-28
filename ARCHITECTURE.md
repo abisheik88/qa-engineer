@@ -36,7 +36,7 @@ trusted. The full division is in
           ▼                                   ▼
 ┌───────────────────────┐        ┌──────────────────────────────────────┐
 │  2. SHARED KNOWLEDGE  │        │  3. DETERMINISTIC ENGINE (Python)    │
-│     Written once,     │        │     qa_analysis     · qa_diagnostics │
+│     Written once,     │        │     analysis      ·  diagnostics  │
 │     synced by copy    │        │     framework adapters               │
 │     into each skill,  │        │     Standard library only; bundled   │
 │     drift-gated in CI │        │     into each skill at install time  │
@@ -96,8 +96,8 @@ install.
 
 | Package | Owns |
 | --- | --- |
-| `qa_analysis` | JUnit and HAR parsing, artifact discovery, the failure taxonomy, the evidence model, credential redaction, contract validation, the `.qa/context.md` parser, and the diff guard |
-| `qa_diagnostics` | Root-cause analysis, timeline reconstruction, prioritization, recommendation ranking, and repair planning — one engine consumed by five skills |
+| `analysis` | JUnit and HAR parsing, artifact discovery, the failure taxonomy, the evidence model, credential redaction, contract validation, the `.qa/context.md` parser, and the diff guard |
+| `diagnostics` | Root-cause analysis, timeline reconstruction, prioritization, recommendation ranking, and repair planning — one engine consumed by five skills |
 | `<framework>_analysis` | Per-framework artifact shapes only. Playwright adds trace and JSON-report analysis; the others normalize through the shared JUnit parser |
 
 Each is reachable through a documented CLI, and every skill's Tooling section gives

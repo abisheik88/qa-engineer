@@ -121,12 +121,12 @@ node scripts/sync-shared.mjs --add shared/execution/deterministic-tooling.md ski
 ```
 
 Then add the skill to **both** bundle manifests —
-`scripts/bundle_python.py` and `packages/installer/lib/core/manifest.mjs` (a test
+`packages/installer/lib/core/bundle.mjs` and `packages/installer/lib/core/manifest.mjs` (a test
 asserts they agree) — and write a `## Tooling` table whose Invocation column is a
 literal command:
 
 ```text
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli <subcommand> <args>
+PYTHONPATH="$QA_LIB" python3 -m qa-engine analysis <subcommand> <args>
 ```
 
 Every row needs a Fallback that keeps the skill honest when the tool is absent:
@@ -176,7 +176,7 @@ npm run validate:architecture    # eval coverage, boundaries
 npm run validate:doc-claims      # documentation matches behavior
 npm run validate:evals           # golden passes, adversarial rejected
 npm test                         # installer, bundle, security, reliability
-python3 scripts/bundle_python.py --check   # if the skill bundles tooling
+python3 npm test   # if the skill bundles tooling
 ```
 
 ## Definition of done

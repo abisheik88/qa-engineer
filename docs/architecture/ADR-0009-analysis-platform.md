@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-07-18
+- **Superseded in part by [ADR-0012](ADR-0012-node-engine.md):** the engine is now Node rather than Python. The decisions this record exists for — analysis as code rather than prompts, one evidence model and one taxonomy, zero third-party dependencies, a framework-agnostic core with thin adapters — all stand. Only the language changed, and ADR-0012 records why: the language was assumed here rather than argued for, and it cost users a second runtime whose absence degraded skills silently.
 
 ## Context
 

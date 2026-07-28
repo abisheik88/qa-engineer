@@ -1,6 +1,6 @@
 # Evaluation Framework
 
-How the pack proves its skills work — automated regression testing for AI skills. The **deterministic scoring layer is implemented and gates CI**: [`run_evals.py`](run_evals.py) scores committed skill outputs against their contracts and case-specific assertions, for both *golden* cases (correct behavior, which must be accepted) and *adversarial* cases (the failure modes the pack promises to prevent, which must be rejected). The **live-agent layer** — running a real headless agent against fixtures and feeding its output into this same scorer — and the **LLM rubric judge** remain for a later milestone (see [ROADMAP.md](../../ROADMAP.md)). What is designed but not yet built is called out in [Status](#status).
+How the pack proves its skills work — automated regression testing for AI skills. The **deterministic scoring layer is implemented and gates CI**: [`run-evals.mjs`](run-evals.mjs) scores committed skill outputs against their contracts and case-specific assertions, for both *golden* cases (correct behavior, which must be accepted) and *adversarial* cases (the failure modes the pack promises to prevent, which must be rejected). The **live-agent layer** — running a real headless agent against fixtures and feeding its output into this same scorer — and the **LLM rubric judge** remain for a later milestone (see [ROADMAP.md](../../ROADMAP.md)). What is designed but not yet built is called out in [Status](#status).
 
 Testing prompts is the discipline almost no comparable project practices, and it is a first-class goal of this one. The framework is designed now, alongside the first skills, so that every skill ships against a known bar rather than a hope.
 
@@ -13,7 +13,7 @@ A skill is instructions an agent follows. Its quality is behavioral: does the ag
 ```text
 tests/evals/
 ├── README.md         this file — the framework design
-├── run_evals.py      the deterministic scorer + CI gate (implemented)
+├── run-evals.mjs      the deterministic scorer + CI gate (implemented)
 ├── qa-init/          *.case.json — golden + adversarial cases
 ├── qa-generate/      *.case.json
 ├── qa-run/           *.case.json
@@ -100,7 +100,7 @@ Rubric trends are reviewed, not gated. Results are published with each release, 
 
 **Implemented and gating CI:**
 
-- The deterministic scorer [`run_evals.py`](run_evals.py) (contract validity + assertions), run via `npm run validate:evals`.
+- The deterministic scorer [`run-evals.mjs`](run-evals.mjs) (contract validity + assertions), run via `npm run validate:evals`.
 - Golden + adversarial cases for the six core skills (`qa-init`, `qa-generate`, `qa-run`, `qa-debug`, `qa-fix`, `qa-report`), including the marquee anti-"hallucinated-green" cases.
 - The **live-agent runner** [`run_live.py`](run_live.py) with a `replay` provider (recorded outputs) and a `command` provider (any agent CLI), the [scenarios dataset](scenarios/), the [reference captures](captures/), a committed [baseline](baselines/reference.json), and **regression detection** — run via `npm run eval:live`. See [docs/evaluation-platform.md](../../docs/evaluation-platform.md).
 

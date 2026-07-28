@@ -5,8 +5,7 @@
 [![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-public%20preview-orange.svg)](docs/release/v0.9-release-checklist.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisites)
-[![Python](https://img.shields.io/badge/python-%E2%89%A53.8-3776AB.svg)](#step-1--check-your-prerequisites)
+[![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisite)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-spec--native-6E56CF.svg)](https://agentskills.io)
 [![CI](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#how-this-is-verified)
@@ -19,7 +18,7 @@
 
 1. [What this is, in plain language](#what-this-is-in-plain-language)
 2. [Is this for me?](#is-this-for-me)
-3. [Step 1 — Check your prerequisites](#step-1--check-your-prerequisites)
+3. [Step 1 — Check your prerequisites](#step-1--check-your-prerequisite)
 4. [Step 2 — Install it](#step-2--install-it)
 5. [Step 3 — Confirm it worked](#step-3--confirm-it-worked)
 6. [Step 4 — Your first real task](#step-4--your-first-real-task)
@@ -67,40 +66,32 @@ You do not need to learn a new language, framework, or config file. You install 
 
 **Works best with Playwright** today. Selenium, Cypress, and WebdriverIO are detected and their results are understood, but running and generating tests live is currently Playwright-only. See [framework support](#framework-support).
 
-## Step 1 — Check your prerequisites
+## Step 1 — Check your prerequisite
 
-You need two things. Run these two commands to check — copy and paste them exactly:
+You need one thing. Run this to check — copy and paste it exactly:
 
 ```bash
 node --version
-python3 --version
 ```
 
-You want **Node 18.18 or newer** and **Python 3.8 or newer**. If both print a version number that is high enough, skip ahead to [Step 2](#step-2--install-it).
+You want **Node 18.18 or newer**. If it prints a high enough version, skip ahead to
+[Step 2](#step-2--install-it).
+
+That is the whole list. There is nothing to `pip install`, no second language, and no
+dependencies: the tools that read your test results are dependency-free JavaScript
+that runs on the same Node you just checked.
 
 <details>
 <summary><b>"command not found" — how to install Node.js</b></summary>
 
-Node.js gives you the `npx` command used to install this pack.
+Node.js gives you the `npx` command used to install this pack, and it runs the
+analysis tools afterwards.
 
 - **macOS** — `brew install node` (needs [Homebrew](https://brew.sh)), or download from [nodejs.org](https://nodejs.org).
 - **Windows** — download the LTS installer from [nodejs.org](https://nodejs.org) and run it.
 - **Linux** — `sudo apt install nodejs npm` (Debian/Ubuntu), or use [nvm](https://github.com/nvm-sh/nvm).
 
 Then re-run `node --version`. Take the **LTS** version if offered a choice.
-
-</details>
-
-<details>
-<summary><b>"command not found" — how to install Python</b></summary>
-
-Python runs the analysis tools that read your test results. It uses only Python's built-in library — there is nothing extra to install, no `pip install` step.
-
-- **macOS** — `brew install python3`, or download from [python.org](https://python.org).
-- **Windows** — install from [python.org](https://python.org) and **tick "Add Python to PATH"** during setup. Then use `python --version` if `python3` is not found.
-- **Linux** — `sudo apt install python3` (Debian/Ubuntu).
-
-**Can you skip Python?** Yes, but you shouldn't. Without it the skills fall back to the AI reading files by eye, and they will mark their results *degraded* to tell you so. The whole point of this project is that the numbers come from tools, not guesses.
 
 </details>
 
@@ -165,7 +156,7 @@ Real output from a healthy install:
 ✓ [PASS] skills: 13 skill(s) installed
 ✓ [PASS] contracts: 12 contract schema(s) present
 ✓ [PASS] engine: deterministic engine bundled under .agents/skills/qa-init/scripts/lib
-✓ [PASS] python-imports: Python imports OK (python3 Python 3.12.3)
+✓ [PASS] engine-runs: bundled engine runs cleanly
 ✓ [PASS] node: Node v24.18.0
 ✓ self-test PASSED
 ```
@@ -347,10 +338,9 @@ npx qa-engineer install --yes --force --project .
 
 ### A skill says the engine is missing, or results are "degraded"
 
-The Python tools aren't reachable. Fix in this order:
+The deterministic engine isn't reachable. Fix in this order:
 
 ```bash
-python3 --version                          # is Python installed at all?
 npx qa-engineer repair --project .         # reinstall the bundled tools
 npx qa-engineer doctor --project .         # should now say "bundled engine runs cleanly"
 ```
@@ -409,7 +399,7 @@ The core idea in one line: **tools produce the facts, the AI explains them.**
               │  raw output, exit code
               ▼
   ┌───────────────────────────────────┐
-  │  Bundled Python tools             │  count the results, classify the failure,
+  │  Bundled Node engine              │  count the results, classify the failure,
   │  (installed inside the skill)     │  redact secrets — no guessing
   └───────────────────────────────────┘
               │  facts
@@ -459,11 +449,11 @@ Everything below is reproducible from a clone with the command beside it.
 
 | Evidence | Command |
 | --- | --- |
-| 152 analysis, framework, and branding tests | `python3 shared/analysis/lib/run_tests.py` |
-| 28 diagnostic engine tests · 5 seam tests | `PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s shared/diagnostics/lib/tests` |
+| 82 engine tests: analysis, diagnostics, frameworks, seams | `node --test packages/engine/test/*.test.mjs` |
+| The recorded corpus, proven against a second implementation | `node --test packages/engine/test/corpus.test.mjs` |
 | 50 installer tests — including security and repeated-use stress | `npm test` |
 | 21 evaluation cases, including deliberately dishonest outputs the scorer must reject | `npm run validate:evals` |
-| 4 real AI-produced results, scored | `python3 tests/evals/run_live.py --captures claude-opus-5` |
+| 4 real AI-produced results, scored | `node tests/evals/run-live.mjs --captures claude-opus-5` |
 | 17 repository checks — including "documentation matches implementation" | `npm run validate:skills` … |
 
 ## Going deeper

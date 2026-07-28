@@ -75,7 +75,7 @@ Each contract defines its own closed enum, chosen so that every value implies a 
 ### Supported keyword subset
 
 The pack validates contracts with two dependency-free validators — Python
-([`qa_analysis.contracts`](../../shared/analysis/lib/qa_analysis/contracts.py)) for
+([`the contract validator`](../../packages/engine/lib/analysis/contracts.mjs)) for
 output contracts, JavaScript
 ([`schema-validate.mjs`](../../packages/installer/lib/core/schema-validate.mjs)) for
 installer config. Both implement exactly this subset, and nothing else:
@@ -86,7 +86,7 @@ Two rules make that subset trustworthy:
 
 - **A keyword outside the subset is a validation error**, never a silent no-op. A
   contract cannot carry a constraint that looks enforced and isn't.
-- **The two validators must agree.** [`tests/parity/validator-cases.json`](../../tests/parity/validator-cases.json)
+- **The two validators must agree.** [`packages/engine/test/corpus/validator-cases.json`](../../packages/engine/test/corpus/validator-cases.json)
   runs through both, and CI fails if either disagrees or if the keyword lists
   drift apart — including from the list above.
 

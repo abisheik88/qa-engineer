@@ -8,7 +8,7 @@
     "request": "/qa-init",
     "fixture": "examples/getting-started"
   },
-  "contract": "shared/analysis/schemas/context.schema.json",
+  "contract": "packages/engine/lib/analysis/schemas/context.schema.json",
   "assertions": [
     { "path": "schemaVersion", "equals": 1 },
     { "path": "testFramework.e2e", "in": ["playwright", "selenium", "cypress", "webdriverio", null] },

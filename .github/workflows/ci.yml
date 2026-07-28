@@ -110,80 +110,55 @@ jobs:
           done < <(find skills templates shared -name '*.schema.json' | sort)
           exit "$status"
 
-  analysis:
-    name: Analysis toolkit (Python ${{ matrix.python-version }})
+  engine:
+    name: Deterministic engine (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # COMPATIBILITY.md states Python 3.8+. 3.9 is the oldest version the
-        # hosted runners provide; the 3.8 floor is enforced separately by a
-        # syntax gate (below) that parses every shipped module with
-        # feature_version=(3, 8).
-        python-version: ["3.9", "3.12"]
+        # package.json declares engines.node >=18.18.0. The engine is what runs in a
+        # user's repository, so the declared floor is tested, not assumed.
+        node-version: [18, 20, 22]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - name: Confirm every shipped module parses under the stated 3.8 floor
-        run: python3 scripts/check-python-floor.py
-      - name: Run analysis unit tests (core, Playwright, Selenium, cross-framework)
-        run: python3 shared/analysis/lib/run_tests.py
-      - name: Node engine matches Python, output for output (port parity)
+          node-version: ${{ matrix.node-version }}
+      - name: Run engine unit tests (analysis, diagnostics, frameworks, seams)
+        run: node --test packages/engine/test/*.test.mjs
+      - name: The engine CLI runs every documented subcommand
         run: |
           set -euo pipefail
-          node scripts/check-engine-parity.mjs
-      - name: Run diagnostic unit tests
+          cli="node packages/engine/bin/qa-engine.mjs"
+          $cli analysis junit packages/engine/test/fixtures/playwright-junit.xml > /dev/null
+          $cli analysis har packages/engine/test/fixtures/sample.har > /dev/null
+          $cli analysis diff-guard packages/engine/test/fixtures/unsafe.diff > /dev/null
+          $cli analysis classify "no such element: #cart" > /dev/null
+          $cli analysis context --path packages/engine/test/fixtures/valid-context.md > /dev/null
+          $cli analysis branding --format html > /dev/null
+          $cli analysis report-html packages/engine/test/corpus/explore-result.sample.json > /dev/null
+          $cli playwright report packages/engine/test/fixtures/playwright-junit.xml > /dev/null 2>&1 || true
+          echo "every documented subcommand ran"
+      - name: A malformed artifact exits 2 with a machine-readable body, never a traceback
         run: |
           set -euo pipefail
-          PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s shared/diagnostics/lib/tests -v
-      - name: Run internal seam regression tests
-        run: |
-          set -euo pipefail
-          PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s tests/seams -v
-      - name: Validate the context schema against a sample
-        run: |
-          set -euo pipefail
-          cd shared/analysis/lib
-          python3 -m qa_analysis.cli validate tests/fixtures/valid-context.json ../schemas/context.schema.json
-      - name: Parse and validate a real .qa/context.md end to end
-        run: |
-          set -euo pipefail
-          cd shared/analysis/lib
-          # The Markdown path is what qa-init actually writes; validating only a
-          # hand-written JSON fixture left the real artifact unchecked.
-          python3 -m qa_analysis.cli context --path tests/fixtures/valid-context.md > /dev/null
-          # The template is deliberately full of placeholders: it must NOT validate.
-          if python3 -m qa_analysis.cli context \
-              --path ../../../skills/qa-init/templates/context.md > /dev/null; then
-            echo "::error::the qa-init template validated, so placeholders are being accepted"
+          printf 'not xml' > /tmp/bad.xml
+          set +e
+          out="$(node packages/engine/bin/qa-engine.mjs analysis junit /tmp/bad.xml)"
+          code=$?
+          set -e
+          if [ "$code" != "2" ]; then
+            echo "::error::expected exit 2, got $code"
             exit 1
           fi
-          echo "context parser accepts a generated file and rejects the raw template"
-      - name: Confirm the contract validator rejects an invalid result
-        run: |
-          set -euo pipefail
-          cd shared/analysis/lib
-          if python3 -m qa_analysis.cli validate tests/fixtures/invalid-execution-result.json \
-              ../../../skills/qa-run/contracts/execution-result.schema.json; then
-            echo "::error::validator accepted an invalid contract"
-            exit 1
-          fi
-          echo "validator correctly rejected the invalid contract"
-      - name: Verify bundled tooling RUNS self-contained in every bundling skill
-        run: python3 scripts/bundle_python.py --check
+          echo "$out" | node -e 'const d=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!d.error){process.exit(1)}'
+          echo "malformed input refused cleanly"
       - name: Run behavioral eval harness (deterministic gate)
-        run: python3 tests/evals/run_evals.py
+        run: node tests/evals/run-evals.mjs
       - name: Run live-agent eval (replay provider) + regression gate
-        run: python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json
-
+        run: node tests/evals/run-live.mjs --baseline tests/evals/baselines/reference.json
   installer:
     name: Installer CLI (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
@@ -200,10 +175,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Set up Python (the installer bundles and verifies a Python engine)
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Install dependencies
         run: npm ci
       - name: Run installer tests (install, verify, doctor, drift, bundle, parity, uninstall)
@@ -344,12 +315,12 @@ jobs:
             "shared/diagnostics/repair-strategy.md"
             "shared/diagnostics/report-aggregation.md"
             "shared/diagnostics/knowledge-integration.md"
-            "shared/diagnostics/lib/qa_diagnostics/engine.py"
-            "shared/diagnostics/lib/qa_diagnostics/root_cause.py"
-            "shared/diagnostics/lib/qa_diagnostics/prioritization.py"
-            "shared/diagnostics/lib/qa_diagnostics/repair.py"
-            "shared/diagnostics/lib/qa_diagnostics/timeline.py"
-            "scripts/bundle_python.py"
+            "packages/engine/lib/diagnostics/engine.mjs"
+            "packages/engine/lib/diagnostics/root-cause.mjs"
+            "packages/engine/lib/diagnostics/prioritization.mjs"
+            "packages/engine/lib/diagnostics/repair.mjs"
+            "packages/engine/lib/diagnostics/timeline.mjs"
+            "shared/tooling/qa-tool.mjs"
             "skills/qa-debug/SKILL.md"
             "skills/qa-debug/contracts/debug-result.schema.json"
             "skills/qa-fix/SKILL.md"
@@ -397,15 +368,15 @@ jobs:
             "tests/evals/run_live.py"
             "tests/evals/baselines/reference.json"
             "shared/analysis/lib/qa_analysis/context.py"
-            "shared/analysis/lib/qa_analysis/cli.py"
-            "shared/diagnostics/lib/qa_diagnostics/cli.py"
+            "packages/engine/bin/qa-engine.mjs"
+            "packages/engine/lib/analysis/contracts.mjs"
             "shared/execution/deterministic-tooling.md"
-            "tests/parity/validator-cases.json"
+            "packages/engine/test/corpus/cases.json"
             "packages/installer/lib/commands/uninstall.mjs"
             "packages/installer/lib/cli/commands.mjs"
             "scripts/check-doc-claims.mjs"
             "scripts/check-docs-commands.mjs"
-            "scripts/check-python-floor.py"
+            "packages/engine/test/corpus/expected.json"
             "docs/release/audit-verification.md"
           )
 

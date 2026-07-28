@@ -24,7 +24,7 @@ explicit architectural component with stated guarantees.
    pass results) require a superseding ADR.
 2. **Two layers, one scorer.** Deterministic cases (`*.case.json`) and live
    scenarios (`*.scenario.json` + captures) both score through
-   `tests/evals/run_evals.py`. Live providers are interchangeable; the default
+   `tests/evals/run-evals.mjs`. Live providers are interchangeable; the default
    CI path uses the `replay` provider against committed captures.
 3. **Replay is the source of truth for CI.** Recorded captures under
    `tests/evals/captures/` are immutable evidence. Refreshing a capture is an

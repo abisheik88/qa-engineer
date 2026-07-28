@@ -71,16 +71,16 @@ Follow the execution lifecycle. Perform each phase in order; stop and explain th
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-run` or `.claude/skills/qa-run`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-run` or `.claude/skills/qa-run`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Playwright report normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py playwright report <results.json>` | `{tests, executed}` — the counts and per-test outcomes the result requires | None: without it, classify `errored` and say the reporter could not be normalized |
-| JUnit normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis junit <report.xml>` | The same shape from a JUnit reporter | None: as above |
-| Artifact discovery | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis discover --root <dir>` | Which artifacts the run produced, by type, with presence flags | List artifacts from the reporter's own paths only |
-| Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <result.json> <schema.json>` | `{valid, errors}` before the result is declared complete | None: an unvalidated result is not complete |
+| Playwright report normalizer | `node <SKILL_DIR>/scripts/qa-tool.mjs playwright report <results.json>` | `{tests, executed}` — the counts and per-test outcomes the result requires | None: without it, classify `errored` and say the reporter could not be normalized |
+| JUnit normalizer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis junit <report.xml>` | The same shape from a JUnit reporter | None: as above |
+| Artifact discovery | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis discover --root <dir>` | Which artifacts the run produced, by type, with presence flags | List artifacts from the reporter's own paths only |
+| Contract self-check | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis validate <result.json> <schema.json>` | `{valid, errors}` before the result is declared complete | None: an unvalidated result is not complete |
 
-A missing `qa_tool.py` means the engine is not installed. A run whose numbers could not be normalized is never reported `passed`.
+A missing `qa-tool.mjs` means the engine is not installed. A run whose numbers could not be normalized is never reported `passed`.
 
 ## Output
 

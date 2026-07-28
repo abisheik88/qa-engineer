@@ -13,7 +13,7 @@ How the diagnostic engine reuses the pack's other platforms instead of duplicati
 
 ## The rule
 
-If the engine finds itself wanting to parse an artifact, classify a message, or run a test, that logic belongs in another platform and is called from here. The engine's own code is confined to reasoning that is genuinely diagnostic: turning findings into prioritized root causes, reconstructing timelines, planning repairs, and aggregating reports. This is why the diagnostics library depends on `qa_analysis` and adds no parsing of its own.
+If the engine finds itself wanting to parse an artifact, classify a message, or run a test, that logic belongs in another platform and is called from here. The engine's own code is confined to reasoning that is genuinely diagnostic: turning findings into prioritized root causes, reconstructing timelines, planning repairs, and aggregating reports. This is why the diagnostics library depends on `analysis` and adds no parsing of its own.
 
 ## Why this matters
 

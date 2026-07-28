@@ -3,10 +3,10 @@
 How the pack proves — and keeps proving — that its skills behave correctly. The
 platform has **two layers that share one scorer**:
 
-1. **Deterministic gate** ([`tests/evals/run_evals.py`](../tests/evals/run_evals.py))
+1. **Deterministic gate** ([`tests/evals/run-evals.mjs`](../tests/evals/run-evals.mjs))
    — scores committed golden and adversarial *outputs* against contracts and
    assertions. Frozen and production-ready; it is the single source of scoring.
-2. **Live-agent layer** ([`tests/evals/run_live.py`](../tests/evals/run_live.py))
+2. **Live-agent layer** ([`tests/evals/run-live.mjs`](../tests/evals/run-live.mjs))
    — runs a real (or replayed) agent against *scenarios*, then feeds each produced
    output into the **same** deterministic scorer. This is the end-to-end
    behavioral measurement.
@@ -21,7 +21,7 @@ reproducible. Real agent output lives in separate, labelled sets so a one-off ru
 can never become the gate:
 
 ```bash
-python3 tests/evals/run_live.py --provider replay --captures claude-opus-5
+node tests/evals/run-live.mjs --provider replay --captures claude-opus-5
 ```
 
 `tests/evals/captures/claude-opus-5/` holds four artifacts produced by Claude Opus 5
@@ -68,7 +68,7 @@ output artifact as JSON to stdout. Example (illustrative — wire your agent's
 headless invocation):
 
 ```bash
-python3 tests/evals/run_live.py \
+node tests/evals/run-live.mjs \
   --provider command \
   --command 'my-agent run --skill {skill} --prompt "{prompt}" --json'
 ```
@@ -113,7 +113,7 @@ drops. The committed baseline is [`tests/evals/baselines/reference.json`](../tes
 Update the baseline deliberately, never silently:
 
 ```bash
-python3 tests/evals/run_live.py --emit-baseline tests/evals/baselines/reference.json
+node tests/evals/run-live.mjs --emit-baseline tests/evals/baselines/reference.json
 ```
 
 ## Cross-model drift
@@ -123,10 +123,10 @@ then run another against it:
 
 ```bash
 # Model A becomes the reference
-python3 tests/evals/run_live.py --provider command --command 'agent-a …' \
+node tests/evals/run-live.mjs --provider command --command 'agent-a …' \
   --emit-baseline /tmp/model-a.json
 # Model B is checked for drift against A
-python3 tests/evals/run_live.py --provider command --command 'agent-b …' \
+node tests/evals/run-live.mjs --provider command --command 'agent-b …' \
   --baseline /tmp/model-a.json
 ```
 
@@ -147,8 +147,8 @@ gate ([engineering principle 1](engineering-principles.md)).
 
 CI runs the deterministic path with no API keys:
 
-- `python3 tests/evals/run_evals.py` — the deterministic gate.
-- `python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json`
+- `node tests/evals/run-evals.mjs` — the deterministic gate.
+- `node tests/evals/run-live.mjs --baseline tests/evals/baselines/reference.json`
   — the live runner in `replay` mode, plus the regression gate.
 
 Both are mandatory in the `analysis` job. Live runs against **real hosted agents**

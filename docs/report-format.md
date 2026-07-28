@@ -74,7 +74,7 @@ Schemas live beside their producer: `skills/<skill>/contracts/<name>.schema.json
 
 Two commands produce no artifact of their own: `/qa` is a router, and `/qa-init`
 writes `.qa/context.md`, governed by
-[`context.schema.json`](../shared/analysis/schemas/context.schema.json).
+[`context.schema.json`](../packages/engine/lib/analysis/schemas/context.schema.json).
 
 ## Distinctions worth handling correctly
 
@@ -111,7 +111,7 @@ The bundled validator, no dependencies:
 
 ```bash
 QA_LIB="$(ls -d .agents/skills/qa-run/scripts/lib .claude/skills/qa-run/scripts/lib 2>/dev/null | head -1)"
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli validate \
+PYTHONPATH="$QA_LIB" python3 -m qa-engine analysis validate \
   qa-artifacts/execution-result.json \
   .agents/skills/qa-run/contracts/execution-result.schema.json
 ```
@@ -152,5 +152,5 @@ footer, and are not versioned. Two rules:
 The footer's wording comes from one metadata file and can be rendered directly:
 
 ```bash
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format html
+PYTHONPATH="$QA_LIB" python3 -m qa-engine analysis branding --format html
 ```
