@@ -33,6 +33,7 @@ import {
   footerHtml, footerMarkdown, footerText, appendTo,
   footer as brandingFooter, metadata as brandingMetadata,
 } from '../packages/engine/lib/analysis/branding.mjs';
+import { parse as parseContext, MalformedContext } from '../packages/engine/lib/analysis/context.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const cases = JSON.parse(fs.readFileSync(path.join(root, 'tests/parity/engine-cases.json'), 'utf8'));
@@ -55,6 +56,7 @@ function python(source, payload) {
 // only switched over once its name is here and the gate is green.
 const MODULES = [
   'redaction', 'taxonomy', 'junit', 'contracts', 'har', 'discovery', 'branding',
+  'context',
 ];
 
 const problems = [];
@@ -466,6 +468,137 @@ function compare(module, label, expected, actual) {
   const sharedMetadata = path.join(root, 'shared/analysis/lib/qa_analysis/branding.json');
   const onDisk = JSON.parse(fs.readFileSync(sharedMetadata, 'utf8'));
   compare('branding', 'metadata comes from the one file on disk', onDisk, brandingMetadata());
+}
+
+// --- context ------------------------------------------------------------------
+// The YAML-subset parser, over the real generated fixture plus every shape the
+// subset declares supported and every shape it declares rejected. Two documents
+// that parse differently here would give two skills different beliefs about the
+// same project, which is worse than either being wrong consistently.
+{
+  const documents = [
+    // The real thing qa-init writes.
+    fs.readFileSync(path.join(fixtures, 'valid-context.md'), 'utf8'),
+    // Supported shapes.
+    '---\nschemaVersion: 1\n---\nbody',
+    '---\na: 1\nb: 1.5\nc: true\nd: false\ne: null\nf: ~\ng:\nh: "1"\n---\n',
+    '---\nlist:\n  - one\n  - two\n---\n',
+    '---\nlist:\n- flush\n- with-key-indent\nnext: after\n---\n',
+    '---\nempty: []\nemptyMap: {}\n---\n',
+    '---\nnested:\n  deeper:\n    key: value\n---\n',
+    '---\nvalue: kept   # this comment is not\n---\n',
+    '---\nquoted: "has # inside"\nalso: \'and # here\'\n---\n',
+    '---\n# only a comment\n\nkey: value\n---\n',
+    "---\nsingle: 'quoted'\ndouble: \"quoted\"\nbare: unquoted words\n---\n",
+    '---\nnegative: -5\nnegativeFloat: -1.25\n---\n',
+    '---\nkeyWithColonInValue: "a: b"\n---\n',
+    '---\nurl: https://example.com/path\n---\n',
+    // CRLF, which a Windows generator writes and which the fence and indent
+    // handling both have to survive.
+    '---\r\na: 1\r\nb:\r\n  c: "x"\r\n---\r\nbody\r\n',
+    // Body handling.
+    '---\nkey: value\n---\n# Heading\n\nProse with --- inside.\n',
+    '---\nkey: value\n---\n',
+  ];
+  const expected = python(
+    'import json,sys\n' +
+      'from qa_analysis import context\n' +
+      'out = []\n' +
+      'for text in json.load(sys.stdin):\n' +
+      '    try:\n' +
+      '        parsed = context.parse(text)\n' +
+      '        out.append({"ok": True, "context": parsed["context"], "body": parsed["body"]})\n' +
+      '    except context.MalformedContext as exc:\n' +
+      '        out.append({"ok": False, "detail": str(exc)})\n' +
+      'print(json.dumps(out))\n',
+    documents,
+  );
+  documents.forEach((text, index) => {
+    let actual;
+    try {
+      const parsed = parseContext(text);
+      actual = { ok: true, context: parsed.context, body: parsed.body };
+    } catch (error) {
+      if (!(error instanceof MalformedContext)) throw error;
+      actual = { ok: false, detail: error.message };
+    }
+    compare('context', text.slice(0, 60), expected[index], actual);
+  });
+
+  // Rejected shapes: both must refuse, and with the same explanation — this is the
+  // one place the message text is compared, because a contributor whose context
+  // file is rejected reads that message to find out what to change.
+  const rejected = [
+    'no frontmatter at all\n',
+    '---\nkey: value\nno closing fence\n',
+    '---\nblock: |\n  text\n---\n',
+    '---\nflow: [1, 2]\n---\n',
+    '---\nflowMap: {a: 1}\n---\n',
+    '---\nanchor: &a value\n---\n',
+    '---\nalias: *a\n---\n',
+    '---\nkey: value\n\tbad: indent\n---\n',
+    '---\njust some words\n---\n',
+    '---\n: novalue\n---\n',
+    '---\n- item at root\n---\n',
+    '---\nlist:\n  - one\n  key: inside a sequence\n---\n',
+  ];
+  const expectedRejected = python(
+    'import json,sys\n' +
+      'from qa_analysis import context\n' +
+      'out = []\n' +
+      'for text in json.load(sys.stdin):\n' +
+      '    try:\n' +
+      '        context.parse(text)\n' +
+      '        out.append({"refused": False})\n' +
+      '    except context.MalformedContext as exc:\n' +
+      '        out.append({"refused": True, "detail": str(exc)})\n' +
+      'print(json.dumps(out))\n',
+    rejected,
+  );
+  rejected.forEach((text, index) => {
+    let actual;
+    try {
+      parseContext(text);
+      actual = { refused: false };
+    } catch (error) {
+      if (!(error instanceof MalformedContext)) throw error;
+      actual = { refused: true, detail: error.message };
+    }
+    compare('context.rejected', text.slice(0, 40), expectedRejected[index], actual);
+    if (!actual.refused) {
+      problems.push(`context.rejected: both sides ACCEPTED ${JSON.stringify(text)}`);
+    }
+  });
+
+  // And validation against the real contract, which is the whole point of the
+  // parser: the same document must be valid or invalid in both.
+  const schema = JSON.parse(
+    fs.readFileSync(path.join(root, 'shared/analysis/schemas/context.schema.json'), 'utf8'),
+  );
+  const validated = [
+    fs.readFileSync(path.join(fixtures, 'valid-context.md'), 'utf8'),
+    '---\nschemaVersion: 1\n---\n',
+    '---\nschemaVersion: 1\npackageManager: "not-a-real-manager"\n---\n',
+  ];
+  const expectedValidation = python(
+    'import json,sys\n' +
+      'from qa_analysis import context, contracts\n' +
+      'payload = json.load(sys.stdin)\n' +
+      'schema = payload["schema"]\n' +
+      'out = []\n' +
+      'for text in payload["documents"]:\n' +
+      '    parsed = context.parse(text, schema=schema)\n' +
+      '    out.append({"valid": parsed["valid"], "hasErrors": len(parsed["errors"]) > 0})\n' +
+      'print(json.dumps(out))\n',
+    { schema, documents: validated },
+  );
+  validated.forEach((text, index) => {
+    const parsed = parseContext(text, { schema });
+    compare('context.validated', text.slice(0, 50), expectedValidation[index], {
+      valid: parsed.valid,
+      hasErrors: parsed.errors.length > 0,
+    });
+  });
 }
 
 if (problems.length) {

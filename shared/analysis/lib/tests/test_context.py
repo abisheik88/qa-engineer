@@ -168,6 +168,37 @@ class SubsetBoundaryTests(unittest.TestCase):
         with self.assertRaises(MalformedContext):
             parse_file(FIXTURES / "does-not-exist.md")
 
+    def test_a_mapping_key_sharing_indent_with_a_sequence_entry_is_rejected(self):
+        """YAML rejects this document; the parser used to reinterpret it.
+
+            list:
+              - one
+              key: inside a sequence
+
+        PyYAML: "expected <block end>, but found '?'". This parser closed the
+        sequence and put `key` in the ROOT mapping — two levels out from where it
+        was written — yielding {"list": ["one"], "key": "..."} from a file no
+        generator could have meant. A silent reinterpretation of an invalid file is
+        the failure mode this module exists to avoid.
+        """
+        with self.assertRaises(MalformedContext) as caught:
+            parse_frontmatter("list:\n  - one\n  key: inside a sequence\n")
+        self.assertIn("matches no open block", str(caught.exception))
+
+    def test_a_line_indented_past_every_open_block_is_rejected(self):
+        with self.assertRaises(MalformedContext):
+            parse_frontmatter("a: 1\n    b: 2\n")
+
+    def test_legitimate_dedent_back_to_an_outer_block_still_parses(self):
+        # The invariant must not reject the ordinary shape it sits next to.
+        parsed = parse_frontmatter(
+            "language:\n  primary: \"ts\"\n  others:\n    - \"js\"\nruntime:\n  node: \"20.x\"\n"
+        )
+        self.assertEqual(
+            parsed,
+            {"language": {"primary": "ts", "others": ["js"]}, "runtime": {"node": "20.x"}},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
