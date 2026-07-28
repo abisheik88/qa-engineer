@@ -168,8 +168,14 @@ Each failure includes an exact repair command.`);
         section = item.section;
         logger.info(`\n${section}`);
       }
+      // A failed check that is not blocking is a warning, not an error. Rendering
+      // "no git repository" and "no assistant markers" in red — directly above a
+      // hint calling them optional — is the first thing a new user sees, and it
+      // reads as a broken install when nothing is broken.
+      const isBlocking = blocking.some((b) => b.id === item.id);
       if (item.ok) logger.ok(item.message);
-      else logger.error(item.message);
+      else if (isBlocking) logger.error(item.message);
+      else logger.warn(item.message);
       if (!item.ok && item.hint) logger.info(`  → ${item.hint}`);
     }
     logger.info('');

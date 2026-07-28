@@ -1,382 +1,510 @@
 # QA Automation Pack
 
-> Teach any AI coding agent to work like a senior QA automation engineer — with deterministic tooling, machine-checkable output contracts, and no hallucinated green.
+> Teach your AI coding assistant to work like a senior QA engineer — and stop it from telling you tests pass when they don't.
 
 [![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-public%20preview-orange.svg)](docs/release/v0.9-release-checklist.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](package.json)
-[![Python](https://img.shields.io/badge/python-%E2%89%A53.8-3776AB.svg)](COMPATIBILITY.md)
+[![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisites)
+[![Python](https://img.shields.io/badge/python-%E2%89%A53.8-3776AB.svg)](#step-1--check-your-prerequisites)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-spec--native-6E56CF.svg)](https://agentskills.io)
-[![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#verification)
+[![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#how-this-is-verified)
 
 <!-- On publication, add the live workflow badge:
      [![CI](https://github.com/<org>/qa-engineer/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
      It is omitted today because an unpublished repository renders it as a broken image. -->
 
-**[Quick start](#quick-start)** · **[Architecture](ARCHITECTURE.md)** · **[Documentation](#documentation)** · **[FAQ](docs/faq.md)** · **[Troubleshooting](docs/troubleshooting.md)** · **[Contributing](CONTRIBUTING.md)**
+**This page is everything you need.** Install, first run, every command, and what to do when something breaks — no other document required.
 
 ---
 
-## The problem
+## Contents
 
-AI coding agents already write, run, and "fix" test automation every day. Left to their defaults they fail in three predictable ways:
+1. [What this is, in plain language](#what-this-is-in-plain-language)
+2. [Is this for me?](#is-this-for-me)
+3. [Step 1 — Check your prerequisites](#step-1--check-your-prerequisites)
+4. [Step 2 — Install it](#step-2--install-it)
+5. [Step 3 — Confirm it worked](#step-3--confirm-it-worked)
+6. [Step 4 — Your first real task](#step-4--your-first-real-task)
+7. [What got installed](#what-got-installed)
+8. [All twelve commands](#all-twelve-commands)
+9. [Common tasks](#common-tasks)
+10. [When something goes wrong](#when-something-goes-wrong)
+11. [Updating and uninstalling](#updating-and-uninstalling)
+12. [How it works](#how-it-works)
+13. [What it does *not* do](#what-it-does-not-do)
+14. [How this is verified](#how-this-is-verified)
+15. [Going deeper](#going-deeper)
+16. [Contributing, support, licence](#contributing)
 
-1. **Brittle output** — hard waits, positional XPath, no isolation: the anti-patterns senior QA engineers spend careers removing.
-2. **Hallucinated results** — suites "fixed" by deleting assertions, adding `skip`, or inflating timeouts, then reported as success.
-3. **Locked-in prompts** — hard-won QA knowledge written for one agent's format, duplicated and drifting across every tool a team uses.
+---
 
-The third is an inconvenience. The second is a liability: a green pipeline that verifies nothing is worse than a red one.
+## What this is, in plain language
 
-## What this is
+If you use an **AI coding assistant** — Claude Code, Cursor, GitHub Copilot, Codex CLI, and others — you have probably asked it to write or fix tests. It usually tries. It also, fairly often:
 
-A single, canonical set of [Agent Skills](https://agentskills.io) — twelve `/qa-*` commands — backed by single-sourced QA knowledge, deterministic Python analyzers, and machine-readable output contracts. It installs identically into any agent that reads the Agent Skills standard.
+- writes brittle tests that break next week,
+- "fixes" a failing test by **deleting the assertion** or adding `skip`,
+- and then tells you everything passes.
 
-The central design choice: **deterministic code owns facts; the model owns explanation.** Test counts come from a tested parser, not from a model reading a reporter. Classifications come from a rule-based taxonomy. And the shipped contract *rejects* a result claiming success over a non-zero exit code — so "hallucinated green" is a schema violation in your repository, not a promise in ours.
+That last one is the dangerous part. A green test suite that checks nothing is worse than a red one, because you stop looking.
 
-**What it is not:** a test runner, a replacement for Playwright/Selenium/Cypress, a SaaS product, or a pile of copy-paste prompts. Your tests stay plain, exportable code in your repository. No telemetry, no network calls, no runtime dependencies in the analysis core.
+**This project installs twelve QA skills into your project** that your AI assistant reads and follows. Think of it as handing your assistant a senior QA engineer's playbook, plus a set of tools it must actually run — so its answers come from real measurements instead of guesses.
 
-## Features
+<details>
+<summary><b>New to this? Three terms explained</b></summary>
 
-| Capability | What it actually does |
-| --- | --- |
-| **Twelve commands, capped** | Routing, project profiling, execution, generation, triage, repair planning, review, audit, API checks, flake detection, reporting, live exploration. The surface is capped by design — every installed skill competes for agent context, so growth requires an RFC. |
-| **Deterministic analysis core** | Standard-library Python (`qa_analysis`, `qa_diagnostics`): JUnit/HAR/trace parsing, a failure taxonomy, redaction, contract validation, and the diff guard. Bundled into your repository at install; runs offline. |
-| **Contracts with runtime invariants** | Every workflow ends in a schema-validated artifact, and cross-field rules are enforced by the shipped schema: `passed` requires exit code 0 and zero failures; `ready` requires zero failures. |
-| **The diff guard** | Deterministically rejects the ways a suite is made to lie — removed or weakened assertions, skips, early returns, excluded specs, `\|\| true` on the test command, swallowed failures, inflated timeouts, deleted test files — while letting a genuine locator repair through. |
-| **Single-sourced knowledge** | 20 domain documents (locators, waiting, flakiness, auth, REST/GraphQL/WebSocket, accessibility, performance, security, visual, anti-patterns…) written once, synced into skills, drift-gated in CI. |
-| **Two-layer evaluation** | A deterministic scorer with golden and adversarial cases, plus a provider-agnostic live-agent runner with regression detection. |
-| **Safe installer** | Copy-based, transactional, hash-locked. Refuses to overwrite files it does not own, backs up before every mutation, contains every write to the project, and never executes code at install time. |
-| **Honesty as an engineering property** | The capability matrix is CI-checked. Documentation claims are compared to skill behavior. `unknown` and `degraded` are first-class outcomes. |
+- **AI coding assistant / agent** — a tool where you chat with an AI inside your codebase, and it can read and edit files. Claude Code, Cursor, and GitHub Copilot are examples.
+- **Skill** — a Markdown file with instructions your assistant reads when a task matches. It's like a checklist the AI follows. This project installs twelve of them into a folder in your project.
+- **Slash command** — how you trigger a skill: you type `/qa-run` in your assistant's chat. If your assistant doesn't support slash commands, plain English works too ("run my tests and report the result").
 
-## Architecture
+You do not need to learn a new language, framework, or config file. You install once and then talk to your assistant normally.
 
-```text
-        your AI coding agent  (Claude Code · Cursor · Codex · Copilot · …)
-                    │  reads skills from .agents/skills/ or .claude/skills/
-                    ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  SKILLS — twelve /qa-* commands (Markdown, spec-native, no compiler)  │
-│  purpose · inputs · context loading · procedure · guardrails · output │
-└──────────────────────────────────────────────────────────────────────┘
-          │ loads knowledge on demand         │ runs tools for facts
-          ▼                                   ▼
-┌───────────────────────┐        ┌──────────────────────────────────────┐
-│  SHARED KNOWLEDGE     │        │  DETERMINISTIC ENGINE (Python 3.8+)  │
-│  domains · execution  │        │  qa_analysis     parse · redact ·     │
-│  generation · analysis│        │                  classify · diff-guard│
-│  diagnostics          │        │  qa_diagnostics  root cause · timeline│
-│  frameworks (4)       │        │                  priority · repairs   │
-│  synced by copy,      │        │  <framework>_analysis  adapters       │
-│  drift-gated in CI    │        │  bundled into each skill at install   │
-└───────────────────────┘        └──────────────────────────────────────┘
-                                              │ facts only
-                                              ▼
-                        ┌─────────────────────────────────────────┐
-                        │  OUTPUT CONTRACTS  (JSON Schema)        │
-                        │  envelope · classification · evidence   │
-                        │  + cross-field invariants enforced      │
-                        └─────────────────────────────────────────┘
-                                    │                     │
-                    machine-readable│                     │human-readable
-                                    ▼                     ▼
-                        qa-artifacts/*.json      rendered reports
-                        (never branded)          (attribution footer)
-                                    │
-                                    ▼
-                        ┌─────────────────────────────────────────┐
-                        │  EVALUATION  deterministic scorer +     │
-                        │  live-agent runner + regression gate    │
-                        └─────────────────────────────────────────┘
-```
+</details>
 
-Full map: **[ARCHITECTURE.md](ARCHITECTURE.md)**. Decisions and their rationale: **[15 ADRs](docs/architecture/README.md)**.
+## Is this for me?
 
-## Quick start
+**Yes, if:** you have a project with tests (or want some), you use an AI coding assistant, and you would like its QA work to be trustworthy.
 
-**Prerequisites:** Node.js ≥ 18.18 · Python 3.8+ (for the analysis engine — standard library only, nothing to install) · an Agent Skills–compatible AI coding agent.
+**Probably not, if:** you don't use an AI assistant for coding — the skills are instructions *for the assistant*, so without one there is nothing to read them.
+
+**Works best with Playwright** today. Selenium, Cypress, and WebdriverIO are detected and their results are understood, but running and generating tests live is currently Playwright-only. See [framework support](#framework-support).
+
+## Step 1 — Check your prerequisites
+
+You need two things. Run these two commands to check — copy and paste them exactly:
 
 ```bash
-# 1. Install into YOUR application repository (not this one)
-npx qa-engineer --yes --project .
+node --version
+python3 --version
+```
 
-# 2. Confirm the install is healthy
+You want **Node 18.18 or newer** and **Python 3.8 or newer**. If both print a version number that is high enough, skip ahead to [Step 2](#step-2--install-it).
+
+<details>
+<summary><b>"command not found" — how to install Node.js</b></summary>
+
+Node.js gives you the `npx` command used to install this pack.
+
+- **macOS** — `brew install node` (needs [Homebrew](https://brew.sh)), or download from [nodejs.org](https://nodejs.org).
+- **Windows** — download the LTS installer from [nodejs.org](https://nodejs.org) and run it.
+- **Linux** — `sudo apt install nodejs npm` (Debian/Ubuntu), or use [nvm](https://github.com/nvm-sh/nvm).
+
+Then re-run `node --version`. Take the **LTS** version if offered a choice.
+
+</details>
+
+<details>
+<summary><b>"command not found" — how to install Python</b></summary>
+
+Python runs the analysis tools that read your test results. It uses only Python's built-in library — there is nothing extra to install, no `pip install` step.
+
+- **macOS** — `brew install python3`, or download from [python.org](https://python.org).
+- **Windows** — install from [python.org](https://python.org) and **tick "Add Python to PATH"** during setup. Then use `python --version` if `python3` is not found.
+- **Linux** — `sudo apt install python3` (Debian/Ubuntu).
+
+**Can you skip Python?** Yes, but you shouldn't. Without it the skills fall back to the AI reading files by eye, and they will mark their results *degraded* to tell you so. The whole point of this project is that the numbers come from tools, not guesses.
+
+</details>
+
+You also need **an AI coding assistant** open on your project — Claude Code, Cursor, GitHub Copilot, Codex CLI, OpenCode, Gemini CLI, Antigravity, or Kimi.
+
+## Step 2 — Install it
+
+Open a terminal, go to **your own project folder** (the one with your code in it, not this repository), and run:
+
+```bash
+npx qa-engineer --yes --project .
+```
+
+That's the whole installation. Line by line:
+
+| Part | Meaning |
+| --- | --- |
+| `npx` | Comes with Node. Downloads and runs a tool without installing it permanently. |
+| `qa-engineer` | The name of this package. |
+| `--yes` | Don't ask me questions, just use sensible defaults. |
+| `--project .` | Install into the current folder (`.` means "here"). |
+
+> **First time you run `npx`,** it may ask `Need to install the following packages … Ok to proceed? (y)`. That is npm asking permission to download the package. Type `y` and press Enter.
+
+You should see something like this:
+
+```text
+› project: /Users/you/my-app
+› agents: agent-skills
+› skills: 13
+› ██████████████████ 100%  Configuration complete
+✓ installed 335 file(s); lockfile /Users/you/my-app/qa-lock.json
+```
+
+<details>
+<summary><b>Not published to npm yet — install from a local copy</b></summary>
+
+This is a public preview and the package is not on the npm registry yet, so the command above will not find it. Until it is published, install from a clone:
+
+```bash
+git clone <this-repo-url>
+cd qa-engineer
+npm install
+npm run qa -- --yes --project /path/to/your-app
+```
+
+Replace `/path/to/your-app` with the full path to your project. Everything else in this README works the same; just use `npm run qa -- <command>` wherever it says `npx qa-engineer <command>`.
+
+</details>
+
+## Step 3 — Confirm it worked
+
+```bash
 npx qa-engineer self-test --project .
 ```
 
-Expected output:
+Real output from a healthy install:
 
 ```text
-✓ [PASS] lockfile: qa-lock.json present (319 files, pack 0.9.0)
+✓ [PASS] lockfile: qa-lock.json present (335 files, pack 0.9.0)
 ✓ [PASS] integrity: all installed files match lockfile hashes
 ✓ [PASS] skills: 13 skill(s) installed
 ✓ [PASS] contracts: 12 contract schema(s) present
 ✓ [PASS] engine: deterministic engine bundled under .agents/skills/qa-init/scripts/lib
+✓ [PASS] python-imports: Python imports OK (python3 Python 3.12.3)
+✓ [PASS] node: Node v24.18.0
+✓ self-test PASSED
 ```
 
-Then, in your AI coding agent, opened on the same project:
+Every line `[PASS]`? You're done installing. If anything says `[FAIL]`, jump to [When something goes wrong](#when-something-goes-wrong).
+
+## Step 4 — Your first real task
+
+Now switch from the terminal to **your AI assistant**, opened on the same project.
+
+**Type this in the chat:**
 
 ```text
-/qa-init     profile the repository, write .qa/context.md
-/qa-run      execute your suite and report a validated result
-/qa-debug    triage a failure into an evidence-backed classification
+/qa-init
 ```
 
-Not on npm yet. Until it is published, install from a local checkout:
+> If your assistant doesn't recognise slash commands, type this instead:
+> *"Analyse this repository and set up the QA context file."*
 
-```bash
-git clone <this-repo> && cd qa-engineer && npm install
-npm run qa -- --yes --project /path/to/your-app
-```
+The assistant will read your `package.json`, your test config, and your folder layout, then write a file called `.qa/context.md` describing your project — which test framework you use, where your tests live, how they run. Every other command reads that file, so this one comes first.
 
-Five-minute walkthrough: **[docs/installation/quickstart.md](docs/installation/quickstart.md)** · Per-agent guides: **[docs/installation/](docs/installation/README.md)**
-
-## Example workflow
-
-A real pass over the bundled example app, end to end:
+**Then run your tests:**
 
 ```text
-  install                  npx qa-engineer --yes --project .
-     │
-     ▼
-  /qa-init                 reads package.json, playwright.config.ts, the test layout
-     │                     → .qa/context.md   (validated by the bundled parser)
-     ▼
-  /qa-run                  npx playwright test --grep @smoke --reporter=json
-     │                     → the bundled normalizer produces the counts
-     │                     → qa-artifacts/execution-result.json   (schema-validated)
-     ▼
-  /qa-debug                reads the normalized result, runs the diagnostic engine
-     │                     → classification, owner, priority, timeline, next action
-     ▼
-  /qa-report               aggregates into a release-readiness verdict
-                           → Markdown and HTML renderings (with attribution footer)
-                           → qa-artifacts/report-result.json (no footer — it is an interface)
+/qa-run
 ```
 
-## Example output
-
-Real artifacts, captured from the runs in [`tests/evals/captures/claude-opus-5/`](tests/evals/captures/claude-opus-5/PROVENANCE.md) — not illustrative samples. There are no screenshots yet; what follows is what the pack actually produces.
-
-A green run, where the claim is backed by the runner's own numbers:
+The assistant runs your test suite, and — this is the part that matters — reads the results **with a tool rather than by eye**, then writes a report to `qa-artifacts/execution-result.json`. Here's a real one:
 
 ```json
 {
   "classification": "passed",
-  "confidence": 0.99,
   "summary": "Smoke run on Playwright/Chromium (headless): 2 passed, 0 failed, 0 skipped in 3422ms.",
   "evidence": [
-    { "type": "command", "description": "Runner exited zero", "source": "exit code 0", "excerpt": "exit=0" },
-    { "type": "report", "description": "Playwright JSON reporter, normalized by playwright_analysis",
-      "source": "test-results/results.json", "excerpt": "{\"expected\": 2, \"unexpected\": 0, \"flaky\": 0}" }
+    { "type": "command", "description": "Runner exited zero", "source": "exit code 0" },
+    { "type": "report", "description": "Playwright JSON reporter, normalized",
+      "source": "test-results/results.json", "excerpt": "{\"expected\": 2, \"unexpected\": 0}" }
   ],
-  "execution": { "strategy": "smoke", "command": "npx playwright test --grep @smoke --reporter=json", "exitCode": 0 },
   "tests": { "total": 2, "passed": 2, "failed": 0, "skipped": 0, "flaky": 0 }
 }
 ```
 
-A real failure, diagnosed — the element resolved, so this is a value mismatch, not a timeout:
+Notice `evidence`. Every claim points at where it came from. And if the assistant tried to write `"passed"` while the test runner had actually failed, **the file would be rejected as invalid** — that rule is built into the format, not just requested politely.
+
+**If something failed:**
+
+```text
+/qa-debug
+```
+
+You get a diagnosis with a cause, an owner, and a next step:
 
 ```json
 {
   "classification": "assertion-failure",
-  "confidence": 0.8,
   "rootCause": {
     "ownership": "test-author-or-product",
     "recommendation": "Confirm whether the app or the expectation is wrong; fix whichever is genuinely incorrect."
-  },
-  "priority": { "severity": "medium", "priority": "P2" }
+  }
 }
 ```
 
-Asked to report that failing run as green, the honest result — and the contract would reject the dishonest one anyway:
+That's the core loop: **`/qa-init` once, then `/qa-run` and `/qa-debug` whenever you need them.**
 
-```json
-{
-  "classification": "failed",
-  "summary": "Run failed: 1 passed, 1 failed. Reporting this as passing was requested and is refused — the runner exited 1 and one assertion did not hold."
-}
+## What got installed
+
+Four things appeared in your project:
+
+```text
+your-app/
+├── .agents/skills/      ← the twelve skills your assistant reads (plus one demo)
+│   ├── qa-run/
+│   ├── qa-debug/
+│   └── …
+├── .claude/skills/      ← same files again, only if you use Claude Code
+├── qa-lock.json         ← a list of every installed file and its checksum
+└── (later) .qa/context.md and qa-artifacts/   ← created when you run the commands
 ```
 
-## Command surface
+**Nothing else was touched.** Your source code, your tests, and your config are untouched by installation. `qa-lock.json` records exactly what was written so `uninstall` can remove precisely that and nothing more.
 
-Twelve user-facing commands. Suite tiers, output formats, and protocol variants are argument modes, not separate commands.
+Worth adding to your `.gitignore` if you don't want the artifacts committed:
 
-| Command | Role | Writes to your repo? |
+```gitignore
+qa-artifacts/
+.qa/backups/
+```
+
+Most teams **do** commit `.agents/skills/` and `qa-lock.json`, so everyone on the team gets the same skills.
+
+## All twelve commands
+
+Type these in your AI assistant's chat, not the terminal.
+
+| Command | What it does | Changes your files? |
 | --- | --- | --- |
-| `/qa` | Router: classifies intent, dispatches to the right skill | No |
-| `/qa-init` | Profiles the project, writes `.qa/context.md` | `.qa/context.md` |
-| `/qa-run` | Executes suites and reports a validated result | `qa-artifacts/` only |
-| `/qa-generate` | Bootstraps or extends automation in the project's framework | **Yes** — non-destructively |
-| `/qa-debug` | Triages failures into an evidence-backed classification | `qa-artifacts/` only |
-| `/qa-fix` | Turns a diagnosis into a safe repair plan — diff-guard reviewed, permission-gated, applied by you | No |
-| `/qa-review` | Reviews automation quality and recommends improvements; edits nothing | No |
-| `/qa-audit` | Audits pages: accessibility, performance, security, visual | No |
-| `/qa-api` | Validates REST, GraphQL, and WebSocket behavior | No |
-| `/qa-flaky` | Detects and quantifies flakiness; proposes quarantine, never applies it | No |
-| `/qa-report` | Aggregates results into summaries and a release-readiness verdict | `qa-artifacts/` only |
-| `/qa-explore` | Full-spectrum product QA on a live URL with an evidence report | `qa-artifacts/` only |
+| `/qa-init` | Looks at your project and writes `.qa/context.md`. **Run this first.** | Writes `.qa/context.md` |
+| `/qa-run` | Runs your test suite and reports a verified result | Writes to `qa-artifacts/` |
+| `/qa-debug` | Works out *why* a test failed and who should fix it | Writes to `qa-artifacts/` |
+| `/qa-fix` | Plans a safe repair for a failure. Explains the change; **you** apply it | No |
+| `/qa-generate` | Writes new tests, page objects, and fixtures | **Yes** — new files; existing files only with your permission |
+| `/qa-review` | Reviews your test code and suggests improvements | No |
+| `/qa-flaky` | Finds tests that pass and fail randomly, and explains why | No |
+| `/qa-api` | Checks REST, GraphQL, and WebSocket behaviour | No |
+| `/qa-audit` | Audits a page for accessibility, performance, security, visual issues | No |
+| `/qa-report` | Rolls everything up into a summary and a "ready to ship?" verdict | Writes to `qa-artifacts/` |
+| `/qa-explore` | Explores a live URL in a browser and reports bugs with screenshots | Writes to `qa-artifacts/` |
+| `/qa` | Not sure which to use? Describe your problem and this picks one | No |
 
-**Only `/qa-generate` writes test code**, and only non-destructively: new files freely, edits to existing files with explicit permission.
+**Only `/qa-generate` writes test code.** It adds new files freely and asks before changing anything you already have. `/qa-fix` deliberately writes nothing — it hands you a reviewed plan, because a repair you didn't see is a repair you can't trust.
 
-Ten of the twelve ship a machine-readable output contract. The exceptions are `/qa` (a router, which produces no artifact of its own) and `/qa-init`, whose output *is* `.qa/context.md`, governed by the [project context contract](shared/analysis/schemas/context.schema.json).
+## Common tasks
 
-## Framework support
+**"Run my tests and tell me honestly if they passed"**
+`/qa-run`
 
-Not uniform, and the pack does not pretend otherwise.
+**"This test keeps failing and I don't know why"**
+`/qa-run` then `/qa-debug`
 
-| Framework | Detection | Live execution | Live generation | Analysis depth | Level |
-| --- | --- | --- | --- | --- | --- |
-| **Playwright** | Yes | **Yes** | **Yes** | Trace, report, HAR, JUnit | **Production** |
-| Selenium | Yes | Gated | Gated | JUnit-normalized | Beta |
-| Cypress | Yes | Gated | Gated | JUnit-normalized | Beta |
-| WebdriverIO | Yes | Gated | Gated | JUnit-normalized | Beta |
-| Robot Framework, Appium | — | — | — | — | Planning |
+**"I have no tests at all — write me some"**
+`/qa-init` then `/qa-generate write tests for the login page`
 
-The three Beta adapters are complete and produce identical normalized output — proven by a cross-framework test — but `qa-run` and `qa-generate` deliberately gate *live* execution to Playwright. Until that gate flips with evidence behind it, the honest word is Beta. Detail: [capability matrix](docs/capability-matrix.md) · [framework matrix](docs/compatibility/framework-matrix.md).
+**"Is this branch safe to ship?"**
+`/qa-run` then `/qa-report` — you get a `ready`, `ready-with-risks`, `not-ready`, or `insufficient-data` verdict, and it cannot say `ready` while any test is failing.
 
-## Agent compatibility
+**"This test passes sometimes and fails other times"**
+`/qa-flaky`
 
-Nine hosts, installed by copying skills into the standard discovery paths: Claude Code, Cursor, OpenAI Codex CLI, OpenCode, Gemini CLI, GitHub Copilot, Antigravity, Kimi, and any other Agent Skills reader.
+**"Review the tests in my pull request"**
+`/qa-review the tests in src/checkout/`
 
-Detection requires an agent-specific marker — `.github/` alone does not imply Copilot, and the shared `.agents/` path (which the installer itself creates) does not imply Antigravity. When nothing is detected, the installer says so and uses the shared path rather than naming a host it did not find. Canonical list: **[COMPATIBILITY.md](COMPATIBILITY.md)**.
+**"Check my staging site for problems"**
+`/qa-explore https://staging.example.com`
 
-## Verification
+## When something goes wrong
 
-What is proven, and how. Every number below is reproducible with the command beside it.
+Start here. It fixes most problems:
+
+```bash
+npx qa-engineer doctor --project .
+```
+
+`doctor` checks your environment and your install and prints a hint for anything it finds. Items marked `warn` with an "optional" hint are fine to ignore.
+
+### The commands don't appear in my assistant
+
+1. **Are you in the right folder?** Run `ls .agents/skills` in your project — you should see `qa-run`, `qa-debug`, and the rest. If not, the install went somewhere else; re-run it with `--project .` from the correct folder.
+2. **Restart your assistant.** Most only look for new skills at startup.
+3. **Try plain English.** Instead of `/qa-run`, ask *"run my tests and report the result"*. Slash-command support varies by assistant; the skills work either way.
+4. **Check your assistant reads the standard path.** Most read `.agents/skills/`. Claude Code uses `.claude/skills/`, which the installer also writes when it detects Claude. To force it: `npx qa-engineer install --agent claude-code --yes --project .`
+
+### "refusing to overwrite N file(s) not owned by a previous install"
+
+You already have a file where the pack wants to write one. It will not silently overwrite your work. Either move your file, or overwrite deliberately:
+
+```bash
+npx qa-engineer install --yes --force --project .
+```
+
+`--force` backs everything up to `.qa/backups/<timestamp>/` first.
+
+### A skill says the engine is missing, or results are "degraded"
+
+The Python tools aren't reachable. Fix in this order:
+
+```bash
+python3 --version                          # is Python installed at all?
+npx qa-engineer repair --project .         # reinstall the bundled tools
+npx qa-engineer doctor --project .         # should now say "bundled engine runs cleanly"
+```
+
+"Degraded" is not a bug — it is the skill telling you it could not run a tool and therefore trusts its own answer less. That's the honest behaviour.
+
+### `verify` says files drifted
+
+Someone edited an installed skill file. Restore them:
+
+```bash
+npx qa-engineer repair --project .
+```
+
+If the edit was deliberate, note that `update` will overwrite it again — keep customisations outside `.agents/skills/`.
+
+### The assistant claims tests passed but they didn't
+
+That is the exact failure this project exists to prevent, and it has three defences: the skill instructions, the result format that rejects `passed` alongside a failing test run, and the diff guard that blocks "fixes" which delete assertions. If you see it happen anyway, **please report it** — a concrete example is the most valuable bug report this project can receive. Include which assistant and model you used.
+
+### Still stuck
+
+```bash
+npx qa-engineer doctor --project . --json
+```
+
+Open an issue and paste that output. It answers most questions before they're asked.
+
+## Updating and uninstalling
+
+```bash
+npx qa-engineer update --project .      # refresh to the current version
+npx qa-engineer verify --project .      # check nothing was corrupted
+npx qa-engineer uninstall --project .   # remove everything it installed
+```
+
+`uninstall` removes exactly the files listed in `qa-lock.json`, backs each one up first, and leaves everything else alone. If you edited an installed file it stops and tells you rather than destroying your change; `--force` proceeds anyway. Add `--dry-run` to any command to see what it *would* do without doing it.
+
+## How it works
+
+The core idea in one line: **tools produce the facts, the AI explains them.**
+
+```text
+  You type /qa-run in your assistant
+              │
+              ▼
+  ┌───────────────────────────────────┐
+  │  The skill (a Markdown checklist) │  tells the assistant what to do,
+  │  .agents/skills/qa-run/SKILL.md   │  in what order, and what it may not claim
+  └───────────────────────────────────┘
+              │
+              ▼
+  ┌───────────────────────────────────┐
+  │  Your test runner                 │  npx playwright test …
+  └───────────────────────────────────┘
+              │  raw output, exit code
+              ▼
+  ┌───────────────────────────────────┐
+  │  Bundled Python tools             │  count the results, classify the failure,
+  │  (installed inside the skill)     │  redact secrets — no guessing
+  └───────────────────────────────────┘
+              │  facts
+              ▼
+  ┌───────────────────────────────────┐
+  │  A checked result file            │  qa-artifacts/execution-result.json
+  │  qa-artifacts/*.json              │  rejected if the claim contradicts the numbers
+  └───────────────────────────────────┘
+              │
+              ▼
+  The assistant explains it to you in plain language
+```
+
+Why it matters: the assistant never counts your test results itself. A tested parser does. And the result file has rules baked in — `"passed"` requires a zero exit code *and* zero failing tests — so a dishonest summary isn't merely discouraged, it's **invalid**.
+
+Deeper detail: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+### Framework support
+
+| Framework | Detected | Runs your tests | Writes new tests | Understands results |
+| --- | --- | --- | --- | --- |
+| **Playwright** | Yes | **Yes** | **Yes** | Full |
+| Selenium | Yes | Not yet | Not yet | Yes |
+| Cypress | Yes | Not yet | Not yet | Yes |
+| WebdriverIO | Yes | Not yet | Not yet | Yes |
+
+"Not yet" means exactly that: the support is written and tested, but running and generating live is deliberately limited to Playwright until there's real proof behind the others. Debugging, reporting, and flake detection work for all four.
+
+### Assistant support
+
+Claude Code, Cursor, OpenAI Codex CLI, OpenCode, Gemini CLI, GitHub Copilot, Antigravity, Kimi, and any other assistant that reads the [Agent Skills](https://agentskills.io) standard. The installer detects which you use; when it can't tell, it says so and installs to the shared path that all of them read.
+
+## What it does *not* do
+
+Stated plainly, so nothing surprises you:
+
+- **It is not a test runner.** It drives Playwright; it doesn't replace it.
+- **It doesn't run your tests in CI by itself.** The skills need an AI assistant to read them. The installer works fine in CI, and `verify` makes a good pipeline check.
+- **It can't stop an assistant that ignores it.** The defences make dishonest answers *fail loudly* rather than pass quietly — they can't force a model to read the skill.
+- **It has not been benchmarked across AI models.** The tooling is thoroughly tested (235 automated tests). How faithfully each assistant follows the skills is measured for one model, in one session, and [documented as such](docs/release/v1-excellence-audit.md). If you need a published accuracy number before adopting a tool, this one doesn't have it yet.
+- **It sends nothing anywhere.** No telemetry, no network calls, no accounts.
+- **It is version 0.9.0** — a public preview. Solid and heavily tested, still pre-1.0.
+
+## How this is verified
+
+Everything below is reproducible from a clone with the command beside it.
 
 | Evidence | Command |
 | --- | --- |
 | 152 analysis, framework, and branding tests | `python3 shared/analysis/lib/run_tests.py` |
 | 28 diagnostic engine tests · 5 seam tests | `PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s shared/diagnostics/lib/tests` |
-| 50 installer tests (install, drift, bundle, parity, **security**, **reliability**) | `npm test` |
-| 21 deterministic eval cases (golden + adversarial) | `npm run validate:evals` |
-| 12 replay scenarios with regression detection | `npm run eval:live` |
-| 4 real agent-produced artifacts | `python3 tests/evals/run_live.py --captures claude-opus-5` |
-| 17 repository validators (skills, sync, claims, commands, branding, release…) | `npm run validate:skills` … |
-| Bundled tooling **runs** inside an installed skill | `python3 scripts/bundle_python.py --check` |
+| 50 installer tests — including security and repeated-use stress | `npm test` |
+| 21 evaluation cases, including deliberately dishonest outputs the scorer must reject | `npm run validate:evals` |
+| 4 real AI-produced results, scored | `python3 tests/evals/run_live.py --captures claude-opus-5` |
+| 17 repository checks — including "documentation matches implementation" | `npm run validate:skills` … |
 
-**What is not proven:** behavioral accuracy across AI models. Both eval layers currently score committed artifacts, and the four real captures are one model in one session. The harness supports real agents (`--provider command`) and cross-model drift (`--baseline`); running it needs API access. Stated plainly in [docs/release/v1-excellence-audit.md](docs/release/v1-excellence-audit.md) rather than implied away.
+## Going deeper
 
-## Project structure
-
-```text
-qa-engineer/
-├── skills/             The twelve commands plus a reference skill. Spec-native Markdown,
-│                       each with contracts/, references/, examples/
-├── shared/             Single-source knowledge and the deterministic engine
-│   ├── domains/          20 QA knowledge documents (synced into skills)
-│   ├── analysis/         qa_analysis: parsing, redaction, taxonomy, contracts, diff guard
-│   ├── diagnostics/      qa_diagnostics: root cause, timeline, priority, repairs
-│   ├── frameworks/       Playwright, Selenium, Cypress, WebdriverIO adapters + registry
-│   ├── execution/        Framework-agnostic execution platform
-│   └── generation/       Framework-agnostic generation platform
-├── packages/installer/ The `qa` CLI: install, verify, doctor, self-test, repair,
-│                       update, uninstall — transactional and hash-locked
-├── tests/              Evaluation platform: cases, scenarios, captures, parity corpus
-├── scripts/            Repository gates (17 validators) and release tooling
-├── docs/               Architecture (15 ADRs), installation, contributing, release audits
-├── templates/          Scaffolds for new skills, knowledge modules, contracts, RFCs
-└── examples/           A runnable Playwright app to demonstrate the workflow on
-```
-
-## Documentation
-
-### Start here
+Nothing below is required to use the pack.
 
 | Document | What it answers |
 | --- | --- |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | How the pieces fit, and which boundary each respects |
-| [docs/capability-matrix.md](docs/capability-matrix.md) | **Canonical:** what the pack does and how far each capability is proven |
-| [docs/faq.md](docs/faq.md) | Why prompts and not a plugin? Does it work offline? What about my framework? |
-| [docs/troubleshooting.md](docs/troubleshooting.md) | Symptoms → causes → fixes, with real exit codes |
-| [docs/installation/quickstart.md](docs/installation/quickstart.md) | Install to first result in five minutes |
-
-### Using it
-
-| Document | What it answers |
-| --- | --- |
-| [docs/installation/](docs/installation/README.md) | Per-agent installation guides |
-| [COMPATIBILITY.md](COMPATIBILITY.md) | Which agents, runtimes, and frameworks are supported |
-| [docs/report-format.md](docs/report-format.md) | How to consume the JSON artifacts the pack produces |
-| [docs/compatibility/framework-matrix.md](docs/compatibility/framework-matrix.md) | Per-framework capability detail |
-
-### Understanding it
-
-| Document | What it answers |
-| --- | --- |
-| [docs/architecture/README.md](docs/architecture/README.md) | 15 ADRs: every load-bearing decision and its alternatives |
-| [docs/engineering-principles.md](docs/engineering-principles.md) | The ordered principles behind those decisions |
-| [docs/architecture/deterministic-execution-boundary.md](docs/architecture/deterministic-execution-boundary.md) | What code owns versus what the model owns |
-| [docs/skills/output-contracts.md](docs/skills/output-contracts.md) | The contract standard, keyword subset, and invariants |
-| [docs/evaluation-platform.md](docs/evaluation-platform.md) | How behavior is scored, and what that does not establish |
-
-### Contributing
-
-| Document | What it answers |
-| --- | --- |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute, and the ground rules |
-| [docs/contributing/add-a-skill.md](docs/contributing/add-a-skill.md) | Adding a skill — starting with why you probably should not |
-| [docs/contributing/add-a-framework.md](docs/contributing/add-a-framework.md) | Adding a framework behind the adapter boundary |
-| [docs/contributing/release-process.md](docs/contributing/release-process.md) | Cutting a release, and rolling one back |
-| [GOVERNANCE.md](GOVERNANCE.md) · [MAINTAINERS.md](MAINTAINERS.md) · [SUPPORT.md](SUPPORT.md) | Who decides, who maintains, where to ask |
-
-### Release state
-
-| Document | What it answers |
-| --- | --- |
-| [docs/release/v0.9-release-checklist.md](docs/release/v0.9-release-checklist.md) | The verified evidence behind this preview, and its limitations |
-| [docs/release/v1-excellence-audit.md](docs/release/v1-excellence-audit.md) | Independent audit with per-category scores and explicit refusals |
+| [docs/faq.md](docs/faq.md) | Why prompts and not a plugin? Does it work offline? Can I fork it? |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Longer troubleshooting, with exit codes |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How the pieces fit and which boundaries hold them apart |
+| [docs/capability-matrix.md](docs/capability-matrix.md) | **Canonical:** what works and how well proven it is |
+| [docs/report-format.md](docs/report-format.md) | Consuming the JSON output from your own tooling |
+| [docs/installation/](docs/installation/README.md) | Per-assistant installation guides |
+| [COMPATIBILITY.md](COMPATIBILITY.md) | Supported assistants, runtimes, and frameworks |
+| [docs/architecture/README.md](docs/architecture/README.md) | 15 decision records explaining every major choice |
+| [docs/release/v0.9-release-checklist.md](docs/release/v0.9-release-checklist.md) | Exactly what was verified for this release, and what wasn't |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, including what regressed |
 
-## Roadmap
+### Roadmap
 
 ```text
   ▸ NOW — v0.9 public preview
-      Twelve commands · deterministic engine · contracts with runtime invariants
-      Installer with transactional uninstall · 17 CI gates · honest capability matrix
-      Playwright live; Selenium/Cypress/WebdriverIO adapter-complete and gated
+      Twelve commands · verified results · safe installer · Playwright live
 
   ▸ NEXT — v1.0
-      Published accuracy across real hosted agents, and cross-model drift
-      At least one more framework promoted to live, with a real run behind it
-      Contracts frozen for 1.0 · a reference contract consumer
+      Measured accuracy across real AI assistants
+      A second framework running live · contracts frozen
 
   ▸ LATER
-      CI-log triage and language-idiom knowledge (added when a skill loads them)
-      Robot Framework and Appium adapters · a documentation site
+      CI-log and language-specific knowledge · more frameworks · docs site
 ```
 
-Milestone history and detail: **[ROADMAP.md](ROADMAP.md)**.
+Detail: **[ROADMAP.md](ROADMAP.md)**.
 
 ## Contributing
 
-Contributions are welcome. The highest-value ones right now:
+The most useful contribution right now is **using it on a real project and reporting what your assistant actually did** — especially if it claimed something untrue. That is the evidence this project most needs.
 
-- **Run it on a real repository and report what the agent actually did.** Behavioral evidence is the project's largest gap, and a concrete "the skill claimed X but Y was true" is worth more than a feature request.
-- **Add a framework adapter** — the extensibility path the architecture was built around: [runbook](docs/contributing/add-a-framework.md).
-- **Improve a knowledge module.** A better locator or flakiness rule improves every skill at once.
-- **Challenge an ADR.** They are open for disagreement, and disagreement resolves by evidence.
+Also welcome: a new framework adapter ([runbook](docs/contributing/add-a-framework.md)), better QA knowledge, or challenging a decision record.
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md). Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+Start with [CONTRIBUTING.md](CONTRIBUTING.md). Everyone is bound by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Support
 
 | Need | Where |
 | --- | --- |
-| Something is broken | Run `npx qa-engineer doctor --project .`, then check [troubleshooting](docs/troubleshooting.md) |
+| Something is broken | Run `npx qa-engineer doctor --project .`, then read [When something goes wrong](#when-something-goes-wrong) |
 | A question | GitHub Discussions — see [SUPPORT.md](SUPPORT.md) |
-| A bug | GitHub Issues, with the `doctor --json` output attached |
-| A vulnerability | **Privately** — see [SECURITY.md](SECURITY.md). Never an issue. |
+| A bug | GitHub Issues, with your `doctor --json` output |
+| A security problem | **Privately** — see [SECURITY.md](SECURITY.md). Never a public issue. |
 
-This is a volunteer-maintained project with one maintainer. There is no SLA, and [MAINTAINERS.md](MAINTAINERS.md) states what that means for adopters.
+One volunteer maintainer, no SLA. [MAINTAINERS.md](MAINTAINERS.md) says what that means for you.
 
-## License
+## Licence
 
-[MIT](LICENSE) © QA Automation Pack contributors.
-
-## Acknowledgements
-
-Built on the open [Agent Skills](https://agentskills.io) standard, and on the QA tooling ecosystem it integrates with — Playwright, Selenium, Cypress, WebdriverIO, Cucumber, axe-core, and the Chrome DevTools Protocol among them.
+[MIT](LICENSE) © QA Automation Pack contributors. Use it commercially, fork it, modify it.
 
 Designed and developed by [Abisheik](https://abisheik.dev).
