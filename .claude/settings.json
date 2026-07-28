@@ -27,7 +27,9 @@
       "Bash(node --test packages/engine/test/*.test.mjs)",
       "Bash(node tests/evals/run-evals.mjs)",
       "Bash(node --test packages/engine/test/corpus.test.mjs)",
-      "Bash(git ls-files *)"
+      "Bash(git ls-files *)",
+      "Bash(node packages/installer/bin/qa.mjs install --help)",
+      "Bash(node packages/installer/bin/qa.mjs --help)"
     ]
   }
 }

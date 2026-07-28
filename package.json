@@ -1,6 +1,6 @@
 {
   "name": "qa-engineer",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "A vendor-neutral Agent Skills pack that teaches AI coding agents to work like senior QA automation engineers.",
   "license": "MIT",
   "type": "module",
