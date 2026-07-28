@@ -44,6 +44,30 @@ if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(rootPkg.version)) {
   problems.push(`root version is not semver: ${rootPkg.version}`);
 }
 
+// The lockfile must agree with package.json, or `npm ci` refuses to run — which
+// takes down every CI job that installs dependencies, in seconds, with an error
+// that does not name the cause. Renaming the package to qa-engineer without
+// regenerating the lockfile did exactly that, and nothing here caught it.
+const lock = readJson('package-lock.json');
+if (lock.name !== rootPkg.name) {
+  problems.push(
+    `package-lock.json name "${lock.name}" does not match package.json "${rootPkg.name}" — ` +
+      'npm ci will fail; run: npm install --package-lock-only',
+  );
+}
+if (lock.version !== rootPkg.version) {
+  problems.push(
+    `package-lock.json version ${lock.version} does not match package.json ${rootPkg.version} — ` +
+      'run: npm install --package-lock-only',
+  );
+}
+if (lock.packages?.['']?.name && lock.packages[''].name !== rootPkg.name) {
+  problems.push(
+    `package-lock.json packages[""].name "${lock.packages[''].name}" is stale — ` +
+      'run: npm install --package-lock-only',
+  );
+}
+
 const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8');
 if (!changelog.includes('## [Unreleased]')) {
   problems.push('CHANGELOG.md must contain ## [Unreleased]');

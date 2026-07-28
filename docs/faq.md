@@ -44,7 +44,7 @@ exactly what the lockfile lists, backing each file up first.
 Only `/qa-generate` writes test code, and only non-destructively: new files freely,
 edits to existing files with explicit permission. `/qa-fix` produces a *plan* and
 writes nothing. `/qa-review` edits nothing. The
-[command table](../README.md#command-surface) marks exactly which commands touch
+[command table](../README.md#all-twelve-commands) marks exactly which commands touch
 your repository.
 
 ## My project uses Cypress / Selenium / WebdriverIO. Does it work?
