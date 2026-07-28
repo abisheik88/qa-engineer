@@ -1,0 +1,340 @@
+{
+  "contract": {
+    "name": "qa-explore/explore-result",
+    "version": "1.0.0"
+  },
+  "skill": {
+    "name": "qa-explore",
+    "version": "0.1.0"
+  },
+  "generatedAt": "2026-07-28T00:00:00Z",
+  "url": "http://localhost:4201/login",
+  "reportVersion": "1.0",
+  "browserAdapter": "playwright-mcp",
+  "dimensionsRun": [
+    "functional",
+    "api",
+    "performance",
+    "security",
+    "ui",
+    "ux"
+  ],
+  "summary": "Login page QA \u2014 negative and edge handling is solid; double-submit and input hygiene need fixes; positive login is blocked pending user sign-in.",
+  "classification": "issues-found",
+  "severityCounts": {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 3
+  },
+  "findings": [
+    {
+      "id": "EXP-1",
+      "severity": "high",
+      "dimension": "functional",
+      "title": "Double-click on Login fires two GraphQL auth requests",
+      "repro": "1. Open http://localhost:4201/login  2. Enter a valid-format email and any password  3. Double-click Login within ~300 ms  4. Watch the Network panel",
+      "actual": "Two identical POST requests are sent to https://admin.f2finterview.com/graphql for one submit. The button stays enabled while the first request is in flight.",
+      "expected": "One authentication request per submit. The Login button is disabled from the first click until the request settles.",
+      "fixDirection": "Disable the submit control on click and re-enable it in the request's finally/completion handler; ignore submits while a request is pending.",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "type": "screenshot",
+          "source": "screenshots/TC-16-double.png"
+        },
+        {
+          "type": "network",
+          "source": "network/TC-16.json",
+          "excerpt": "POST /graphql 200  (t=0ms)\nPOST /graphql 200  (t=118ms)  <- duplicate, identical body"
+        }
+      ]
+    },
+    {
+      "id": "EXP-2",
+      "severity": "medium",
+      "dimension": "ux",
+      "title": "Password field uses autocomplete=new-password on a sign-in form",
+      "repro": "1. Open /login  2. Inspect the email and password inputs in the DOM",
+      "actual": "The password input declares autocomplete=\"new-password\", and the email input is type=\"text\" with no autocomplete hint.",
+      "expected": "On a sign-in form the password input declares autocomplete=\"current-password\" and the email input is type=\"email\" autocomplete=\"username\", so saved credentials are offered and mobile keyboards show the right layout.",
+      "fixDirection": "Set autocomplete=\"current-password\" on the password field; set type=\"email\" autocomplete=\"username\" on the email field.",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "type": "dom",
+          "source": "dom/login-inputs.html",
+          "excerpt": "<input name=\"inputTxt\" type=\"text\">\n<input name=\"inputTxt\" type=\"password\" autocomplete=\"new-password\">"
+        }
+      ]
+    },
+    {
+      "id": "EXP-3",
+      "severity": "medium",
+      "dimension": "security",
+      "title": "No maximum length on email or password",
+      "repro": "1. Open /login  2. Paste a 312-character email and a 502-character password  3. Submit",
+      "actual": "Both values are accepted and sent to the API unchanged; the form shows no length validation.",
+      "expected": "Client-side maximum lengths (e.g. 254 for email per RFC 5321, a documented bound for password) reject over-long input before a request is made.",
+      "fixDirection": "Add maxlength attributes and matching form-control validators; mirror the bounds server-side so the client is not the only check.",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "type": "screenshot",
+          "source": "screenshots/TC-13-long.png"
+        }
+      ]
+    },
+    {
+      "id": "EXP-4",
+      "severity": "low",
+      "dimension": "ux",
+      "title": "Leading and trailing spaces in the email are not trimmed",
+      "repro": "1. Open /login  2. Type \"  user@example.com  \" with surrounding spaces  3. Submit",
+      "actual": "The untrimmed value is validated and submitted, so a copy-paste with a trailing space reads as an invalid email.",
+      "expected": "The email is trimmed before validation and before the request, so surrounding whitespace does not change the outcome.",
+      "fixDirection": "Trim the email on blur and again before submit; keep the raw value only for display.",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "type": "screenshot",
+          "source": "screenshots/TC-10-spaces.png"
+        }
+      ]
+    },
+    {
+      "id": "EXP-5",
+      "severity": "low",
+      "dimension": "ui",
+      "title": "Both inputs share name=\"inputTxt\"",
+      "repro": "1. Open /login  2. Inspect the name attribute on both inputs",
+      "actual": "The email and password inputs both use name=\"inputTxt\", so they are indistinguishable to password managers, autofill, and any test selecting by name.",
+      "expected": "Each input has a distinct, meaningful name (email, password) matching its autocomplete role.",
+      "fixDirection": "Rename the inputs to email and password and update any bindings or selectors that relied on inputTxt.",
+      "status": "confirmed",
+      "evidence": [
+        {
+          "type": "dom",
+          "source": "dom/login-inputs.html",
+          "excerpt": "name=\"inputTxt\" (x2)"
+        }
+      ]
+    },
+    {
+      "id": "EXP-6",
+      "severity": "low",
+      "dimension": "performance",
+      "title": "Development main.js is ~16 MB on a cold load",
+      "repro": "1. Hard-reload http://localhost:4201/login with an empty cache  2. Read the transfer size of main.js in the Network panel",
+      "actual": "main.js transfers at roughly 16 MB cold, because this is an unoptimised ng serve development build.",
+      "expected": "A production build ships a bundle an order of magnitude smaller; this figure is not a production measurement and must be re-measured against a built artifact.",
+      "fixDirection": "Re-measure against ng build --configuration production before treating bundle size as a defect; if it remains large, budget it in angular.json.",
+      "status": "partial",
+      "evidence": [
+        {
+          "type": "network",
+          "source": "network/cold-load.json",
+          "excerpt": "main.js  16.0 MB  (development build, ng serve)"
+        }
+      ]
+    }
+  ],
+  "testCases": {
+    "total": 18,
+    "passed": 15,
+    "failed": 2,
+    "blocked": 1,
+    "skipped": 0,
+    "cases": [
+      {
+        "id": "TC-1",
+        "title": "Valid credentials lead to a successful login and redirect",
+        "status": "blocked"
+      },
+      {
+        "id": "TC-2",
+        "title": "Password visibility toggle works",
+        "status": "pass"
+      },
+      {
+        "id": "TC-3",
+        "title": "Forgot Password link navigates correctly",
+        "status": "pass"
+      },
+      {
+        "id": "TC-4",
+        "title": "Empty email and empty password trigger client validation",
+        "status": "pass"
+      },
+      {
+        "id": "TC-5",
+        "title": "Valid-format email with a wrong password shows a clear error",
+        "status": "pass"
+      },
+      {
+        "id": "TC-6",
+        "title": "Unknown email and password show a clear error",
+        "status": "pass"
+      },
+      {
+        "id": "TC-7",
+        "title": "Invalid email format is rejected by validation",
+        "status": "pass"
+      },
+      {
+        "id": "TC-8",
+        "title": "Email only, empty password triggers validation",
+        "status": "pass"
+      },
+      {
+        "id": "TC-9",
+        "title": "Password only, empty email triggers validation",
+        "status": "pass"
+      },
+      {
+        "id": "TC-10",
+        "title": "Leading and trailing spaces in the email",
+        "status": "pass",
+        "findingId": "EXP-4"
+      },
+      {
+        "id": "TC-11",
+        "title": "SQL injection strings in both fields",
+        "status": "pass"
+      },
+      {
+        "id": "TC-12",
+        "title": "XSS payload in the email field",
+        "status": "pass"
+      },
+      {
+        "id": "TC-13",
+        "title": "Extremely long email and password",
+        "status": "fail",
+        "findingId": "EXP-3"
+      },
+      {
+        "id": "TC-14",
+        "title": "Email case variation is accepted by the UI",
+        "status": "pass"
+      },
+      {
+        "id": "TC-15",
+        "title": "Enter key submits the form",
+        "status": "pass"
+      },
+      {
+        "id": "TC-16",
+        "title": "Rapid double-click submit",
+        "status": "fail",
+        "findingId": "EXP-1"
+      },
+      {
+        "id": "TC-17",
+        "title": "Mobile viewport at 375px",
+        "status": "pass"
+      },
+      {
+        "id": "TC-18",
+        "title": "Keyboard, autocomplete, and accessibility attributes",
+        "status": "pass",
+        "findingId": "EXP-2"
+      }
+    ]
+  },
+  "dbValidation": {
+    "inScope": false,
+    "summary": "Not in scope: no data-store access was provided for this run."
+  },
+  "whatWorksWell": [
+    "Empty required fields keep Login disabled and show \"This field is required\"",
+    "An invalid email format shows \"Please enter valid Email\" and blocks submit",
+    "Wrong or unknown credentials stay on /login with an \"Invalid login credentials\" banner",
+    "The password visibility toggle switches the input between password and text",
+    "\"Forgot Password?\" navigates to /forgot-password",
+    "An XSS payload in the email field does not execute; it is treated as an invalid email",
+    "A SQLi-style password does not bypass authentication; the page stays on login with an error",
+    "The 375px mobile layout has no horizontal overflow and the form remains usable"
+  ],
+  "fixOrder": [
+    "EXP-1 \u2014 one auth request per submit (a duplicate login attempt is user-visible and can trip rate limiting)",
+    "EXP-3 \u2014 bound the input lengths on both client and server",
+    "EXP-2 \u2014 correct the autocomplete and input types so credential managers work",
+    "EXP-5 \u2014 give the inputs distinct names",
+    "EXP-4 \u2014 trim the email before validation",
+    "EXP-6 \u2014 re-measure the bundle against a production build before acting"
+  ],
+  "recommendations": [
+    {
+      "action": "Guard the submit handler against concurrent requests, then re-run TC-16",
+      "priority": "high"
+    },
+    {
+      "action": "Add maxlength bounds to both fields and mirror them server-side",
+      "priority": "medium"
+    },
+    {
+      "action": "Ask the user to sign in once so TC-1 (positive login) can be unblocked",
+      "priority": "medium"
+    },
+    {
+      "action": "Re-check security headers against the deployed environment, not ng serve",
+      "priority": "low"
+    }
+  ],
+  "evidence": [
+    {
+      "type": "screenshot",
+      "description": "Two auth requests from one double-click",
+      "source": "screenshots/TC-16-double.png"
+    },
+    {
+      "type": "screenshot",
+      "description": "312-character email and 502-character password accepted",
+      "source": "screenshots/TC-13-long.png"
+    },
+    {
+      "type": "screenshot",
+      "description": "Email with surrounding spaces rejected as invalid",
+      "source": "screenshots/TC-10-spaces.png"
+    },
+    {
+      "type": "screenshot",
+      "description": "Invalid-credentials error state",
+      "source": "screenshots/TC-5-wrong-password.png"
+    },
+    {
+      "type": "dom",
+      "description": "Login form input attributes as rendered",
+      "source": "dom/login-inputs.html"
+    },
+    {
+      "type": "network",
+      "description": "Cold-load transfer sizes for the development build",
+      "source": "network/cold-load.json"
+    },
+    {
+      "type": "report",
+      "description": "Run metadata and API error copy",
+      "source": "run-notes.json",
+      "excerpt": "{\n  \"runId\": \"2f7261\",\n  \"apiEndpoint\": \"https://admin.f2finterview.com/graphql\",\n  \"positiveLogin\": \"blocked-pending-user-signin\",\n  \"securityHeadersOnLocalhost\": \"absent (expected for ng serve; verify in the deployed environment)\",\n  \"uiErrorCopy\": \"Invalid login credentials\",\n  \"apiErrorCopy\": \"The email or password entered does not match our records. Please try again.\"\n}"
+    }
+  ],
+  "scope": {
+    "objective": "Check whether a first-time user can sign in to the admin console, and whether the login form behaves correctly when they get it wrong \u2014 bad password, unknown email, empty fields, pasted whitespace, and a slip of the mouse.",
+    "covered": [
+      "The sign-in form at /login: email field, password field, password visibility toggle, Login button, and the Forgot Password link",
+      "Every way a sign-in can fail: wrong password, unknown email, empty fields, malformed email, and text pasted with surrounding spaces",
+      "The GraphQL authentication request the page sends, and the error message it returns",
+      "Hostile input in both fields: SQL-injection strings and an XSS payload",
+      "The form on a 375px-wide mobile screen, and with the keyboard alone",
+      "What the browser downloads on a first, uncached visit to the page"
+    ],
+    "notCovered": [
+      "Signing in successfully. Doing so needs real credentials, which a QA run must never enter on the user's behalf \u2014 so everything behind the login wall is untested.",
+      "Password reset beyond confirming the link navigates: no email was sent or received.",
+      "Security headers. This run hit a local development server, where they are absent by design; they must be re-checked against the deployed environment.",
+      "Rate limiting and account lockout after repeated failures, which would have locked the test account."
+    ]
+  }
+}
