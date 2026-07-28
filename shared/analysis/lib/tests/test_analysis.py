@@ -49,6 +49,32 @@ class RedactionTests(unittest.TestCase):
         self.assertEqual(out[0]["value"], "[REDACTED:header]")
         self.assertEqual(out[1]["value"], "text/html")
 
+    def test_crlf_line_endings_survive_redaction(self):
+        """Redaction masks a value; it must not rewrite the document around it.
+
+        `.+$` under re.MULTILINE swallows the carriage return, so every redacted
+        header line in a CRLF artifact — the normal case for a Windows runner log
+        or a raw HTTP capture — came back with an LF ending and the file ended up
+        with mixed endings. Found by the Node port's parity corpus, where
+        JavaScript preserved the CR and Python did not.
+        """
+        text = "GET /pay\r\nAuthorization: Bearer abc123\r\nCookie: sid=xyz\r\nbody\r\n"
+        out = redaction.redact_text(text)
+        self.assertEqual(out.count("\r\n"), text.count("\r\n"))
+        # And no LF was left without its CR — that is the corruption itself.
+        self.assertEqual(out.count("\n"), out.count("\r\n"))
+        self.assertIn("Authorization: [REDACTED:auth-header]\r\n", out)
+        self.assertIn("Cookie: [REDACTED:cookie-header]\r\n", out)
+        self.assertNotIn("abc123", out)
+        self.assertNotIn("sid=xyz", out)
+
+    def test_an_indented_header_is_still_masked(self):
+        # Horizontal indentation is common in pretty-printed captures.
+        out = redaction.redact_text("  Authorization: Bearer abc123\n\tCookie: a=1\n")
+        self.assertNotIn("abc123", out)
+        self.assertIn("  Authorization: [REDACTED:auth-header]", out)
+        self.assertIn("\tCookie: [REDACTED:cookie-header]", out)
+
 
 class JUnitTests(unittest.TestCase):
     def test_parses_playwright_junit(self):
@@ -67,6 +93,37 @@ class JUnitTests(unittest.TestCase):
                 junit.parse_junit(bad)
         finally:
             os.unlink(bad)
+
+    def _parse(self, xml):
+        with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as handle:
+            handle.write(xml)
+            path = handle.name
+        try:
+            return junit.parse_junit(path)
+        finally:
+            os.unlink(path)
+
+    def test_unreadable_duration_raises_the_documented_error(self):
+        """A non-numeric `time` used to escape as a bare ValueError.
+
+        Found by the Node port's parity corpus. The CLI catches MalformedArtifact
+        and exits 2 with {error, detail}; a ValueError sailed past it and reached
+        the caller as a Python traceback and exit 1 — which a skill's fallback
+        logic has no way to recognize.
+        """
+        for value in ("not-a-number", "nan", "inf", "1.2.3", "5s"):
+            with self.assertRaises(MalformedArtifact, msg=value):
+                self._parse(f'<testsuite><testcase name="a" time="{value}"/></testsuite>')
+
+    def test_absent_or_empty_duration_is_zero(self):
+        # Plenty of runners omit it; that is not a malformed document.
+        for xml in ('<testsuite><testcase name="a"/></testsuite>',
+                    '<testsuite><testcase name="a" time=""/></testsuite>'):
+            self.assertEqual(self._parse(xml)["executed"][0]["durationMs"], 0)
+
+    def test_seconds_become_whole_milliseconds(self):
+        result = self._parse('<testsuite><testcase name="a" time="1.5"/></testsuite>')
+        self.assertEqual(result["executed"][0]["durationMs"], 1500)
 
 
 class HarTests(unittest.TestCase):
