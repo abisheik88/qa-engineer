@@ -1,0 +1,195 @@
+{
+  "description": "Shared corpus for the Python-to-Node engine port. Both implementations are run over every case and must produce identical output; scripts/check-engine-parity.mjs is the gate. Cases exist to pin behaviour that a reimplementation gets wrong quietly: regex flag translation, replacement-group syntax, rounding, and refusal to parse a malformed document. Add a case whenever a difference is found \u2014 the case is the record that it was found.",
+  "redaction": [
+    "",
+    "nothing sensitive here at all",
+    "Authorization: Bearer abc.def.ghi",
+    "authorization: bearer ABC123==",
+    "AUTHORIZATION = supersecretvalue",
+    "  Proxy-Authorization: Basic dXNlcjpwYXNz",
+    "Set-Cookie: session=abc123; HttpOnly",
+    "cookie: a=1; b=2",
+    "token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.dBjftJeZ4CVPmB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+    "AKIAIOSFODNN7EXAMPLE",
+    "ghp_abcdefghijklmnopqrstuvwxyz0123456789",
+    "xoxb-1234567890-abcdefghij",
+    "sk-abcdefghijklmnopqrstuvwxyz0123456789",
+    "password: hunter2",
+    "password=hunter2&next=/home",
+    "PASSWORD: \"hunter2\"",
+    "api_key: 'abcd1234'",
+    "api-key=abcd1234",
+    "client_secret: shhhhhh",
+    "secret: abc",
+    "https://user:pass@example.com/path",
+    "postgres://admin:s3cr3t@db.internal:5432/app",
+    "https://api.example.com/v1?token=abc123&page=2",
+    "https://api.example.com/v1?api_key=abc123#frag",
+    "contact me at someone@example.com please",
+    "USER@EXAMPLE.CO.UK",
+    "not.an.email@localhost",
+    "two secrets: password=abc1234 and token=def5678",
+    "Authorization: Bearer abc\nCookie: x=1\npassword=zzzz9999",
+    "a line\r\nAuthorization: Bearer abc\r\nanother line",
+    "$1 is a literal dollar-one and password=abcd",
+    "$& and $` and $' with password=abcd",
+    "unicode \u2713 password=abcd \u2713",
+    "eyJ-only-two.parts",
+    "Bearer",
+    "Bearer   spaced+token/value=="
+  ],
+  "classify": [
+    {
+      "message": ""
+    },
+    {
+      "message": "no idea what happened"
+    },
+    {
+      "message": "Error: element(s) not found\nCall log: waiting for locator('#cart')"
+    },
+    {
+      "message": "no such element: Unable to locate element: {\"method\":\"css selector\"}"
+    },
+    {
+      "message": "locator resolved to 0 elements"
+    },
+    {
+      "message": "Timed out 5000ms waiting for expect(locator).toHaveText(expected)\n\nExpected: \"Total: 42\"\nReceived: \"Total: 0\""
+    },
+    {
+      "message": "Expected: 5\nReceived: 3"
+    },
+    {
+      "message": "EXPECTED: a\nRECEIVED: b"
+    },
+    {
+      "message": "Test timeout of 30000ms exceeded."
+    },
+    {
+      "message": "deadline exceeded"
+    },
+    {
+      "message": "401 Unauthorized"
+    },
+    {
+      "message": "authentication failed for user"
+    },
+    {
+      "message": "403 Forbidden"
+    },
+    {
+      "message": "permission denied"
+    },
+    {
+      "message": "connect ECONNREFUSED 127.0.0.1:3000"
+    },
+    {
+      "message": "getaddrinfo ENOTFOUND api.example.com"
+    },
+    {
+      "message": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "message": "503 Service Unavailable"
+    },
+    {
+      "message": "fetch failed"
+    },
+    {
+      "message": "AssertionError: expected true to be false"
+    },
+    {
+      "message": "expect(received).toBe(expected)"
+    },
+    {
+      "message": "duplicate key value violates unique constraint"
+    },
+    {
+      "message": "Cannot find module '@playwright/test'"
+    },
+    {
+      "message": "missing environment variable API_URL"
+    },
+    {
+      "message": "baseURL not set"
+    },
+    {
+      "message": "dev server did not start"
+    },
+    {
+      "message": "out of memory"
+    },
+    {
+      "message": "browser has crashed"
+    },
+    {
+      "message": "worker process died"
+    },
+    {
+      "message": "internal error in playwright"
+    },
+    {
+      "message": "anything",
+      "httpStatus": 401
+    },
+    {
+      "message": "anything",
+      "httpStatus": 403
+    },
+    {
+      "message": "anything",
+      "httpStatus": 500
+    },
+    {
+      "message": "anything",
+      "httpStatus": 599
+    },
+    {
+      "message": "Timed out",
+      "httpStatus": 404
+    },
+    {
+      "message": "Timed out",
+      "httpStatus": 200
+    }
+  ],
+  "junit": [
+    "<testsuites><testsuite name=\"s\"><testcase name=\"a\" classname=\"f.spec.ts\" time=\"1.5\"/></testsuite></testsuites>",
+    "<testsuite name=\"s\"><testcase name=\"a\" time=\"0\"/></testsuite>",
+    "<testsuite><testcase name=\"a\"><failure message=\"boom\"/></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\"><failure>text body</failure></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\"><error message=\"crashed\"/></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\"><skipped message=\"why\"/></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\"><skipped/></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\"><failure message=\"password=hunter2\"/></testcase></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"0.0005\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"0.0015\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"not-a-number\"/></testsuite>",
+    "<testsuite><testcase name=\"&lt;script&gt;\" classname=\"a&amp;b\"/></testsuite>",
+    "<testsuite><testcase name=\"quote&quot;inside\"/></testsuite>",
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!-- a comment --><testsuite><testcase name=\"a\"/></testsuite>",
+    "<testsuite><testcase name=\"a\"><failure><![CDATA[raw < & > text]]></failure></testcase></testsuite>",
+    "<testsuites><testsuite><testcase name=\"a\"/></testsuite><testsuite><testcase name=\"b\"><failure message=\"x\"/></testcase></testsuite></testsuites>",
+    "<testsuites/>",
+    "<testsuite/>",
+    "<testsuites><testsuite><testcase name=\"unicode \u2713\"/></testsuite></testsuites>",
+    "<testsuite><testcase name=\"a\" time=\"nan\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"inf\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"1e3\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"-0.25\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"0.0025\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\"1.2.3\"/></testsuite>",
+    "<testsuite><testcase name=\"a\" time=\" 0.5 \"/></testsuite>"
+  ],
+  "junitMalformed": [
+    "<testsuites><testsuite><testcase name=\"a\"",
+    "<html><body/></html>",
+    "<testsuite><testcase name=\"a\"></testsuite>",
+    "<a/><b/>",
+    "",
+    "not xml at all",
+    "<testsuite><testcase name=unquoted/></testsuite>"
+  ]
+}

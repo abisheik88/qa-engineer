@@ -18,8 +18,16 @@ _RULES = [
     ("openai-key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
     ("bearer", re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*")),
     # Sensitive header lines: keep the header name, mask the value.
-    ("auth-header", re.compile(r"(?im)^(\s*(?:authorization|proxy-authorization)\s*[:=]\s*).+$")),
-    ("cookie-header", re.compile(r"(?im)^(\s*(?:set-cookie|cookie)\s*[:=]\s*).+$")),
+    #
+    # The value is `[^\r\n]+` rather than `.+$`, and the indent is `[ \t]*` rather
+    # than `\s*`, for one reason: on CRLF text, `.+` swallows the carriage return
+    # and `$` matches before the newline, so redacting a header silently rewrote
+    # the line ending to LF and corrupted the rest of the document's endings.
+    # Horizontal whitespace is also what a header indent actually is. Found by the
+    # Node port's parity corpus, where the two languages disagreed here and
+    # JavaScript was right.
+    ("auth-header", re.compile(r"(?im)^([ \t]*(?:authorization|proxy-authorization)[ \t]*[:=][ \t]*)[^\r\n]+")),
+    ("cookie-header", re.compile(r"(?im)^([ \t]*(?:set-cookie|cookie)[ \t]*[:=][ \t]*)[^\r\n]+")),
     # Secret-like assignments: key=value / "key": "value".
     ("assigned-secret", re.compile(
         r'(?i)(\b(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|client[_-]?secret)\b\s*[:=]\s*["\']?)'
