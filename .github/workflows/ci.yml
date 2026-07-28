@@ -66,6 +66,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      # check-docs-commands executes `qa <command> --help` for every documented
+      # command — that is the point of it, since a documented command that no
+      # longer runs is exactly the drift it exists to catch. Executing the CLI
+      # needs its declared dependencies, so this job installs them like any other.
+      - name: Install dependencies
+        run: npm ci
       - name: Validate skills against the specification
         run: node scripts/validate-skills.mjs
       - name: Verify shared-knowledge sync integrity
