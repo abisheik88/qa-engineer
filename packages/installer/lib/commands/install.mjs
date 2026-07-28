@@ -225,7 +225,7 @@ export async function runInstall(argv, { log } = {}) {
   if (opts.help) {
     logger.result(`Usage: qa install [--agent <id>]... [--force] [--dry-run] [--yes] [--json] [--project <dir>]
 
-Copy qa-automation-pack skills into Agent Skills discovery paths
+Copy QA Automation Pack skills into Agent Skills discovery paths
 (.agents/skills/ and .claude/skills/ when applicable), write qa-lock.json,
 and generate thin slash wrappers for agents that need them.`);
     return EXIT.OK;

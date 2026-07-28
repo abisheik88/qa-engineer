@@ -48,12 +48,12 @@ Then the checks a checkout cannot make:
 # 4. The real artifact, installed into a real project
 npm pack
 mkdir /tmp/rel && cd /tmp/rel && npm init -y
-npm install /path/to/qa-automation-pack-<version>.tgz
-npx qa-automation-pack --version          # must print <version>, not 0.0.0
-npx qa-automation-pack install --yes --project .
-npx qa-automation-pack verify --project .
-npx qa-automation-pack self-test --project .
-npx qa-automation-pack uninstall --project .
+npm install /path/to/qa-engineer-<version>.tgz
+npx qa-engineer --version          # must print <version>, not 0.0.0
+npx qa-engineer install --yes --project .
+npx qa-engineer verify --project .
+npx qa-engineer self-test --project .
+npx qa-engineer uninstall --project .
 ```
 
 `npm run validate:release` covers version/tag consistency, tarball completeness
@@ -106,7 +106,7 @@ install by hand once per release is cheap and catches what schemas cannot.
 8. **Verify what the registry actually serves**, from a clean directory:
 
    ```bash
-   npx qa-automation-pack@<version> --version
+   npx qa-engineer@<version> --version
    ```
 
 ## Reproducibility
@@ -127,14 +127,14 @@ Anyone can re-run that on the tag and compare it to the published notes.
 The pack ships no service, so a rollback is a version change plus the installer's
 own recovery:
 
-1. **Do not unpublish.** `npm deprecate qa-automation-pack@<bad> "<reason>"` and
+1. **Do not unpublish.** `npm deprecate qa-engineer@<bad> "<reason>"` and
    ship a fixed version. Unpublishing breaks anyone who pinned it.
 2. **Users recover in place** — the installer is transactional and the lockfile
    records every file:
 
    ```bash
-   npx qa-automation-pack@<previous> install --yes --force --project .
-   npx qa-automation-pack verify --project .
+   npx qa-engineer@<previous> install --yes --force --project .
+   npx qa-engineer verify --project .
    ```
 
    Overwritten files are in `.qa/backups/<timestamp>/` from the install that

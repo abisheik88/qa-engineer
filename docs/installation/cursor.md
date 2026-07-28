@@ -3,9 +3,9 @@
 1. From your app directory:
 
    ```bash
-   npx qa-automation-pack --yes
+   npx qa-engineer --yes
    # or target Cursor explicitly:
-   npx qa-automation-pack install --agent cursor --yes
+   npx qa-engineer install --agent cursor --yes
    ```
 
 2. Skills land in `.agents/skills/` (Cursor 2.4+ also reads `.cursor/skills/` — the shared `.agents/skills/` path is the pack default).

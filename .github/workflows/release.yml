@@ -1,4 +1,4 @@
-# Release scaffold for qa-automation-pack.
+# Release scaffold for qa-engineer.
 # On a version tag (v*), builds, tests, and packs an npm tarball.
 # npm publish is intentionally disabled until the package identity and
 # NPM_TOKEN are confirmed — flip `if: false` when ready to ship to the registry.
@@ -73,8 +73,8 @@ jobs:
       - name: Upload pack artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qa-automation-pack-tarball
-          path: qa-automation-pack-*.tgz
+          name: qa-engineer-tarball
+          path: qa-engineer-*.tgz
           if-no-files-found: error
 
       # TODO(M9): enable when npm package name/org and NPM_TOKEN are confirmed.

@@ -39,7 +39,7 @@ The repository is currently documentation and configuration only, so setup is mi
 
 ```bash
 git clone <your-fork-url>
-cd qa-automation-pack
+cd qa-engineer
 ```
 
 Run the same checks CI runs before pushing:

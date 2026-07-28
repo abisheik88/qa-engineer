@@ -8,7 +8,7 @@ Requirements: git, Node.js 18+ (used via `npx` and for the repository tooling â€
 
 ```bash
 git clone <your-fork-url>
-cd qa-automation-pack
+cd qa-engineer
 ```
 
 ### VS Code

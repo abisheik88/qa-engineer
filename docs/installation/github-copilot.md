@@ -1,9 +1,9 @@
 # Install for GitHub Copilot
 
 ```bash
-npx qa-automation-pack --yes
+npx qa-engineer --yes
 # or:
-npx qa-automation-pack install --agent github-copilot --yes
+npx qa-engineer install --agent github-copilot --yes
 ```
 
 - Skills: `.agents/skills/` (also compatible with `.github/skills/` hosts)

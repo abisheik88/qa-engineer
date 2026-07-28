@@ -1,9 +1,9 @@
 # Install for Antigravity
 
 ```bash
-npx qa-automation-pack --yes
+npx qa-engineer --yes
 # or:
-npx qa-automation-pack install --agent antigravity --yes
+npx qa-engineer install --agent antigravity --yes
 ```
 
 - Skills: `.agents/skills/`

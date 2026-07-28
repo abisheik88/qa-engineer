@@ -9,8 +9,8 @@ body:
         Most installation problems are diagnosed by the pack itself. Before filing, please run:
 
         ```bash
-        npx qa-automation-pack doctor --project .
-        npx qa-automation-pack self-test --project .
+        npx qa-engineer doctor --project .
+        npx qa-engineer self-test --project .
         ```
 
         and check [docs/troubleshooting.md](../../docs/troubleshooting.md) — it covers skills not
@@ -21,7 +21,7 @@ body:
   - type: textarea
     id: doctor
     attributes:
-      label: Output of `npx qa-automation-pack doctor --project . --json`
+      label: Output of `npx qa-engineer doctor --project . --json`
       description: >-
         This answers most environment questions at once. Redact anything sensitive — the output
         contains paths, not secrets, but check before pasting.
@@ -34,7 +34,7 @@ body:
       label: What went wrong
       description: The exact command you ran, and what happened instead of what you expected.
       placeholder: |
-        $ npx qa-automation-pack install --yes --project .
+        $ npx qa-engineer install --yes --project .
         error refusing to overwrite 1 file(s) not owned by a previous install
       render: shell
     validations:
@@ -65,7 +65,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: Output of `npx qa-automation-pack --version`, `node --version`, `python3 --version`.
+      description: Output of `npx qa-engineer --version`, `node --version`, `python3 --version`.
       placeholder: pack 0.9.0 · node v20.11.0 · Python 3.11.6
     validations:
       required: true

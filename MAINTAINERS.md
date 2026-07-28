@@ -20,7 +20,7 @@ behind a plural "the team". The mitigations are structural rather than social:
 - The pack is MIT-licensed with no runtime dependencies and no service component,
   so a fork is genuinely viable if maintenance stalls.
 
-The `@qa-automation-pack/maintainers` handle in
+The `@qa-engineer/maintainers` handle in
 [.github/CODEOWNERS](.github/CODEOWNERS) is a placeholder until the repository is
 published under its organization; the areas below are the intended split as the
 group grows.

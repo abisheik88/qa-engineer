@@ -22,11 +22,18 @@ function readJson(rel) {
 const rootPkg = readJson('package.json');
 const installerPkg = readJson('packages/installer/package.json');
 
-if (rootPkg.name !== 'qa-automation-pack') {
-  problems.push(`root package name must be qa-automation-pack, got ${rootPkg.name}`);
+if (rootPkg.name !== 'qa-engineer') {
+  problems.push(`root package name must be qa-engineer, got ${rootPkg.name}`);
 }
-if (!rootPkg.bin?.qa || !rootPkg.bin?.['qa-pack']) {
-  problems.push('root package.json must expose bin.qa and bin.qa-pack');
+// `npx <package>` runs the bin whose name matches the package; without it npm
+// cannot pick a default binary and the documented install command fails.
+if (!rootPkg.bin?.[rootPkg.name]) {
+  problems.push(
+    `root package.json must expose a bin named "${rootPkg.name}" so \`npx ${rootPkg.name}\` resolves`,
+  );
+}
+if (!rootPkg.bin?.qa) {
+  problems.push('root package.json must keep the short bin.qa');
 }
 if (rootPkg.version !== installerPkg.version) {
   problems.push(
@@ -121,4 +128,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(`release validation OK (qa-automation-pack@${rootPkg.version})`);
+console.log(`release validation OK (${rootPkg.name}@${rootPkg.version})`);

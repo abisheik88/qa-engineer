@@ -1,24 +1,24 @@
 {
-  "name": "qa-automation-pack",
+  "name": "qa-engineer",
   "version": "0.9.0",
   "description": "A vendor-neutral Agent Skills pack that teaches AI coding agents to work like senior QA automation engineers.",
   "license": "MIT",
   "type": "module",
-  "homepage": "https://github.com/qa-automation-pack/qa-automation-pack#readme",
+  "homepage": "https://github.com/qa-engineer/qa-engineer#readme",
   "bugs": {
-    "url": "https://github.com/qa-automation-pack/qa-automation-pack/issues"
+    "url": "https://github.com/qa-engineer/qa-engineer/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qa-automation-pack/qa-automation-pack.git"
+    "url": "git+https://github.com/qa-engineer/qa-engineer.git"
   },
   "engines": {
     "node": ">=18.18.0"
   },
   "bin": {
+    "qa-engineer": "packages/installer/bin/qa.mjs",
     "qa": "packages/installer/bin/qa.mjs",
-    "qa-pack": "packages/installer/bin/qa.mjs",
-    "qa-automation-pack": "packages/installer/bin/qa.mjs"
+    "qa-pack": "packages/installer/bin/qa.mjs"
   },
   "workspaces": [
     "packages/*"
@@ -71,6 +71,7 @@
     "eval:live": "python3 tests/evals/run_live.py --baseline tests/evals/baselines/reference.json"
   },
   "keywords": [
+    "qa-engineer",
     "agent-skills",
     "qa",
     "test-automation",

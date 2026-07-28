@@ -1,9 +1,9 @@
 # Install for Gemini CLI
 
 ```bash
-npx qa-automation-pack --yes
+npx qa-engineer --yes
 # or:
-npx qa-automation-pack install --agent gemini-cli --yes
+npx qa-engineer install --agent gemini-cli --yes
 ```
 
 - Skills: `.agents/skills/`

@@ -91,7 +91,7 @@ Shipped: [`qa-explore`](skills/qa-explore/README.md) as the twelfth user-facing 
 
 ## M9.5 — World-class installation and onboarding
 
-**Goal:** a first-time user can run `npx qa-automation-pack`, complete install + validation, and use the pack in their AI assistant within five minutes — without reading repository internals.
+**Goal:** a first-time user can run `npx qa-engineer`, complete install + validation, and use the pack in their AI assistant within five minutes — without reading repository internals.
 
 **Shipped:** interactive onboard wizard (`@clack/prompts`); environment / framework / project detection and recommendations; install progress + automatic validation; `qa self-test`, expanded `qa doctor`, `qa repair`, `qa update`; [quickstart](docs/installation/quickstart.md); release workflow scaffold (pack on tag; publish gated off until ready).
 

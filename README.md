@@ -11,7 +11,7 @@
 [![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#verification)
 
 <!-- On publication, add the live workflow badge:
-     [![CI](https://github.com/<org>/qa-automation-pack/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+     [![CI](https://github.com/<org>/qa-engineer/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
      It is omitted today because an unpublished repository renders it as a broken image. -->
 
 **[Quick start](#quick-start)** · **[Architecture](ARCHITECTURE.md)** · **[Documentation](#documentation)** · **[FAQ](docs/faq.md)** · **[Troubleshooting](docs/troubleshooting.md)** · **[Contributing](CONTRIBUTING.md)**
@@ -98,10 +98,10 @@ Full map: **[ARCHITECTURE.md](ARCHITECTURE.md)**. Decisions and their rationale:
 
 ```bash
 # 1. Install into YOUR application repository (not this one)
-npx qa-automation-pack --yes --project .
+npx qa-engineer --yes --project .
 
 # 2. Confirm the install is healthy
-npx qa-automation-pack self-test --project .
+npx qa-engineer self-test --project .
 ```
 
 Expected output:
@@ -125,7 +125,7 @@ Then, in your AI coding agent, opened on the same project:
 Not on npm yet. Until it is published, install from a local checkout:
 
 ```bash
-git clone <this-repo> && cd qa-automation-pack && npm install
+git clone <this-repo> && cd qa-engineer && npm install
 npm run qa -- --yes --project /path/to/your-app
 ```
 
@@ -136,7 +136,7 @@ Five-minute walkthrough: **[docs/installation/quickstart.md](docs/installation/q
 A real pass over the bundled example app, end to end:
 
 ```text
-  install                  npx qa-automation-pack --yes --project .
+  install                  npx qa-engineer --yes --project .
      │
      ▼
   /qa-init                 reads package.json, playwright.config.ts, the test layout
@@ -261,7 +261,7 @@ What is proven, and how. Every number below is reproducible with the command bes
 ## Project structure
 
 ```text
-qa-automation-pack/
+qa-engineer/
 ├── skills/             The twelve commands plus a reference skill. Spec-native Markdown,
 │                       each with contracts/, references/, examples/
 ├── shared/             Single-source knowledge and the deterministic engine
@@ -364,7 +364,7 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md). Participation is governed by the 
 
 | Need | Where |
 | --- | --- |
-| Something is broken | Run `npx qa-automation-pack doctor --project .`, then check [troubleshooting](docs/troubleshooting.md) |
+| Something is broken | Run `npx qa-engineer doctor --project .`, then check [troubleshooting](docs/troubleshooting.md) |
 | A question | GitHub Discussions — see [SUPPORT.md](SUPPORT.md) |
 | A bug | GitHub Issues, with the `doctor --json` output attached |
 | A vulnerability | **Privately** — see [SECURITY.md](SECURITY.md). Never an issue. |

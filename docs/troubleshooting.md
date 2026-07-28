@@ -7,7 +7,7 @@ and messages quoted are the real ones.
 hint for anything it finds:
 
 ```bash
-npx qa-automation-pack doctor --project .
+npx qa-engineer doctor --project .
 ```
 
 Exit codes across the CLI: `0` success · `1` failure · `2` usage error ·
@@ -24,7 +24,7 @@ npx qa              # wrong: resolves a package literally named "qa"
 Use the package name, which is also a binary name:
 
 ```bash
-npx qa-automation-pack --yes --project .
+npx qa-engineer --yes --project .
 ```
 
 Inside a project that already depends on the pack, the short `qa` binary is on the
@@ -38,7 +38,7 @@ A file already exists where the pack wants to write, and no lockfile claims it �
 so the installer will not assume it is disposable. Either move your file, or:
 
 ```bash
-npx qa-automation-pack install --yes --force --project .   # backs up before overwriting
+npx qa-engineer install --yes --force --project .   # backs up before overwriting
 ```
 
 Backups land in `.qa/backups/<timestamp>/` with the original directory structure.
@@ -50,7 +50,7 @@ purpose — `.github/` alone does not imply Copilot, and `.agents/` (which the
 installer itself creates) does not imply Antigravity. Install explicitly:
 
 ```bash
-npx qa-automation-pack install --agent claude-code --agent github-copilot --yes --project .
+npx qa-engineer install --agent claude-code --agent github-copilot --yes --project .
 # known ids: claude-code cursor codex opencode gemini-cli github-copilot antigravity kimi agent-skills
 ```
 
@@ -72,7 +72,7 @@ In order of likelihood:
    [COMPATIBILITY.md](../COMPATIBILITY.md) and the per-agent guides in
    [docs/installation/](installation/README.md); some hosts need the thin wrappers
    that `--agent` writes.
-4. **A stale partial install.** `npx qa-automation-pack verify --project .` then
+4. **A stale partial install.** `npx qa-engineer verify --project .` then
    `repair`.
 
 Activation itself is the agent's decision, not the pack's — invoking `/qa-init`
@@ -83,8 +83,8 @@ explicitly is the reliable test of whether the skills are installed.
 The skill's `## Tooling` section resolves `QA_LIB` and found nothing:
 
 ```bash
-npx qa-automation-pack repair --project .   # re-materializes scripts/lib/
-npx qa-automation-pack doctor --project .   # confirms "bundled engine runs cleanly"
+npx qa-engineer repair --project .   # re-materializes scripts/lib/
+npx qa-engineer doctor --project .   # confirms "bundled engine runs cleanly"
 ```
 
 If `doctor` reports Python missing, install Python 3.8+. The engine is
@@ -114,7 +114,7 @@ An installed file changed. If you edited it deliberately, that edit will be lost
 the next `update`; move the change into a fork or a local skill instead. To restore:
 
 ```bash
-npx qa-automation-pack repair --project .
+npx qa-engineer repair --project .
 ```
 
 ### `verify` fails with "does not match its schema"
@@ -124,7 +124,7 @@ a `..` segment, both of which are refused because `uninstall` acts on that list.
 Reinstall to regenerate it:
 
 ```bash
-npx qa-automation-pack install --yes --force --project .
+npx qa-engineer install --yes --force --project .
 ```
 
 ### `uninstall` refuses with "installed file(s) have local changes"
@@ -132,7 +132,7 @@ npx qa-automation-pack install --yes --force --project .
 Deliberate: it will not silently delete work. Back up what you want to keep, then:
 
 ```bash
-npx qa-automation-pack uninstall --project . --force
+npx qa-engineer uninstall --project . --force
 ```
 
 ### `refusing to operate outside the project` / `refusing to follow a link out of the project` (exit 3)

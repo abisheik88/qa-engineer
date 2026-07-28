@@ -29,9 +29,14 @@ const cli = path.join(root, 'packages', 'installer', 'bin', 'qa.mjs');
 
 // Documents that quote historical or incorrect commands as evidence, and must
 // not be rewritten to match the current CLI.
+// Historical records. They state what was observed and done at a point in time,
+// under the names in use then, so rewriting them to match the current CLI would
+// make them false. The audit trail is worth more than uniform search-and-replace.
 const EXEMPT = new Set([
   'docs/release/audit-verification.md',
   'docs/release/final-release-audit.md',
+  'docs/release/v1-excellence-audit.md',
+  'docs/release/v0.9-release-checklist.md',
   'CHANGELOG.md',
 ]);
 
@@ -79,7 +84,7 @@ for (const rel of docs) {
     if (target === PACKAGE_NAME) continue;
     // Allowed: documented third-party tooling.
     if (['playwright', '--yes', 'markdownlint-cli2', 'editorconfig-checker'].includes(target)) continue;
-    if (target === 'qa' || target === 'qa-pack') {
+    if (target === 'qa' || target === 'qa-pack' || target === 'qa-automation-pack') {
       problems.push(
         `${rel}: \`npx ${target}\` resolves a package named "${target}", not this pack — ` +
           `use \`npx ${PACKAGE_NAME}\``,

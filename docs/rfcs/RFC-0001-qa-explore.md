@@ -1,7 +1,7 @@
 # RFC: Add `/qa-explore` as the twelfth user-facing command
 
 - **Status:** Accepted
-- **Author:** qa-automation-pack
+- **Author:** qa-engineer maintainers
 - **Tracking issue:** product-QA gap vs hyperbrain-style full-spectrum explore
 
 ## Problem

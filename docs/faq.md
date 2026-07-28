@@ -36,7 +36,7 @@ but the pack adds nothing to it.
 
 Skills under `.agents/skills/` (and `.claude/skills/` for Claude Code), the bundled
 Python engine inside the skills that use it, and `qa-lock.json` recording a SHA-256
-per file. Nothing else. `npx qa-automation-pack uninstall --project .` removes
+per file. Nothing else. `npx qa-engineer uninstall --project .` removes
 exactly what the lockfile lists, backing each file up first.
 
 ## Will it change my tests without asking?
@@ -108,7 +108,7 @@ that improves every skill at once.
 For the deterministic engine, yes — Python 3.8 or newer, standard library only, so
 there is nothing to `pip install`. Without it, skills fall back to documented manual
 reasoning and **mark their results degraded**, which is a real downgrade stated
-plainly rather than hidden. `npx qa-automation-pack doctor --project .` tells you
+plainly rather than hidden. `npx qa-engineer doctor --project .` tells you
 which state you are in.
 
 ## Can I use it in CI?
@@ -141,8 +141,8 @@ that is a risk for adopters and what reduces it. There is no SLA; see
 ## Something broke. What is the fastest path?
 
 ```bash
-npx qa-automation-pack doctor --project .    # diagnoses and prints fix hints
-npx qa-automation-pack repair --project .    # fixes drifted or missing pack files
+npx qa-engineer doctor --project .    # diagnoses and prints fix hints
+npx qa-engineer repair --project .    # fixes drifted or missing pack files
 ```
 
 Then [troubleshooting.md](troubleshooting.md), which maps symptoms to causes with

@@ -25,7 +25,7 @@ const RENDERERS = {
       `# ${GENERATED_MARKER}\n` +
       `description = ${quote(desc)}\n` +
       'prompt = """\n' +
-      `Apply the ${name} skill from the qa-automation-pack, following its procedure.\n` +
+      `Apply the ${name} skill from the QA Automation Pack skills, following its procedure.\n` +
       'Treat the following as the user request:\n\n' +
       '{{args}}\n' +
       '"""\n',
@@ -39,7 +39,7 @@ const RENDERERS = {
       `description: ${quote(desc)}\n` +
       '---\n' +
       `<!-- ${GENERATED_MARKER} -->\n\n` +
-      `Apply the \`${name}\` skill from the qa-automation-pack to the request below, following its procedure.\n\n` +
+      `Apply the \`${name}\` skill from the QA Automation Pack to the request below, following its procedure.\n\n` +
       '$ARGUMENTS\n',
   }),
 
@@ -51,7 +51,7 @@ const RENDERERS = {
       `description: ${quote(desc)}\n` +
       '---\n' +
       `<!-- ${GENERATED_MARKER} -->\n\n` +
-      `Apply the \`${name}\` skill from the qa-automation-pack to the current request, following its procedure.\n`,
+      `Apply the \`${name}\` skill from the QA Automation Pack to the current request, following its procedure.\n`,
   }),
 
   // Antigravity workflow (Markdown). Format is not yet verified against primary
@@ -64,7 +64,7 @@ const RENDERERS = {
       `description: ${quote(desc)}\n` +
       '---\n' +
       `<!-- ${GENERATED_MARKER} -->\n\n` +
-      `Apply the \`${name}\` skill from the qa-automation-pack to the request below, following its procedure.\n\n` +
+      `Apply the \`${name}\` skill from the QA Automation Pack to the request below, following its procedure.\n\n` +
       '$ARGUMENTS\n',
   }),
 };

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// qa-automation-pack CLI entry.
+// qa-engineer CLI entry.
 
 import { EXIT } from '../lib/constants.mjs';
 import { VERSION } from '../lib/version.mjs';
@@ -26,7 +26,7 @@ const log = createLogger({ level: process.env.QA_LOG_LEVEL || 'info' });
 
 function printHelp() {
   const commandLines = COMMANDS.map((c) => `  ${c.name.padEnd(10)} ${c.summary}`).join('\n');
-  log.result(`qa-automation-pack ${VERSION}
+  log.result(`qa-engineer ${VERSION}
 
 Usage:
   qa                  Interactive install + guided first-run

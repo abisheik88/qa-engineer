@@ -46,7 +46,7 @@ The tier column in the matrix above is the **planned** tier — the level each a
 | Requirement | Status | Used for |
 | --- | --- | --- |
 | Python 3.8+ | Required for analysis | The deterministic analysis toolkit (`shared/analysis/lib/`) and framework analyzers — standard library only, no packages |
-| Node.js 18+ | Required for the installer CLI | `npx qa-automation-pack` / `qa install` / `qa doctor` / `qa self-test` (interactive onboarding uses `--yes` / `--ci` in non-TTY and CI) |
+| Node.js 18+ | Required for the installer CLI | `npx qa-engineer` / `qa install` / `qa doctor` / `qa self-test` (interactive onboarding uses `--yes` / `--ci` in non-TTY and CI) |
 
 The analysis toolkit is standard-library-only Python, so it runs on any Python 3.8+ interpreter with nothing to install. Requirements are declared per skill via the specification's `compatibility` frontmatter field, and the pack degrades gracefully: skills describe a manual fallback whenever a runtime or optional integration (such as an MCP server) is unavailable.
 

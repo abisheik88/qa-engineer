@@ -6,9 +6,9 @@ Where to get help, what to expect, and how to help us help you.
 they don't, their output is the single most useful thing you can attach to a report:
 
 ```bash
-npx qa-automation-pack doctor --project .     # environment + install diagnosis, with fix hints
-npx qa-automation-pack self-test --project .  # PASS/FAIL checks
-npx qa-automation-pack repair --project .     # fix drifted or missing pack files
+npx qa-engineer doctor --project .     # environment + install diagnosis, with fix hints
+npx qa-engineer self-test --project .  # PASS/FAIL checks
+npx qa-engineer repair --project .     # fix drifted or missing pack files
 ```
 
 Common problems and their fixes are in
@@ -48,14 +48,14 @@ This is a volunteer-maintained project with **one maintainer**
 
 For a bug, please include:
 
-1. **Output of `npx qa-automation-pack doctor --project . --json`** — this alone
+1. **Output of `npx qa-engineer doctor --project . --json`** — this alone
    answers most of the environment questions.
 2. **The exact command you ran** and what you expected instead.
 3. **Which agent and model** (Claude Code, Cursor, Codex CLI …) if the problem is
    in skill behavior rather than the CLI.
 4. **The artifact**, if one was produced (`qa-artifacts/*.json`), with secrets
    removed — the analyzers redact by default, but check.
-5. **Versions:** `npx qa-automation-pack --version`, `node --version`,
+5. **Versions:** `npx qa-engineer --version`, `node --version`,
    `python3 --version`.
 
 For a skill-behavior report, the most valuable detail is **what the skill claimed

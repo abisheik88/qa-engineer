@@ -103,7 +103,7 @@ if (has('check')) {
 
 if (has('checksums')) {
   const { files, contentDigest } = tarballChecksums();
-  console.log(`# qa-automation-pack@${version} — content digest`);
+  console.log(`# ${pkg.name}@${version} — content digest`);
   console.log(`# ${files.length} files`);
   console.log(`# sha256(manifest) = ${contentDigest}`);
   console.log('#');
@@ -121,7 +121,7 @@ if (!section) {
 
 const { contentDigest, files } = tarballChecksums();
 
-console.log(`# qa-automation-pack ${version}
+console.log(`# ${pkg.name} ${version}
 
 ${section.body}
 
@@ -141,8 +141,8 @@ repacks of the same commit.
 ## Installing
 
 \`\`\`bash
-npx qa-automation-pack@${version} --yes --project .
-npx qa-automation-pack@${version} self-test --project .
+npx ${pkg.name}@${version} --yes --project .
+npx ${pkg.name}@${version} self-test --project .
 \`\`\`
 
 ## Known limitations

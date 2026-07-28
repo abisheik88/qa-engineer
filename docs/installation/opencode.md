@@ -1,9 +1,9 @@
 # Install for OpenCode
 
 ```bash
-npx qa-automation-pack --yes
+npx qa-engineer --yes
 # or:
-npx qa-automation-pack install --agent opencode --yes
+npx qa-engineer install --agent opencode --yes
 ```
 
 - Skills: `.agents/skills/`

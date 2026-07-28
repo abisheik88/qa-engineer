@@ -8,10 +8,10 @@ Install the QA Automation Pack into any AI coding agent that reads the [Agent Sk
 
 ```bash
 # Interactive (recommended)
-npx qa-automation-pack
+npx qa-engineer
 
 # Non-interactive
-npx qa-automation-pack --yes --project /path/to/your-app
+npx qa-engineer --yes --project /path/to/your-app
 
 # From a local checkout before npm publish
 npm install
@@ -21,9 +21,9 @@ npm run qa -- --yes --project /path/to/your-app
 Confirm:
 
 ```bash
-npx qa-automation-pack self-test --project /path/to/your-app
-npx qa-automation-pack doctor --project /path/to/your-app
-npx qa-automation-pack verify --project /path/to/your-app
+npx qa-engineer self-test --project /path/to/your-app
+npx qa-engineer doctor --project /path/to/your-app
+npx qa-engineer verify --project /path/to/your-app
 ```
 
 What gets written:
@@ -66,10 +66,10 @@ Copy any skill directory into the agent's discovery path:
 
 ```bash
 mkdir -p .agents/skills
-cp -R /path/to/qa-automation-pack/skills/qa-explore .agents/skills/
+cp -R /path/to/qa-engineer/skills/qa-explore .agents/skills/
 # Claude Code additionally:
 mkdir -p .claude/skills
-cp -R /path/to/qa-automation-pack/skills/qa-explore .claude/skills/
+cp -R /path/to/qa-engineer/skills/qa-explore .claude/skills/
 ```
 
 Then invoke `/qa-explore` (or ask the agent to QA a URL). Compatibility matrix: [COMPATIBILITY.md](../../COMPATIBILITY.md).

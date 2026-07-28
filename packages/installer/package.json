@@ -1,7 +1,7 @@
 {
-  "name": "@qa-automation-pack/installer",
+  "name": "@qa-engineer/installer",
   "version": "0.9.0",
-  "description": "The qa-automation-pack installer: agent detection, copy-based install, lockfile integrity, and wrapper generation.",
+  "description": "The qa-engineer installer: agent detection, copy-based install, lockfile integrity, and wrapper generation.",
   "license": "MIT",
   "type": "module",
   "exports": {

@@ -6,6 +6,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Renamed: the package and CLI are now `qa-engineer`
+
+Installing the pack should read like hiring one, so the published package and the
+command users type are now `qa-engineer`:
+
+```bash
+npx qa-engineer --yes --project .
+```
+
+- **Changed** the npm package name from `qa-automation-pack` to `qa-engineer`, and
+  the installer workspace to `@qa-engineer/installer`.
+- **Added** a `qa-engineer` bin. `npx <package>` runs the bin matching the package
+  name, so this is what makes the documented command resolve; `qa` and `qa-pack`
+  are kept, so nothing that already worked stops working.
+- **Changed** `PACK_NAME`, so `qa-lock.json` now records `"pack": {"name": "qa-engineer"}`.
+  Existing installs keep working — `verify` compares file hashes, not the pack name —
+  and the next `install`, `update`, or `repair` rewrites the lockfile.
+- **Changed** every documented command, local-checkout path, and repository URL to
+  the new identity, and `check-docs-commands` now flags the old name as stale so a
+  leftover cannot creep back.
+- **Unchanged:** the product is still called **QA Automation Pack** in prose, in the
+  README title, and in the report attribution footer. Renaming the product is a
+  separate decision from renaming the package, and this change does not make it.
+
+**On capitalisation.** npm rejects capital letters in new package names
+(`validate-npm-package-name` reports `validForNewPackages=false` for `qa-Engineer`),
+so the published name is lowercase `qa-engineer` and `npx qa-Engineer` would not
+resolve. Verified rather than assumed.
+
+Historical records — the release audits and earlier changelog entries — keep the
+name in use when they were written, and the docs gate exempts them. Rewriting them
+would make an audit trail say something that did not happen.
+
 ### Release hardening sprint — correctness, consistency, and trust
 
 No new QA capabilities, frameworks, or AI providers. This sprint verified an

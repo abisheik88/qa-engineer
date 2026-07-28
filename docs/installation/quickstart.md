@@ -13,11 +13,11 @@ From your application directory:
 
 ```bash
 # After the package is published to npm:
-npx qa-automation-pack
+npx qa-engineer
 
 # From a local checkout of this repo (today):
 npm install
-npx qa-automation-pack --yes
+npx qa-engineer --yes
 # or:
 npm run qa -- --yes --project /path/to/your-app
 ```
@@ -27,14 +27,14 @@ The interactive wizard scans your environment, recommends components, installs s
 Non-interactive (CI / scripts):
 
 ```bash
-npx qa-automation-pack --yes --project .
+npx qa-engineer --yes --project .
 ```
 
 ## Verify
 
 ```bash
-npx qa-automation-pack self-test
-npx qa-automation-pack doctor
+npx qa-engineer self-test
+npx qa-engineer doctor
 ```
 
 ## Use it
@@ -48,8 +48,8 @@ Open your AI coding assistant and try:
 ## Repair and update
 
 ```bash
-npx qa-automation-pack repair    # fix drifted or missing pack files
-npx qa-automation-pack update    # refresh from the current pack source
+npx qa-engineer repair    # fix drifted or missing pack files
+npx qa-engineer update    # refresh from the current pack source
 ```
 
 ## More
