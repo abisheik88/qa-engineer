@@ -6,7 +6,10 @@
       "Bash(node --test packages/engine/test/)",
       "Bash(node --test packages/engine/test/analysis.test.mjs)",
       "Bash(node --test packages/installer/test/*.test.mjs packages/engine/test/*.test.mjs)",
-      "Bash(node --test packages/engine/test/artifacts.test.mjs)"
+      "Bash(node --test packages/engine/test/artifacts.test.mjs)",
+      "Bash(PYTHONPATH=shared/analysis/lib python3 -c ' *)",
+      "Bash(PYTHONPATH=shared/analysis/lib python3 -m unittest discover -s shared/analysis/lib/tests -t shared/analysis/lib/tests -p test_context.py)",
+      "Bash(node --test packages/engine/test/context.test.mjs)"
     ]
   }
 }

@@ -117,6 +117,30 @@ def _scalar(raw, line_number):
     return text
 
 
+def _require_indent_matches(stack, indent, line_number):
+    """A line must sit at exactly the indent of the container it lands in.
+
+    Without this, a document YAML itself rejects was silently misread. Given
+
+        list:
+          - one
+          key: inside a sequence
+
+    PyYAML reports "expected <block end>, but found '?'" — a mapping key cannot
+    share indentation with a sequence entry in the same block. This parser closed
+    the sequence and put `key` in the *root* mapping, two levels out from where it
+    was written, producing {"list": ["one"], "key": "..."} from an invalid file.
+
+    Found by the Node port's parity gate, which agreed with Python and so caught it
+    only because the corpus recorded the document as one that must be refused.
+    """
+    if stack[-1][0] != indent:
+        raise MalformedContext(
+            f"line {line_number}: indentation {indent} matches no open block "
+            f"(the enclosing block starts at column {stack[-1][0]})"
+        )
+
+
 def parse_frontmatter(text):
     """Parse the supported YAML subset into a dict. Raises MalformedContext.
 
@@ -162,6 +186,7 @@ def parse_frontmatter(text):
             container = stack[-1][1]
             if not isinstance(container, list):
                 raise MalformedContext(f"line {number}: sequence item outside a sequence")
+            _require_indent_matches(stack, indent, number)
             container.append(item)
             continue
 
@@ -196,6 +221,7 @@ def parse_frontmatter(text):
         container = stack[-1][1]
         if not isinstance(container, dict):
             raise MalformedContext(f"line {number}: mapping key inside a sequence")
+        _require_indent_matches(stack, indent, number)
 
         if _strip_comment(value).strip() == "":
             pending = (key, indent)  # a block or a null follows
