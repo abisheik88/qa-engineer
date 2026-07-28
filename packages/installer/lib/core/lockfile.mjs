@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { LOCKFILE, PACK_NAME } from '../constants.mjs';
 import { VERSION, SPEC_REVISION } from '../version.mjs';
 import { QaError } from './errors.mjs';
-import { validate } from './schema-validate.mjs';
+import { validate } from '../../../engine/lib/analysis/contracts.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = path.join(here, '..', '..', 'schemas', 'qa-lock.schema.json');
