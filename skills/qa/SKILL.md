@@ -1,7 +1,7 @@
 ---
 name: qa
 description: >-
-  Entry point for the QA Automation Pack that routes a request to the
+  Entry point for the QA Engineer Pack that routes a request to the
   right QA skill. Use when you are unsure which QA command fits, when you
   open with /qa and no specific task, or when a request spans several QA
   skills and needs directing to the correct one.

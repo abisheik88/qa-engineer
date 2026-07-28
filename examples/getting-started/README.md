@@ -1,7 +1,7 @@
 # Getting started — a runnable walkthrough
 
 A tiny, hermetic Playwright app you can actually run, paired with the exact
-QA Automation Pack commands that support it end to end: **support → install →
+QA Engineer Pack commands that support it end to end: **support → install →
 generate → run → debug → report**. Every command below is real, and the
 expected outputs are shown (and, where the pack emits a contract, validated
 against that contract).

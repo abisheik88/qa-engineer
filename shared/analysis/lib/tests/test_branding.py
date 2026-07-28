@@ -41,7 +41,7 @@ class TextFooterTests(unittest.TestCase):
     def test_snapshot(self):
         expected = (
             "------------------------------------------------------------\n"
-            "               Powered by QA Automation Pack\n"
+            "                Powered by QA Engineer Pack\n"
             "       AI-First Deterministic QA Engineering Platform\n"
             "              Designed & Developed by Abisheik\n"
             "                    https://abisheik.dev\n"
@@ -66,7 +66,7 @@ class MarkdownFooterTests(unittest.TestCase):
         expected = (
             "---\n"
             "\n"
-            "<sub>Powered by **QA Automation Pack** — "
+            "<sub>Powered by **QA Engineer Pack** — "
             "AI-First Deterministic QA Engineering Platform<br>\n"
             "Designed & Developed by [Abisheik](https://abisheik.dev)</sub>\n"
         )
@@ -114,14 +114,14 @@ class HtmlFooterTests(unittest.TestCase):
         self.assertIn("&quot;", rendered)
 
     def test_carries_the_project_name_and_tagline(self):
-        self.assertIn("QA Automation Pack", self.rendered)
+        self.assertIn("QA Engineer Pack", self.rendered)
         self.assertIn("AI-First Deterministic QA Engineering Platform", self.rendered)
 
 
 class AppendTests(unittest.TestCase):
     def test_appending_adds_the_footer(self):
         out = branding.append_to("# Report\n\nAll green.\n", fmt="markdown")
-        self.assertIn("Powered by **QA Automation Pack**", out)
+        self.assertIn("Powered by **QA Engineer Pack**", out)
         self.assertTrue(out.startswith("# Report"))
 
     def test_appending_twice_does_not_duplicate(self):

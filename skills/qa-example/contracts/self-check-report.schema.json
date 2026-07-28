@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:qa-pack:contract:qa-example:self-check-report:1",
   "title": "qa-example self-check report",
-  "description": "Asserts the readability state of an installed QA Automation Pack skill: whether the skill's own references and contract could be read end to end. Classification is action-oriented: pass requires nothing, degraded means specific files need reinstalling, fail means the installation is untrustworthy and should be redone.",
+  "description": "Asserts the readability state of an installed QA Engineer Pack skill: whether the skill's own references and contract could be read end to end. Classification is action-oriented: pass requires nothing, degraded means specific files need reinstalling, fail means the installation is untrustworthy and should be redone.",
   "type": "object",
   "additionalProperties": false,
   "required": ["contract", "skill", "generatedAt", "summary", "classification", "evidence"],

@@ -1,6 +1,6 @@
 # Installation
 
-Install the QA Automation Pack into any AI coding agent that reads the [Agent Skills](https://agentskills.io) standard. Skills are copied byte-for-byte — there is no per-agent rewrite.
+Install the QA Engineer Pack into any AI coding agent that reads the [Agent Skills](https://agentskills.io) standard. Skills are copied byte-for-byte — there is no per-agent rewrite.
 
 **Start here:** [Quickstart (five minutes)](quickstart.md)
 

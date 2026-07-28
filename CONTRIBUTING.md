@@ -1,4 +1,4 @@
-# Contributing to QA Automation Pack
+# Contributing to QA Engineer Pack
 
 Thank you for considering a contribution. This project aims to become the reference open-source QA skill pack for AI coding agents, and it will only get there through the judgment of practicing QA engineers — people like you.
 

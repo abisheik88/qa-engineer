@@ -8,6 +8,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.9.1] — 2026-07-28
+
+### Renamed: the product is QA Engineer Pack
+
+`0.9.0` shipped with the package named `qa-engineer` and the product still called
+QA Automation Pack. Completing the rename so the two agree.
+
+- **Changed** the product name to **QA Engineer Pack** in 31 files — the README
+  title, the attribution footer (via `branding.json`, so every rendered report
+  follows from one edit), the `doctor` header, `install` output, agent wrapper
+  text, the npm description, every guide, and both engineering-principles
+  documents.
+- **Added** two name-consistency rules to `check-branding`, because a rename that
+  touches only the README is exactly what happened here: the H1 said QA Engineer
+  Pack while 44 occurrences of the old name remained, including the footer that
+  appears on every report a user shares. The gate now fails if the README title
+  and `branding.projectName` disagree, or if a previous product name survives
+  anywhere outside the historical records. Both directions verified by
+  reintroducing the drift.
+- **Unchanged:** the npm package, the CLI, and every command name. Installation is
+  still `npx qa-engineer`, so nothing a `0.9.0` user typed stops working.
+
+Historical records — the release audits, the readiness assessment, and earlier
+changelog entries — keep the name the project had when they were written. They
+describe a release that shipped under that name, and editing them would make an
+audit trail describe something that never existed.
+
 ## [0.9.0] — 2026-07-28
 
 First public release: a preview. Everything below shipped in this version.
@@ -104,7 +131,7 @@ npx qa-engineer --yes --project .
 - **Changed** every documented command, local-checkout path, and repository URL to
   the new identity, and `check-docs-commands` now flags the old name as stale so a
   leftover cannot creep back.
-- **Unchanged:** the product is still called **QA Automation Pack** in prose, in the
+- **Unchanged:** the product is still called **QA Engineer Pack** in prose, in the
   README title, and in the report attribution footer. Renaming the product is a
   separate decision from renaming the package, and this change does not make it.
 

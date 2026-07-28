@@ -65,7 +65,7 @@ async function guidedFirstRun(ui, { skip }) {
   );
   await ui.confirm('Continue when done', { initialValue: true });
 
-  ui.success('Your QA Automation Pack is fully operational.');
+  ui.success('Your QA Engineer Pack is fully operational.');
 }
 
 export async function runOnboard(argv, { log } = {}) {
@@ -90,7 +90,7 @@ Options:
   const ui = createUi({ quiet: nonInteractive && !opts.json, json: opts.json });
 
   if (!nonInteractive) {
-    ui.intro('Welcome to QA Automation Pack');
+    ui.intro('Welcome to QA Engineer Pack');
     ui.logLine('Scanning your environment...');
   } else if (!opts.json) {
     logger.step('Scanning environment (non-interactive)...');

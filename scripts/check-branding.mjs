@@ -120,6 +120,50 @@ for (const rel of files) {
   }
 }
 
+// The product name is one name. The README's title, the npm description, and the
+// attribution footer must agree — a rename that touches only the README ships a
+// package whose landing page says one thing and whose every report says another.
+// That happened: the H1 was changed to "QA Engineer Pack" while 44 occurrences of
+// the old name remained, including the footer, the doctor header, and the CLI help.
+const readmeTitle = (fs.readFileSync(path.join(root, 'README.md'), 'utf8').match(/^#\s+(.+)$/m) ?? [])[1]?.trim();
+if (!readmeTitle) {
+  problems.push('README.md has no H1 title to compare against the branding metadata');
+} else if (readmeTitle !== metadata.projectName) {
+  problems.push(
+    `README.md title "${readmeTitle}" does not match branding projectName ` +
+      `"${metadata.projectName}" — the landing page and the report footer would disagree`,
+  );
+}
+
+// Any lingering trace of a previous product name is drift, not history: the
+// footer is generated, so a stale name in prose means the rename was incomplete.
+const PREVIOUS_NAMES = ['QA Automation Pack'];
+const HISTORICAL = new Set([
+  'CHANGELOG.md',
+  'docs/v1-readiness-assessment.md',
+  'docs/release/audit-verification.md',
+  'docs/release/final-release-audit.md',
+  'docs/release/v1-excellence-audit.md',
+  'docs/release/v0.9-release-checklist.md',
+  'scripts/check-branding.mjs',
+]);
+for (const rel of files) {
+  if (HISTORICAL.has(rel)) continue;
+  const ext = path.extname(rel);
+  if (['.png', '.jpg', '.zip', '.pyc', '.tgz', '.ico'].includes(ext)) continue;
+  let text;
+  try {
+    text = fs.readFileSync(path.join(root, rel), 'utf8');
+  } catch {
+    continue;
+  }
+  for (const stale of PREVIOUS_NAMES) {
+    if (stale !== metadata.projectName && text.includes(stale)) {
+      problems.push(`${rel}: still says "${stale}" — the product is now "${metadata.projectName}"`);
+    }
+  }
+}
+
 // The renderer must exist and expose the documented functions.
 const renderer = fs.readFileSync(path.join(root, RENDERER_REL), 'utf8');
 for (const fn of ['footer_html', 'footer_markdown', 'footer_text', 'append_to', 'metadata']) {

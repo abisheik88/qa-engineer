@@ -1,7 +1,7 @@
 ---
 name: qa-example
 description: >-
-  Reference implementation of the QA Automation Pack skill format and a
+  Reference implementation of the QA Engineer Pack skill format and a
   lightweight installation self-check. Use when validating that pack
   skills are correctly installed, discoverable, and readable in an
   agent, or when learning the pack's skill format from a working

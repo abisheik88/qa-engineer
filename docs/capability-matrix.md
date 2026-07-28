@@ -1,6 +1,6 @@
 # Capability Matrix
 
-This is the **single canonical source** for what QA Automation Pack can do and how
+This is the **single canonical source** for what QA Engineer Pack can do and how
 far each capability is proven. Every other document — the [README](../README.md),
 [ROADMAP](../ROADMAP.md), [COMPATIBILITY](../COMPATIBILITY.md), the
 [framework matrix](compatibility/framework-matrix.md), and each skill's own

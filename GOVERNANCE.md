@@ -1,6 +1,6 @@
 # Governance
 
-How decisions get made in QA Automation Pack, who makes them, and how that
+How decisions get made in QA Engineer Pack, who makes them, and how that
 changes. This document is deliberately small: the project is young, and
 pretending to a foundation-scale structure it does not have would be its own kind
 of dishonesty.

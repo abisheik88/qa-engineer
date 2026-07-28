@@ -2,7 +2,7 @@
   "name": "qa-pack-getting-started",
   "private": true,
   "version": "0.0.0",
-  "description": "Runnable example that demonstrates the QA Automation Pack workflow on a tiny hermetic Playwright app.",
+  "description": "Runnable example that demonstrates the QA Engineer Pack workflow on a tiny hermetic Playwright app.",
   "type": "module",
   "scripts": {
     "serve": "node server.mjs",

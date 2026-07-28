@@ -1,6 +1,6 @@
 # Quickstart — five minutes to QA
 
-Install the QA Automation Pack into any project without reading the repository.
+Install the QA Engineer Pack into any project without reading the repository.
 
 ## Prerequisites
 

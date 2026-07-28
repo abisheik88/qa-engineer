@@ -1,6 +1,6 @@
 # QA Router
 
-The public entry point for the QA Automation Pack. Type `/qa` with a request and it routes you to the skill that owns the task — so you never have to memorize the command surface. It does no QA work itself; it classifies intent and hands off.
+The public entry point for the QA Engineer Pack. Type `/qa` with a request and it routes you to the skill that owns the task — so you never have to memorize the command surface. It does no QA work itself; it classifies intent and hands off.
 
 ## Invocation
 

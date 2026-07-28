@@ -1,6 +1,6 @@
 # Architecture Engineering Principles
 
-Immutable architectural guarantees for the QA Automation Pack. These are the
+Immutable architectural guarantees for the QA Engineer Pack. These are the
 rules every future milestone must obey. They refine — and do not replace — the
 project constitution in [docs/engineering-principles.md](../engineering-principles.md).
 

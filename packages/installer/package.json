@@ -1,6 +1,6 @@
 {
   "name": "@qa-engineer/installer",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "The qa-engineer installer: agent detection, copy-based install, lockfile integrity, and wrapper generation.",
   "license": "MIT",
   "type": "module",

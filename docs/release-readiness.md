@@ -1,6 +1,6 @@
 # Release Readiness Report
 
-Status of QA Automation Pack `0.9.0` against a public-preview release. This
+Status of QA Engineer Pack `0.9.0` against a public-preview release. This
 report is derived from the [capability matrix](capability-matrix.md) and the CI
 gates; it does not restate capability claims, it assesses readiness.
 

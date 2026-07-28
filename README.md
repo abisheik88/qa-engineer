@@ -503,6 +503,6 @@ One volunteer maintainer, no SLA. [MAINTAINERS.md](MAINTAINERS.md) says what tha
 
 ## Licence
 
-[MIT](LICENSE) © QA Automation Pack contributors. Use it commercially, fork it, modify it.
+[MIT](LICENSE) © QA Engineer Pack contributors. Use it commercially, fork it, modify it.
 
 Designed and developed by [Abisheik](https://abisheik.dev).

@@ -30,7 +30,7 @@ export async function runDoctor(argv, { log } = {}) {
   if (opts.help) {
     logger.result(`Usage: qa doctor [--project <dir>] [--json]
 
-Diagnose environment and QA Automation Pack installation.
+Diagnose environment and QA Engineer Pack installation.
 Each failure includes an exact repair command.`);
     return EXIT.OK;
   }
@@ -90,7 +90,7 @@ Each failure includes an exact repair command.`);
   if (validation) {
     for (const c of validation.checks) {
       checklist.push({
-        section: 'QA Automation Pack',
+        section: 'QA Engineer Pack',
         id: c.id,
         ok: c.ok,
         message: c.message,
@@ -99,14 +99,14 @@ Each failure includes an exact repair command.`);
     }
   } else {
     checklist.push({
-      section: 'QA Automation Pack',
+      section: 'QA Engineer Pack',
       id: 'lockfile',
       ok: false,
       message: 'no qa-lock.json',
       hint: 'run: qa install',
     });
     checklist.push({
-      section: 'QA Automation Pack',
+      section: 'QA Engineer Pack',
       id: 'skills',
       ok: false,
       message: 'skills not installed',
@@ -124,7 +124,7 @@ Each failure includes an exact repair command.`);
       const packages = bundlePackagesForSkill(bundledSkill);
       const result = verifyImports({ pythonBin: python.bin, libDir: resolvedLib, packages });
       checklist.push({
-        section: 'QA Automation Pack',
+        section: 'QA Engineer Pack',
         id: 'engine-imports',
         ok: result.ok,
         message: result.ok ? 'bundled engine runs cleanly' : `engine check failed: ${result.stderr}`,
@@ -160,7 +160,7 @@ Each failure includes an exact repair command.`);
   };
 
   if (!opts.json) {
-    logger.step(`QA Automation Pack doctor — ${VERSION}`);
+    logger.step(`QA Engineer Pack doctor — ${VERSION}`);
     logger.step(`project ${root}`);
     let section = '';
     for (const item of checklist) {

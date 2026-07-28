@@ -10,7 +10,7 @@ YAML frontmatter delimited by `---` lines, restricted to a subset simple enough 
 ---
 name: qa-example
 description: >-
-  Reference implementation of the QA Automation Pack skill format.
+  Reference implementation of the QA Engineer Pack skill format.
   Use when validating that the pack's skills are correctly installed
   and readable, or when learning the skill format by example.
 license: MIT

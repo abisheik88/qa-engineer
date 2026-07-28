@@ -1,6 +1,6 @@
 # Architecture
 
-A map of how QA Automation Pack fits together and why it is shaped this way. It
+A map of how QA Engineer Pack fits together and why it is shaped this way. It
 is the entry point to the architecture, not a replacement for it: every decision
 below has an [ADR](docs/architecture/README.md) recording its context,
 alternatives, and consequences.

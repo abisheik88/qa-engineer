@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This document is the finalized architecture for QA Automation Pack. It records the system's shape, the decisions already locked in (with their ADRs), and the questions deliberately left open for validation during implementation. Milestone scoping lives in [ROADMAP.md](../../ROADMAP.md); this document describes the end state those milestones build.
+This document is the finalized architecture for QA Engineer Pack. It records the system's shape, the decisions already locked in (with their ADRs), and the questions deliberately left open for validation during implementation. Milestone scoping lives in [ROADMAP.md](../../ROADMAP.md); this document describes the end state those milestones build.
 
 The architecture was selected by evaluating competing designs — a per-agent compiler pipeline, an MCP-server-first design, and a standard-native design — against contributor experience, output fidelity, maintenance cost under agent-format churn, testability, and upgrade path, followed by an adversarial risk review. The decisions below reflect that process.
 

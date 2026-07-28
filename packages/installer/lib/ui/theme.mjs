@@ -14,7 +14,7 @@ export function createUi({ quiet = false, json = false } = {}) {
 
   return {
     log,
-    intro(message = 'Welcome to QA Automation Pack') {
+    intro(message = 'Welcome to QA Engineer Pack') {
       if (quiet || json) return;
       p.intro(message);
     },

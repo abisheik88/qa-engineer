@@ -1,5 +1,5 @@
 <!--
-Thank you for contributing to QA Automation Pack.
+Thank you for contributing to QA Engineer Pack.
 Please fill in every section; delete only the sections that genuinely do not apply.
 -->
 

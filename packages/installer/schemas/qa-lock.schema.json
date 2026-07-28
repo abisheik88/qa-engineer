@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "$id": "urn:qa-pack:config:qa-lock:1",
-  "title": "QA Automation Pack install lockfile",
+  "title": "QA Engineer Pack install lockfile",
   "description": "qa-lock.json records exactly what was installed and a hash per file, so an install can be verified, updated, or removed without guessing. Written by the installer; not hand-edited.",
   "type": "object",
   "additionalProperties": false,

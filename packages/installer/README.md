@@ -1,6 +1,6 @@
 # @qa-engineer/installer
 
-Copy-based installer for the QA Automation Pack. Installs Agent Skills into `.agents/skills/` and `.claude/skills/`, writes `qa-lock.json`, and generates thin slash wrappers for agents that need them. **No skill code runs at install time.**
+Copy-based installer for the QA Engineer Pack. Installs Agent Skills into `.agents/skills/` and `.claude/skills/`, writes `qa-lock.json`, and generates thin slash wrappers for agents that need them. **No skill code runs at install time.**
 
 ## Commands
 

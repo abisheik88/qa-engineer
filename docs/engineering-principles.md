@@ -1,6 +1,6 @@
 # Engineering Principles
 
-The constitution of the QA Automation Pack. When a decision is not settled by a specific standard or [Architecture Decision Record](architecture/README.md), it is settled here. These principles are ordered: when two conflict, the earlier one wins.
+The constitution of the QA Engineer Pack. When a decision is not settled by a specific standard or [Architecture Decision Record](architecture/README.md), it is settled here. These principles are ordered: when two conflict, the earlier one wins.
 
 They exist to be applied, not admired. Every principle states a rule and how to apply it, so that two contributors reaching the same fork reach the same decision.
 
