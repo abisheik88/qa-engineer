@@ -19,13 +19,13 @@ What must be true to tag a release. Items are checked against the current tree.
 | --- | --- | --- |
 | 1 | All CI jobs green (lint, editorconfig, links, skills, analysis, installer, structure) | ✅ passing locally; installer + matrix jobs newly added |
 | 2 | `npm test` runs and passes | ✅ installer smoke test (6 cases) |
-| 3 | 47 Python tests pass | ✅ `python3 shared/analysis/lib/run_tests.py` |
+| 3 | 47 Python tests pass | ✅ `node --test packages/engine/test/*.test.mjs` |
 | 4 | Capability matrix consistent with framework matrix and skills on disk | ✅ `npm run validate:matrix` |
 | 5 | No broken package.json scripts | ✅ `docs:build` removed; `test` fixed |
 | 6 | Every capability claim traceable to a test/contract | ✅ via the capability matrix evidence index |
 | 7 | A runnable example that actually runs | ✅ `examples/getting-started` (2 tests pass live) |
-| 8 | Deterministic behavioral gate in CI (golden + adversarial cases) | ✅ `tests/evals/run_evals.py` (`npm run validate:evals`) |
-| 9 | Live-agent eval runner + regression gate | ✅ `tests/evals/run_live.py` (replay + command providers, committed baseline, drift detection); `npm run eval:live` gates CI |
+| 8 | Deterministic behavioral gate in CI (golden + adversarial cases) | ✅ `tests/evals/run-evals.mjs` (`npm run validate:evals`) |
+| 9 | Live-agent eval runner + regression gate | ✅ `tests/evals/run-live.mjs` (replay + command providers, committed baseline, drift detection); `npm run eval:live` gates CI |
 | 10 | Published cross-model accuracy against real hosted agents | ⚠ operational — the runner and `command` provider are ready; executing against paid agents needs API access (maintainer/scheduled step) |
 | 11 | Documentation site published | ❌ Milestone 9 remaining |
 | 12 | Versioned npm release + provenance | ❌ Milestone 9 remaining |
@@ -38,8 +38,8 @@ Items 1–9 are met. Item 10 is operational (mechanism built; needs API access t
 *behaviorally benchmarked*. What currently clears that bar:
 
 - ✅ **Playwright** execution, generation, and analysis — real runtime + tests.
-- ✅ **Diagnostic engine** (`qa-debug`, `qa-fix`, `qa-report`) — `qa_diagnostics` tests + contracts + self-containment check.
-- ✅ **Analysis core** (`qa_analysis`) — redaction, taxonomy, parsers, diff guard, contract validator, all unit-tested.
+- ✅ **Diagnostic engine** (`qa-debug`, `qa-fix`, `qa-report`) — `diagnostics` tests + contracts + self-containment check.
+- ✅ **Analysis core** (`analysis`) — redaction, taxonomy, parsers, diff guard, contract validator, all unit-tested.
 - ✅ **QA knowledge base** — 19 domains, structure lint-enforced.
 
 Everything else is **Beta** or **Experimental** by design — see the
@@ -61,8 +61,8 @@ maturity, because 1.0 is gated on Milestone 10.
 - **No documentation site** and **no published npm package** yet (Milestone 9).
 - **Behavioral proof is deterministic + replayed, not yet live against paid
   agents.** Both the deterministic gate
-  ([`run_evals.py`](../tests/evals/run_evals.py)) and the live-agent runner
-  ([`run_live.py`](../tests/evals/run_live.py), replay provider + regression gate)
+  ([`run-evals.mjs`](../tests/evals/run-evals.mjs)) and the live-agent runner
+  ([`run_live.py`](../tests/evals/run-live.mjs), replay provider + regression gate)
   are in CI. The runner also has a `command` provider that drives any real agent
   CLI — but running it against **paid hosted agents** (for a published accuracy
   number and cross-model drift) needs API access and is a maintainer/scheduled

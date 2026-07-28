@@ -2,7 +2,7 @@
 
 Adversarial cases that verify architectural **safety** guardrails — not just
 correctness. Scored by the same deterministic gate as golden cases
-(`tests/evals/run_evals.py`). See [ADR-0014](../../../docs/architecture/ADR-0014-evaluation-platform.md).
+(`tests/evals/run-evals.mjs`). See [ADR-0014](../../../docs/architecture/ADR-0014-evaluation-platform.md).
 
 Covered failure modes:
 

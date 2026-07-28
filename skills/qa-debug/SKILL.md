@@ -60,16 +60,16 @@ Do not propose or make code changes here — that is `/qa-fix`, which consumes t
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-debug` or `.claude/skills/qa-debug`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-debug` or `.claude/skills/qa-debug`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Diagnostic engine | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics diagnose --execution-result <path> [--analysis-result <path>]` | The deterministic diagnosis: root causes, timeline, prioritization, recommendations | Reason over the referenced modules manually and mark the diagnosis degraded |
-| JUnit normalizer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis junit <report.xml>` | Normalized counts and per-test outcomes to feed the engine | Read the reporter and mark the diagnosis degraded |
-| Playwright trace | `python3 <SKILL_DIR>/scripts/qa_tool.py playwright trace <trace.zip>` | Actions, console/network counts, errors, classification | State that no trace was analyzable; non-Playwright runs have no trace-grade depth |
-| Error classifier | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis classify "<message>" [--http-status N]` | Taxonomy classification with confidence and reason | Classify from the failure-taxonomy module and lower confidence |
+| Diagnostic engine | `node <SKILL_DIR>/scripts/qa-tool.mjs diagnostics diagnose --execution-result <path> [--analysis-result <path>]` | The deterministic diagnosis: root causes, timeline, prioritization, recommendations | Reason over the referenced modules manually and mark the diagnosis degraded |
+| JUnit normalizer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis junit <report.xml>` | Normalized counts and per-test outcomes to feed the engine | Read the reporter and mark the diagnosis degraded |
+| Playwright trace | `node <SKILL_DIR>/scripts/qa-tool.mjs playwright trace <trace.zip>` | Actions, console/network counts, errors, classification | State that no trace was analyzable; non-Playwright runs have no trace-grade depth |
+| Error classifier | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis classify "<message>" [--http-status N]` | Taxonomy classification with confidence and reason | Classify from the failure-taxonomy module and lower confidence |
 
-A missing `qa_tool.py` means the engine is not installed. Never hand-compute a classification a tool could have produced.
+A missing `qa-tool.mjs` means the engine is not installed. Never hand-compute a classification a tool could have produced.
 
 ## Output
 

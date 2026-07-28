@@ -9,7 +9,8 @@ This document records which AI coding agents the pack targets, how each one disc
 | Pack version | Released | Discovery paths verified against agent docs | Live agent runs |
 | --- | --- | --- | --- |
 | 0.9.0, 0.9.1 | 2026-07-28 | Not systematically re-read for the release | Claude Code, Cursor (manual, by the maintainer) |
-| 0.9.2 | 2026-07-28 | Yes — every host's own documentation, re-read on 2026-07-28 (sources in the matrix below) | Claude Code, Cursor (manual, by the maintainer) |
+| 0.9.2 | 2026-07-28 | Yes — every host's own documentation, re-read on 2026-07-28 (sources in the matrix below) | **Do not use.** The tarball omitted the engine; every command failed on a missing module |
+| 0.9.3 | 2026-07-28 | Yes, as 0.9.2 | Claude Code, Cursor (manual, by the maintainer) |
 
 "Verified" in the third column means the discovery paths in the matrix below were read off each host's own documentation on that date and are asserted against the installer by `packages/installer/test/hosts.test.mjs`, which fails if the installer writes to a path that host does not document reading. It does **not** mean the pack was executed inside every host: that is the Tier 1 bar, and only Claude Code and Cursor have had a real run.
 
@@ -55,8 +56,14 @@ The tier column in the matrix above is the **planned** tier — the level each a
 
 | Requirement | Status | Used for |
 | --- | --- | --- |
-| Python 3.8+ | Required for analysis | The deterministic analysis toolkit (`shared/analysis/lib/`) and framework analyzers — standard library only, no packages |
-| Node.js 18+ | Required for the installer CLI | `npx qa-engineer` / `qa install` / `qa doctor` / `qa self-test` (interactive onboarding uses `--yes` / `--ci` in non-TTY and CI) |
+| Node.js 18.17+ | The only requirement | Everything: `npx qa-engineer` and the CLI, and the deterministic engine the skills run (`packages/engine/`) |
+
+**One runtime, no dependencies.** Until 0.9.2 the engine was Python, which meant a
+second runtime users had to install for tooling they had installed with Node — and
+when it was missing, skills fell back to model guesswork and said nothing.
+[ADR-0012](docs/architecture/ADR-0012-node-engine.md) records why that changed and
+how the migration was verified. The engine still takes no third-party dependencies:
+the XML and ZIP readers it needs are written out rather than depended on.
 
 ## Operating systems
 
@@ -66,15 +73,22 @@ The tier column in the matrix above is the **planned** tier — the level each a
 | macOS | Expected to work; not covered by CI |
 | Windows | Expected to work; **not yet verified end to end** |
 
-The installer uses Node's platform-independent path handling, and the skills
-invoke their bundled engine through a launcher (`scripts/qa_tool.py`) that needs
-no shell features — the command shape is identical in bash, zsh, PowerShell, and
-cmd.exe. The one difference on Windows is the interpreter name: use `python` where
-`python3` is not on PATH.
+The installer uses Node's platform-independent path handling, and the skills invoke
+the engine through a committed launcher (`scripts/qa-tool.mjs`) that needs no shell
+features — the command shape is identical in bash, zsh, PowerShell, and cmd.exe,
+with no platform difference at all.
 
-Until a Windows run is confirmed, that row says "expected", not "supported".
+The Windows row said "expected" for a specific reason that no longer applies: the
+engine was Python, and `python3` is not on PATH on Windows by default, so every
+deterministic call there failed and each skill quietly fell back to guesswork. The
+engine is now the same Node that ran the install. The row still says "expected"
+rather than "supported" because nobody has run the pack end to end on Windows —
+that is an unverified claim, not a known gap.
 
-The analysis toolkit is standard-library-only Python, so it runs on any Python 3.8+ interpreter with nothing to install. Requirements are declared per skill via the specification's `compatibility` frontmatter field, and the pack degrades gracefully: skills describe a manual fallback whenever a runtime or optional integration (such as an MCP server) is unavailable.
+Requirements are declared per skill via the specification's `compatibility`
+frontmatter field, and the pack degrades gracefully: skills describe a manual
+fallback whenever a runtime or optional integration (such as an MCP server) is
+unavailable.
 
 ## Reporting compatibility problems
 

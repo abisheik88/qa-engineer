@@ -6,8 +6,8 @@ import { EXIT, SHARED_SKILLS_DIR } from '../constants.mjs';
 import { resolveSourceRoot, resolveProjectRoot } from '../core/paths.mjs';
 import { VERSION, SPEC_REVISION } from '../version.mjs';
 import { AGENTS, resolveInstallTargets, listAgentIds } from '../agents/registry.mjs';
-import { packHasBundles, findPython, verifyImports } from '../core/bundle.mjs';
-import { BUNDLE_DEST, BUNDLE_MANIFEST, bundlePackagesForSkill } from '../core/manifest.mjs';
+import { packHasBundles, verifyEngine } from '../core/bundle.mjs';
+import { BUNDLE_DEST, BUNDLE_MANIFEST } from '../core/manifest.mjs';
 import { readLock } from '../core/lockfile.mjs';
 import { createLogger } from '../core/logger.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
@@ -46,7 +46,6 @@ Each failure includes an exact repair command.`);
   const detected = AGENTS.filter((a) => a.detect(root)).map((a) => a.id);
   const targets = resolveInstallTargets(root, opts.agents).map((a) => a.id);
   const lock = readLock(root);
-  const python = findPython();
   const gitOk = hasGit(root);
   const scan = scanProject(root, opts.agents);
   const validation = lock ? validateInstall(root) : null;
@@ -61,13 +60,6 @@ Each failure includes an exact repair command.`);
     ok: nodeMajor >= 18,
     message: `Node ${process.version}`,
     hint: nodeMajor >= 18 ? undefined : 'upgrade to Node.js 18.18+',
-  });
-  checklist.push({
-    section: 'Environment',
-    id: 'python',
-    ok: Boolean(python),
-    message: python ? `${python.bin} (${python.version})` : 'Python not found',
-    hint: python ? undefined : 'install Python 3.8+ for analysis/diagnostics engines',
   });
   checklist.push({
     section: 'Environment',
@@ -114,18 +106,18 @@ Each failure includes an exact repair command.`);
     });
   }
 
-  // Deep Python import check when bundles are on disk
-  if (lock && packHasBundles() && python) {
+  // Deep check: the bundled engine must RUN, not merely be present. It runs under
+  // this same Node, so there is no interpreter to look for and no reason to skip.
+  if (lock && packHasBundles()) {
     const bundledSkill = Object.keys(BUNDLE_MANIFEST)[0];
     const libDir = path.join(root, SHARED_SKILLS_DIR, bundledSkill, BUNDLE_DEST);
     const claudeLib = path.join(root, '.claude', 'skills', bundledSkill, BUNDLE_DEST);
     const resolvedLib = fs.existsSync(libDir) ? libDir : fs.existsSync(claudeLib) ? claudeLib : null;
     if (resolvedLib) {
-      const packages = bundlePackagesForSkill(bundledSkill);
-      const result = verifyImports({ pythonBin: python.bin, libDir: resolvedLib, packages });
+      const result = verifyEngine({ libDir: resolvedLib });
       checklist.push({
         section: 'QA Engineer Pack',
-        id: 'engine-imports',
+        id: 'engine-runs',
         ok: result.ok,
         message: result.ok ? 'bundled engine runs cleanly' : `engine check failed: ${result.stderr}`,
         hint: result.ok ? undefined : 'run: qa repair',
@@ -149,7 +141,6 @@ Each failure includes an exact repair command.`);
     installTargets: targets,
     lockfilePresent: Boolean(lock),
     lockfilePack: lock?.pack ?? null,
-    python,
     bundles: packHasBundles(),
     node: process.version,
     git: gitOk,

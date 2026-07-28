@@ -42,10 +42,10 @@ point at the test or contract that backs the level.
 | Capability | Command | What it does today | Level | Evidence |
 | --- | --- | --- | --- | --- |
 | Intent routing | `qa` | Classifies a request and dispatches to the right skill. | Beta | Skill validated by `validate-skills`; no runtime contract (it is a dispatcher). |
-| Project understanding | `qa-init` | Detects framework/CI/conventions; writes `.qa/context.md` and validates it with the bundled parser before reporting completion. | Beta | [`context.schema.json`](../shared/analysis/schemas/context.schema.json) + `qa_analysis.context`, exercised against the real template and a generated file in CI. |
+| Project understanding | `qa-init` | Detects framework/CI/conventions; writes `.qa/context.md` and validates it with the bundled parser before reporting completion. | Beta | [`context.schema.json`](../packages/engine/lib/analysis/schemas/context.schema.json) + `the engine's context parser`, exercised against the real template and a generated file in CI. |
 | Test execution | `qa-run` | **Executes Playwright** suites and BDD scenarios; **plans only** for other frameworks. Counts come from the bundled normalizer, never from reading the reporter by hand. | **Production** (Playwright) · Planning (others) | [`execution-result.schema.json`](../skills/qa-run/contracts/execution-result.schema.json) with its runtime invariants + Playwright analyzers + Python tests. |
 | Test generation | `qa-generate` | **Bootstraps/extends Playwright** non-destructively; detect-only for others. | **Production** (Playwright) · Planning (others) | [`generation-result.schema.json`](../skills/qa-generate/contracts/generation-result.schema.json) + Playwright templates. |
-| Failure triage | `qa-debug` | Evidence-backed classification, timeline, owner, ranked fixes. | **Production** | [`debug-result.schema.json`](../skills/qa-debug/contracts/debug-result.schema.json) + `qa_diagnostics` tests + bundle self-containment check. |
+| Failure triage | `qa-debug` | Evidence-backed classification, timeline, owner, ranked fixes. | **Production** | [`debug-result.schema.json`](../skills/qa-debug/contracts/debug-result.schema.json) + `diagnostics` tests + bundle self-containment check. |
 | Repair planning | `qa-fix` | Produces a safe repair **plan** and writes no code at all. Any diff — drafted or supplied — is reviewed by the diff guard, and a `fail` verdict cannot be reported `repairable`. | **Production** | [`fix-result.schema.json`](../skills/qa-fix/contracts/fix-result.schema.json) with its runtime invariant + diff-guard tests. |
 | Reporting | `qa-report` | Aggregates results into summaries + a release-readiness verdict. | **Production** | [`report-result.schema.json`](../skills/qa-report/contracts/report-result.schema.json). |
 | Quality review | `qa-review` | Reviews automation quality against the knowledge base and recommends improvements. Edits nothing. | Beta | [`review-result.schema.json`](../skills/qa-review/contracts/review-result.schema.json) + examples. |
@@ -58,14 +58,14 @@ Supporting platforms that the commands share:
 
 | Platform | Role | Level | Evidence |
 | --- | --- | --- | --- |
-| Deterministic analysis core (`qa_analysis`) | Redaction, evidence model, taxonomy, JUnit/HAR parsers, contract validator, context parser, diff guard — reachable from skills through `python3 -m qa_analysis.cli`. | **Production** | Python unit tests in `shared/analysis/lib/tests/`. |
-| Diagnostic engine (`qa_diagnostics`) | Root cause, timeline, prioritization, repair planning; one engine, five skills — reachable through `python3 -m qa_diagnostics.cli`, inputs and outputs validated against the internal seam contracts. | **Production** | Python unit tests in `shared/diagnostics/lib/tests/`, plus an installed-bundle execution test. |
-| Framework analyzers | Playwright report + trace analyzers (`python3 -m playwright_analysis`), bundled into `qa-run` and `qa-debug`; thin JUnit adapters for the other three. | **Production** (Playwright) · Beta (others) | `shared/frameworks/*/lib/tests/` and the cross-framework test. |
-| Contract invariants | Cross-field rules enforced by the shipped schemas: `passed` implies exit code 0 and no failures; `ready` implies zero failures; a failed diff-guard review cannot be `repairable`. | **Production** | `shared/analysis/lib/tests/test_parity.py`; validator parity corpus in `tests/parity/`. |
+| Deterministic analysis core (`analysis`) | Redaction, evidence model, taxonomy, JUnit/HAR parsers, contract validator, context parser, diff guard — reachable from skills through `python3 -m qa-engine analysis`. | **Production** | engine unit tests in `packages/engine/test/`. |
+| Diagnostic engine (`diagnostics`) | Root cause, timeline, prioritization, repair planning; one engine, five skills — reachable through `python3 -m qa-engine diagnostics`, inputs and outputs validated against the internal seam contracts. | **Production** | engine unit tests in `packages/engine/test/`, plus an installed-bundle execution test. |
+| Framework analyzers | Playwright report + trace analyzers (`qa-engine playwright`), bundled into `qa-run` and `qa-debug`; thin JUnit adapters for the other three. | **Production** (Playwright) · Beta (others) | `packages/engine/test/` and the cross-framework test. |
+| Contract invariants | Cross-field rules enforced by the shipped schemas: `passed` implies exit code 0 and no failures; `ready` implies zero failures; a failed diff-guard review cannot be `repairable`. | **Production** | `packages/engine/test/test_parity.py`; validator parity corpus in `tests/parity/`. |
 | QA knowledge base | 19 domain documents, uniform seven-section structure, lint-enforced. | **Production** | `check-knowledge` lint (19 documents) in CI. |
 | Installer CLI (`qa` / `install` / `verify` / `doctor` / `self-test` / `repair` / `update` / `uninstall`) | Interactive onboard, detection/recommendations, copy-based install, lockfile, thin wrappers, transactional uninstall; no code execution at install. | Beta | Smoke, bundle, parity, and uninstall tests in `packages/installer/test/`; no behavioral eval yet. |
 
-The whole pack is verified by **116 Python tests** and **30 Node tests**, plus the
+The whole pack is verified by **82 engine tests** and **30 Node tests**, plus the
 Node validators (`validate-skills`, `sync-shared --check`, `check-keywords`,
 `check-knowledge`, `check-doc-claims`, `check-docs-commands`) and the release
 packaging gate. See [Evidence index](#evidence-index).
@@ -111,7 +111,7 @@ identically to Playwright.
   dedicated adapter test **and** coverage in the cross-framework test.
 - **Cypress, WebdriverIO** — `shared/frameworks/{cypress,webdriverio}/lib/` (thin
   JUnit adapters) covered by the **cross-framework test**
-  (`shared/analysis/lib/tests/test_compat.py`), which asserts all four frameworks
+  (`packages/engine/test/test_compat.py`), which asserts all four frameworks
   produce an identical normalized shape and taxonomy. They have no dedicated
   per-adapter test file beyond the shared one — hence Beta, alongside Selenium,
   rather than Production.
@@ -126,24 +126,24 @@ capability levels here.
 
 | Claim | Proven by | Run it |
 | --- | --- | --- |
-| 116 Python tests pass | `shared/analysis/lib/tests/`, `shared/diagnostics/lib/tests/`, `shared/frameworks/*/lib/tests/` | `python3 shared/analysis/lib/run_tests.py` |
-| All four frameworks normalize identically | `shared/analysis/lib/tests/test_compat.py` | (included above) |
+| 82 engine tests pass | `packages/engine/test/`, `packages/engine/test/`, `packages/engine/test/` | `node --test packages/engine/test/*.test.mjs` |
+| All four frameworks normalize identically | `packages/engine/test/test_compat.py` | (included above) |
 | 12 user-facing skills valid; description budget respected | `scripts/validate-skills.mjs` | `npm run validate:skills` |
 | Shared knowledge copies are in sync | `scripts/sync-shared.mjs --check` | `npm run validate:sync` |
 | 19 knowledge domains are well-formed | `scripts/check-knowledge.mjs` | `npm run validate:knowledge` |
-| Bundled tooling **runs** in an installed skill, not just imports | `scripts/bundle_python.py --check` | `python3 scripts/bundle_python.py --check` |
+| Bundled tooling **runs** in an installed skill, not just imports | `npm test` | `python3 npm test` |
 | The installed engine and context validator run from the bundle alone | `packages/installer/test/bundle.test.mjs` | `npm test` |
 | Installer installs, verifies, reports, and uninstalls transactionally | `packages/installer/test/` | `npm test` |
-| Both validators accept and reject exactly the same documents | `tests/parity/validator-cases.json` | `npm test` + `python3 shared/analysis/lib/run_tests.py` |
-| A contract rejects a hallucinated-green result at runtime | `shared/analysis/lib/tests/test_parity.py` | `python3 shared/analysis/lib/run_tests.py` |
-| `.qa/context.md` is parsed and validated deterministically | `shared/analysis/lib/tests/test_context.py` | `npm run validate:context` |
-| The diff guard catches fake-green techniques and passes legitimate repairs | `shared/analysis/lib/tests/test_analysis.py` + `tests/fixtures/*.diff` | `python3 shared/analysis/lib/run_tests.py` |
+| Every shipped contract stays inside the validator-enforced subset | `packages/engine/test/corpus/validator-cases.json` | `npm test` + `node --test packages/engine/test/*.test.mjs` |
+| A contract rejects a hallucinated-green result at runtime | `packages/engine/test/test_parity.py` | `node --test packages/engine/test/*.test.mjs` |
+| `.qa/context.md` is parsed and validated deterministically | `packages/engine/test/test_context.py` | `npm run validate:context` |
+| The diff guard catches fake-green techniques and passes legitimate repairs | `packages/engine/test/test_analysis.py` + `tests/fixtures/*.diff` | `node --test packages/engine/test/*.test.mjs` |
 | Documentation claims match skill behavior | `scripts/check-doc-claims.mjs` | `npm run validate:doc-claims` |
 | Every documented CLI command exists and runs | `scripts/check-docs-commands.mjs` | `npm run validate:docs-commands` |
 | Every capability claim matches this matrix | `scripts/check-capability-matrix.mjs` | `npm run validate:matrix` |
 | The published tarball carries everything the installer bundles | `scripts/release/validate-release.mjs` | `npm run validate:release` |
-| Skill outputs reject hallucinated-green and unsafe results (deterministic behavioral gate) | `tests/evals/run_evals.py` (golden + adversarial cases) | `npm run validate:evals` |
-| A (replayed or real) agent's output passes the same gate, with regression detection | `tests/evals/run_live.py` + `baselines/reference.json` | `npm run eval:live` |
+| Skill outputs reject hallucinated-green and unsafe results (deterministic behavioral gate) | `tests/evals/run-evals.mjs` (golden + adversarial cases) | `npm run validate:evals` |
+| A (replayed or real) agent's output passes the same gate, with regression detection | `tests/evals/run-live.mjs` + `baselines/reference.json` | `npm run eval:live` |
 
 ## Change policy
 

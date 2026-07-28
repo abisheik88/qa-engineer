@@ -7,7 +7,7 @@
     "scenario": "A repo with no test framework, but the profile asserts high confidence anyway.",
     "request": "/qa-init"
   },
-  "contract": "shared/analysis/schemas/context.schema.json",
+  "contract": "packages/engine/lib/analysis/schemas/context.schema.json",
   "assertions": [
     { "anyOf": [{ "path": "confidence", "notEquals": "high" }, { "path": "testFramework.e2e", "present": true }] }
   ],

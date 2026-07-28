@@ -58,13 +58,15 @@ for (const needle of ['Deterministic code owns', 'LLM must not', 'Invent executi
   if (!boundary.includes(needle)) problems.push(`deterministic-execution-boundary.md missing: ${needle}`);
 }
 
-// The supported JSON Schema subset is declared in three places: the Python
-// validator, the JavaScript validator, and output-contracts.md. All three must
-// agree, or a contract author can write a constraint one side ignores.
-const pythonSrc = fs.readFileSync(
-  path.join(root, 'shared/analysis/lib/qa_analysis/contracts.py'),
-  'utf8',
-);
+// The supported JSON Schema subset is declared in two places: the validator and
+// output-contracts.md. They must agree, or a contract author writes a constraint the
+// documentation promises and the validator ignores — which is worse than no rule,
+// because the schema *looks* like it enforces something.
+//
+// This used to compare three places, the third being a second validator in Python.
+// One validator is the point of ADR-0012; the documentation check is what still has
+// teeth, and packages/installer/test/parity.test.mjs additionally holds every shipped
+// contract to the subset.
 const jsSrc = fs.readFileSync(
   path.join(root, 'packages/engine/lib/analysis/contracts.mjs'),
   'utf8',
@@ -80,21 +82,15 @@ function keywordsFrom(source, startMarker) {
     .sort();
 }
 
-const pythonKeywords = keywordsFrom(pythonSrc, 'SUPPORTED_KEYWORDS = frozenset({');
 const jsKeywords = keywordsFrom(jsSrc, 'const SUPPORTED = new Set([');
 
-if (!pythonKeywords) problems.push('contracts.py: could not read SUPPORTED_KEYWORDS');
-if (!jsKeywords) problems.push('contracts.mjs: could not read SUPPORTED');
-if (pythonKeywords && jsKeywords) {
-  const onlyPython = pythonKeywords.filter((k) => !jsKeywords.includes(k));
-  const onlyJs = jsKeywords.filter((k) => !pythonKeywords.includes(k));
-  for (const k of onlyPython) problems.push(`schema keyword "${k}" supported in Python but not JavaScript`);
-  for (const k of onlyJs) problems.push(`schema keyword "${k}" supported in JavaScript but not Python`);
-
+if (!jsKeywords) {
+  problems.push('contracts.mjs: could not read SUPPORTED');
+} else {
   // The documented subset must list exactly the implemented keywords.
   const subsetDoc = fs.readFileSync(path.join(root, 'docs/skills/output-contracts.md'), 'utf8');
   const documented = [...subsetDoc.matchAll(/`(\$?[a-zA-Z]+)`/g)].map((m) => m[1]);
-  for (const k of pythonKeywords) {
+  for (const k of jsKeywords) {
     if (!documented.includes(k)) {
       problems.push(`output-contracts.md does not document supported keyword "${k}"`);
     }

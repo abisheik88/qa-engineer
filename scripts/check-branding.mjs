@@ -2,7 +2,7 @@
 // Branding single-source check.
 //
 // The promise is that changing the report footer means editing exactly one file:
-// shared/analysis/lib/qa_analysis/branding.json. A promise like that decays the
+// packages/engine/lib/analysis/branding.json. A promise like that decays the
 // first time someone pastes the tagline into a template "just here", so it is
 // checked rather than trusted.
 //
@@ -22,8 +22,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
 
-const METADATA_REL = 'shared/analysis/lib/qa_analysis/branding.json';
-const RENDERER_REL = 'shared/analysis/lib/qa_analysis/branding.py';
+const METADATA_REL = 'packages/engine/lib/analysis/branding.json';
+const RENDERER_REL = 'packages/engine/lib/analysis/branding.mjs';
 
 if (!fs.existsSync(path.join(root, METADATA_REL))) {
   console.error(`branding check failed:\n  - missing ${METADATA_REL}`);
@@ -50,7 +50,8 @@ const GUARDED = ['tagline', 'website', 'authorPrefix']
 const ALLOWED = new Set([
   METADATA_REL,
   RENDERER_REL,
-  'shared/analysis/lib/tests/test_branding.py', // snapshots, by design
+  'packages/engine/test/branding.test.mjs',      // snapshots, by design
+  'packages/engine/test/corpus/expected.json',   // the recorded corpus, by design
   'docs/release/v1-excellence-audit.md',        // audits quote what was implemented
   'CHANGELOG.md',                                // release notes describe the footer
 ]);
@@ -102,7 +103,7 @@ for (const rel of files) {
     if (text.includes(value)) {
       problems.push(
         `${rel}: hardcodes the branding "${key}" ("${value}") — read it from ${METADATA_REL} ` +
-          'via qa_analysis.branding instead, so a wording change stays a one-file edit',
+          "via the engine's branding module instead, so a wording change stays a one-file edit",
       );
     }
   }
@@ -166,8 +167,8 @@ for (const rel of files) {
 
 // The renderer must exist and expose the documented functions.
 const renderer = fs.readFileSync(path.join(root, RENDERER_REL), 'utf8');
-for (const fn of ['footer_html', 'footer_markdown', 'footer_text', 'append_to', 'metadata']) {
-  if (!renderer.includes(`def ${fn}(`)) {
+for (const fn of ['footerHtml', 'footerMarkdown', 'footerText', 'appendTo', 'metadata']) {
+  if (!renderer.includes(`export function ${fn}(`)) {
     problems.push(`${RENDERER_REL}: missing the documented function ${fn}()`);
   }
 }
@@ -178,7 +179,7 @@ for (const fn of ['footer_html', 'footer_markdown', 'footer_text', 'append_to', 
 // because the module's own prose mentions them. A check that cannot fail is worse
 // than none: it reports safety it never verified. Those attributes are asserted
 // against the RENDERED output, where it counts, by
-// shared/analysis/lib/tests/test_branding.py::HtmlFooterTests.
+// packages/engine/test/branding.test.mjs.
 
 // The instruction must reach skills from one synced source, not per-skill copies.
 const knowledge = fs.readFileSync(path.join(root, 'shared/domains/evidence-and-reporting.md'), 'utf8');

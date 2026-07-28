@@ -27,7 +27,7 @@ Unlike the pack's other platforms, this one is knowledge **and** code. The modul
 
 ## Implementation
 
-The [lib/](lib/README.md) directory holds `qa_analysis` (the framework-agnostic core) and its tests. Framework adapters ([Playwright](../frameworks/playwright/README.md), [Selenium](../frameworks/selenium/README.md)) add only what is framework-specific and reuse this core for the evidence model, taxonomy, redaction, and contract validation.
+The [lib/](lib/README.md) directory holds `analysis` (the framework-agnostic core) and its tests. Framework adapters ([Playwright](../frameworks/playwright/README.md), [Selenium](../frameworks/selenium/README.md)) add only what is framework-specific and reuse this core for the evidence model, taxonomy, redaction, and contract validation.
 
 ## Boundaries
 

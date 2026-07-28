@@ -1,6 +1,6 @@
 # Contract checks
 
-Shared schema-validation used across eval cases: the deterministic, gating check that a skill's structured output conforms to its [output contract](../../../docs/skills/output-contracts.md). The deterministic contract-validity check is **implemented** — [`run_evals.py`](../run_evals.py) validates every case's output against its skill contract, reusing the pack's contract validator. This directory holds any additional shared schema-validation material the live-agent layer needs.
+Shared schema-validation used across eval cases: the deterministic, gating check that a skill's structured output conforms to its [output contract](../../../docs/skills/output-contracts.md). The deterministic contract-validity check is **implemented** — [`run-evals.mjs`](../run-evals.mjs) validates every case's output against its skill contract, reusing the pack's contract validator. This directory holds any additional shared schema-validation material the live-agent layer needs.
 
 ## What this checks
 

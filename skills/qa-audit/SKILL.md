@@ -55,15 +55,15 @@ Do not use it to run functional tests (`/qa-run`) or review test code (`/qa-revi
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-audit` or `.claude/skills/qa-audit`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-audit` or `.claude/skills/qa-audit`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| HAR analyzer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis har <file.har> [--slow-ms N]` | Redacted headers and timings for performance and security checks | Audit from other available signals and note the gap |
-| Artifact discovery | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis discover --root <dir>` | Which audit inputs exist, by type, with presence flags | Ask for artifact paths rather than assuming any |
-| Redaction | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis redact <file>` | The file's text with credentials masked, before anything is quoted | Do not quote captured headers at all |
+| HAR analyzer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis har <file.har> [--slow-ms N]` | Redacted headers and timings for performance and security checks | Audit from other available signals and note the gap |
+| Artifact discovery | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis discover --root <dir>` | Which audit inputs exist, by type, with presence flags | Ask for artifact paths rather than assuming any |
+| Redaction | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis redact <file>` | The file's text with credentials masked, before anything is quoted | Do not quote captured headers at all |
 
-A missing `qa_tool.py` means the engine is not installed. Live in-page scans (axe, Lighthouse) run through the project's browser tooling and are consumed as evidence; findings from a scan that did not run are never inferred.
+A missing `qa-tool.mjs` means the engine is not installed. Live in-page scans (axe, Lighthouse) run through the project's browser tooling and are consumed as evidence; findings from a scan that did not run are never inferred.
 
 ## Output
 

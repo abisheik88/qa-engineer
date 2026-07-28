@@ -33,14 +33,9 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-// One metadata file, found wherever it currently lives. Beside this module is
-// where it belongs and where it will be once the Python engine is gone; until
-// then the Python renderer owns the copy under shared/, and both implementations
-// read that same file rather than two that agree by luck.
-const METADATA_CANDIDATES = [
-  path.join(here, 'branding.json'),
-  path.resolve(here, '../../../../shared/analysis/lib/qa_analysis/branding.json'),
-];
+// One metadata file, beside this module — so it travels with the engine into a
+// bundled skill without a second copy to keep in step.
+const METADATA_CANDIDATES = [path.join(here, 'branding.json')];
 
 // The visual width of the plain-text rules. Wide enough to frame the four lines,
 // narrow enough to survive an 80-column terminal or a PDF margin.

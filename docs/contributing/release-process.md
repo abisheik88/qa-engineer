@@ -24,11 +24,11 @@ contract rules are [ADR-0003](../architecture/ADR-0003-versioning-strategy.md).
 # 1. Everything green, from a clean checkout
 npm ci
 npm test
-python3 shared/analysis/lib/run_tests.py
+node --test packages/engine/test/*.test.mjs
 PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s shared/diagnostics/lib/tests
 PYTHONPATH=shared/analysis/lib:shared/diagnostics/lib python3 -m unittest discover -s tests/seams
 python3 scripts/check-python-floor.py
-python3 scripts/bundle_python.py --check
+python3 npm test
 npm run validate:evals && npm run eval:live
 
 # 2. Every structural and documentation gate
