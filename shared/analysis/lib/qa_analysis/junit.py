@@ -24,6 +24,30 @@ def _int(value, default=0):
         return default
 
 
+def _duration_ms(raw, path):
+    """`time` in seconds as whole milliseconds.
+
+    An absent or empty attribute is zero — plenty of runners omit it. A value
+    that is present but not a finite number means the document is not what it
+    claims to be, so it raises: found by the Node port's parity corpus, where
+    `time="not-a-number"` escaped as a bare ValueError and `time="nan"` as
+    "cannot convert float NaN to integer". Both reached the caller as a traceback
+    and exit 1, while the CLI's documented failure mode is exit 2 with
+    {error, detail}.
+    """
+    if raw is None or raw == "":
+        return 0
+    try:
+        seconds = float(raw)
+    except (TypeError, ValueError):
+        raise MalformedArtifact(
+            f"testcase time={raw!r} is not a number at {path}"
+        ) from None
+    if seconds != seconds or seconds in (float("inf"), float("-inf")):
+        raise MalformedArtifact(f"testcase time={raw!r} is not a finite number at {path}")
+    return int(round(seconds * 1000))
+
+
 def parse_junit(path):
     """Parse a JUnit XML file into a normalized result.
 
@@ -65,7 +89,7 @@ def parse_junit(path):
                 "title": case.get("name", ""),
                 "file": case.get("classname", ""),
                 "status": status,
-                "durationMs": int(round(float(case.get("time", "0") or "0") * 1000)),
+                "durationMs": _duration_ms(case.get("time"), path),
             }
             if message:
                 entry["message"] = message
