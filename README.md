@@ -1,4 +1,4 @@
-# QA Automation Pack
+# QA Engineer Pack
 
 > Teach your AI coding assistant to work like a senior QA engineer — and stop it from telling you tests pass when they don't.
 
