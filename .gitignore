@@ -51,6 +51,12 @@ qa-artifacts/
 #     canonical source lives in shared/, so the bundle is a build artifact) ---
 skills/*/scripts/lib/
 
+# Leftovers from the Python engine. Untracked debris in these paths made
+# check-capability-matrix pass locally while failing in a clean clone, because it
+# tested for a *directory* that an empty __pycache__ satisfied.
+__pycache__/
+*.pyc
+
 # --- Local agent configuration (machine-specific, never shared) ---
 .claude/settings.local.json
 

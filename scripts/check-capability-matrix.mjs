@@ -123,14 +123,43 @@ for (const [key, level] of canonicalFw) {
     }
     continue;
   }
-  const adapterDir = path.join(root, 'shared', 'frameworks', key);
-  const hasAdapter = fs.existsSync(path.join(adapterDir, 'lib'));
+  // Adapter *code*, not an adapter directory. This used to test for the existence
+  // of shared/frameworks/<key>/lib/, which an empty leftover directory satisfies —
+  // and did, silently, after the adapters moved into the engine: the check passed
+  // on a working tree holding nothing but __pycache__ and failed in a clean clone.
+  // A directory proves nothing; a module that names the framework does.
+  const hasAdapter = adapterModuleFor(key) !== null;
   if (level === 'planning' && hasAdapter) {
-    notes.push(`framework "${key}" is labelled planning but has an adapter lib — consider promoting.`);
+    notes.push(`framework "${key}" is labelled planning but has adapter code — consider promoting.`);
   }
   if (level !== 'planning' && !hasAdapter) {
-    problems.push(`framework "${key}" is labelled "${level}" but has no adapter at shared/frameworks/${key}/lib`);
+    problems.push(
+      `framework "${key}" is labelled "${level}" but no adapter implements it under ` +
+        'packages/engine/lib/frameworks/',
+    );
   }
+}
+
+/**
+ * The engine module that implements this framework, or null.
+ *
+ * Playwright has its own adapter because a trace.zip is Playwright-specific. The
+ * JUnit-XML frameworks share one module and declare themselves in its glob table,
+ * so membership is read from the code rather than assumed from a path.
+ */
+function adapterModuleFor(key) {
+  const frameworks = path.join(root, 'packages', 'engine', 'lib', 'frameworks');
+  const dedicated = path.join(frameworks, `${key}.mjs`);
+  if (fs.existsSync(dedicated)) return dedicated;
+
+  const shared = path.join(frameworks, 'junit-frameworks.mjs');
+  if (!fs.existsSync(shared)) return null;
+  // Read the declared table rather than grepping for the bare name, so a framework
+  // mentioned only in a comment does not count as implemented.
+  const source = fs.readFileSync(shared, 'utf8');
+  const table = source.match(/RESULT_GLOBS = \{([\s\S]*?)\n\};/);
+  if (table && new RegExp(`^\\s*${key}:`, 'm').test(table[1])) return shared;
+  return null;
 }
 
 // ---- Check 3: command surface matches the skills on disk ---------------------
