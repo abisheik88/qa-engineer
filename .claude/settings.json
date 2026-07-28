@@ -11,7 +11,8 @@
       "Bash(PYTHONPATH=shared/analysis/lib python3 -m unittest discover -s shared/analysis/lib/tests -t shared/analysis/lib/tests -p test_context.py)",
       "Bash(node --test packages/engine/test/context.test.mjs)",
       "Bash(node --test packages/engine/test/diff-guard.test.mjs)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Read(//home/abisheik/.npm-global/lib/node_modules/qa-engineer/packages/**)"
     ]
   }
 }

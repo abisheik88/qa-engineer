@@ -62,8 +62,11 @@ jobs:
           node scripts/check-doc-claims.mjs
           node scripts/check-docs-commands.mjs
 
-      # Verifies version/tag consistency and that the tarball carries everything
-      # the installer bundles — a release that omits bundled code installs broken.
+      # Verifies version/tag consistency, that the tarball carries everything the
+      # installer bundles, and that the CLI actually RUNS when unpacked from it.
+      # 0.9.2 shipped a tarball whose lockfile.mjs imported a file the allowlist
+      # left out: every command died on ERR_MODULE_NOT_FOUND while a listing-only
+      # check reported OK.
       - name: Release validation
         run: node scripts/release/validate-release.mjs
 
