@@ -234,6 +234,78 @@ class StructureTests(unittest.TestCase):
         self.assertIn("No defects found", page)
 
 
+class OrientationTests(unittest.TestCase):
+    """A forwarded report must explain itself to someone who was not there."""
+
+    def test_the_report_says_what_kind_of_document_it_is(self):
+        page = report_html.render(_explore())
+        self.assertIn("exploratory QA report", page)
+        self.assertIn("About this report", page)
+
+    def test_the_orientation_comes_before_the_first_finding(self):
+        page = report_html.render(_explore())
+        self.assertLess(page.index("About this report"), page.index("<h2>Findings</h2>"))
+
+    def test_how_the_application_was_observed_is_stated_in_plain_words(self):
+        page = report_html.render(_explore(browserAdapter="playwright-mcp"))
+        self.assertIn("a real browser driven by Playwright", page)
+
+    def test_an_unavailable_browser_is_not_dressed_up_as_a_real_one(self):
+        page = report_html.render(_explore(browserAdapter="unavailable"))
+        self.assertIn("no browser automation", page)
+        self.assertNotIn("a real browser", page)
+
+    def test_every_dimension_run_is_explained_not_just_named(self):
+        page = report_html.render(_explore(dimensionsRun=["functional", "ux", "security"]))
+        for plain in (
+            "Does the feature do what it is supposed to do",
+            "Whether the flow makes sense to a person using it",
+            "where credentials and tokens are stored",
+        ):
+            self.assertIn(plain, page, "a dimension was named without being explained")
+
+    def test_the_severity_legend_defines_every_level(self):
+        page = report_html.render(_explore())
+        for meaning in ("Blocks release", "Fix before release", "Fix soon", "Worth fixing"):
+            self.assertIn(meaning, page)
+
+    def test_declared_scope_is_rendered(self):
+        page = report_html.render(_explore(scope={
+            "objective": "Check whether a new user can sign in, and what happens when they cannot.",
+            "covered": ["The sign-in form at /login and its password toggle"],
+            "notCovered": ["Signing in successfully — a QA run must not enter real credentials"],
+        }))
+        self.assertIn("Check whether a new user can sign in", page)
+        self.assertIn("The sign-in form at /login and its password toggle", page)
+        self.assertIn("must not enter real credentials", page)
+        self.assertIn("Not covered in this run", page)
+
+    def test_an_unrun_dimension_is_reported_as_not_covered(self):
+        page = report_html.render(_explore(dimensionsRun=["functional"]))
+        self.assertIn("Not covered in this run", page)
+        self.assertIn("was not examined", page)
+        # And with its plain meaning, not only its jargon name.
+        self.assertIn("whether the numbers and text on screen match", page)
+
+    def test_a_blocked_case_is_named_as_something_that_could_not_be_run(self):
+        page = report_html.render(_explore(testCases={
+            "total": 1, "passed": 0, "failed": 0, "blocked": 1, "skipped": 0,
+            "cases": [{"id": "TC-1", "title": "Valid credentials sign in", "status": "blocked"}],
+        }))
+        self.assertIn("Could not be run", page)
+        self.assertIn("TC-1 (Valid credentials sign in)", page)
+
+    def test_a_run_with_no_scope_still_explains_itself(self):
+        # Older artifacts, and runs that skip the field, must not lose the section.
+        page = report_html.render(_explore())
+        self.assertIn("About this report", page)
+        self.assertIn("How to read the findings", page)
+
+    def test_scope_prose_is_escaped_like_everything_else(self):
+        page = report_html.render(_explore(scope={"objective": "<script>alert(1)</script>"}))
+        self.assertNotIn("<script>alert(1)</script>", page)
+
+
 class ContractSelectionTests(unittest.TestCase):
     def test_an_unsupported_contract_is_refused_rather_than_half_rendered(self):
         with self.assertRaises(report_html.ReportError) as caught:

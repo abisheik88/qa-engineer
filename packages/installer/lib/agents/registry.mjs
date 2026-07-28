@@ -14,8 +14,17 @@ import { SHARED_SKILLS_DIR, CLAUDE_SKILLS_DIR } from '../constants.mjs';
  * @property {string} skillsDir  project-relative skills discovery path
  * @property {string|null} wrapperFormat  wrappers.mjs renderer key, or null
  * @property {string|null} wrapperDir  where wrappers are written, or null
+ * @property {readonly string[]} discovery  every project path this host reads skills from
+ * @property {string} docs  the primary documentation the discovery list was read from
+ * @property {string} invoke  how a user reaches a skill in this host, in their words
  * @property {(root:string)=>boolean} detect
  */
+
+// `discovery` is what makes an install correct rather than hopeful: writing skills
+// to a path the host does not read produces a silent no-op — the files are there,
+// the agent never sees them, and the user concludes the pack does not work. Each
+// list below was read off that host's own documentation on 2026-07-28 (`docs`), and
+// a test asserts `skillsDir` is a member of it. See COMPATIBILITY.md.
 
 /** @type {AgentDef[]} */
 export const AGENTS = Object.freeze([
@@ -26,6 +35,9 @@ export const AGENTS = Object.freeze([
     skillsDir: CLAUDE_SKILLS_DIR,
     wrapperFormat: null,
     wrapperDir: null,
+    discovery: Object.freeze(['.claude/skills']),
+    docs: 'https://code.claude.com/docs/en/skills',
+    invoke: 'type /qa-explore, or just describe the task — skills auto-activate',
     detect: (root) =>
       fs.existsSync(path.join(root, '.claude')) ||
       fs.existsSync(path.join(root, 'CLAUDE.md')),
@@ -35,6 +47,10 @@ export const AGENTS = Object.freeze([
     name: 'Cursor',
     tier: 2,
     skillsDir: SHARED_SKILLS_DIR,
+    // Cursor reads both, and additionally loads Claude and Codex directories.
+    discovery: Object.freeze(['.agents/skills', '.cursor/skills']),
+    docs: 'https://cursor.com/docs/skills',
+    invoke: 'type / in Agent chat and pick qa-explore',
     wrapperFormat: null,
     wrapperDir: null,
     detect: (root) =>
@@ -46,6 +62,12 @@ export const AGENTS = Object.freeze([
     name: 'OpenAI Codex CLI',
     tier: 1,
     skillsDir: SHARED_SKILLS_DIR,
+    // Codex documents `.agents/skills` exclusively — at the cwd, the parent, and
+    // the repository root. There is no `.codex/skills`, so `.codex/` is only ever
+    // a detection marker here, never a target.
+    discovery: Object.freeze(['.agents/skills']),
+    docs: 'https://developers.openai.com/codex/skills',
+    invoke: 'type $qa-explore, or /skills to browse them',
     wrapperFormat: null,
     wrapperDir: null,
     detect: (root) =>
@@ -57,7 +79,12 @@ export const AGENTS = Object.freeze([
     name: 'OpenCode',
     tier: 1,
     skillsDir: SHARED_SKILLS_DIR,
+    discovery: Object.freeze(['.agents/skills', '.opencode/skills', '.claude/skills']),
+    docs: 'https://opencode.ai/docs/skills/',
+    invoke: 'type /qa-explore, or describe the task — the agent loads skills itself',
     wrapperFormat: 'command-md',
+    // Plural, per https://opencode.ai/docs/commands/ — global is
+    // ~/.config/opencode/commands/, per-project .opencode/commands/.
     wrapperDir: '.opencode/commands',
     detect: (root) => fs.existsSync(path.join(root, '.opencode')),
   },
@@ -66,6 +93,9 @@ export const AGENTS = Object.freeze([
     name: 'Gemini CLI',
     tier: 2,
     skillsDir: SHARED_SKILLS_DIR,
+    discovery: Object.freeze(['.agents/skills', '.gemini/skills']),
+    docs: 'https://google-gemini.github.io/gemini-cli/',
+    invoke: 'type /qa-explore (generated command), or describe the task',
     wrapperFormat: 'command-toml',
     wrapperDir: '.gemini/commands',
     detect: (root) => fs.existsSync(path.join(root, '.gemini')),
@@ -75,6 +105,9 @@ export const AGENTS = Object.freeze([
     name: 'GitHub Copilot',
     tier: 2,
     skillsDir: SHARED_SKILLS_DIR,
+    discovery: Object.freeze(['.agents/skills', '.github/skills']),
+    docs: 'https://docs.github.com/en/copilot',
+    invoke: 'type /qa-explore in Copilot Chat (generated prompt file)',
     wrapperFormat: 'prompt-md',
     wrapperDir: '.github/prompts',
     // Detected by a Copilot-specific marker, not by `.github/` — almost every
@@ -90,6 +123,13 @@ export const AGENTS = Object.freeze([
     name: 'Antigravity',
     tier: 2,
     skillsDir: SHARED_SKILLS_DIR,
+    // Antigravity defaults to `.agents/skills` at the workspace root, with
+    // backward support for `.agent/skills`; global skills live under
+    // ~/.gemini/config/skills. So the pack's default install path is already the
+    // one it reads — detection below only governs the optional workflow wrappers.
+    discovery: Object.freeze(['.agents/skills', '.agent/skills']),
+    docs: 'https://antigravity.google/docs/skills',
+    invoke: 'describe the task — skills auto-activate; workflows give slash commands',
     wrapperFormat: 'workflow-md',
     wrapperDir: '.agents/workflows',
     // Detected by its own configuration directory, NOT by `.agents/`.
@@ -106,6 +146,9 @@ export const AGENTS = Object.freeze([
     name: 'Kimi (Agent Skills copy)',
     tier: 2,
     skillsDir: SHARED_SKILLS_DIR,
+    discovery: Object.freeze(['.agents/skills']),
+    docs: 'https://agentskills.io/specification',
+    invoke: 'describe the task, or use the product\'s own slash surface',
     wrapperFormat: null,
     wrapperDir: null,
     detect: () => false,
@@ -119,6 +162,9 @@ export const AGENTS = Object.freeze([
     name: 'Unknown agent (shared Agent Skills path)',
     tier: null,
     skillsDir: SHARED_SKILLS_DIR,
+    discovery: Object.freeze(['.agents/skills']),
+    docs: 'https://agentskills.io/specification',
+    invoke: 'describe the task; most hosts also expose skills on /',
     wrapperFormat: null,
     wrapperDir: null,
     detected: false,

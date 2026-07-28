@@ -24,6 +24,31 @@ import { detectFrameworks } from '../detect/frameworks.mjs';
 import { getFramework } from '../../../../shared/frameworks/registry.mjs';
 
 /**
+ * Say how to reach a skill in the host that was actually detected.
+ *
+ * The invocation surface differs per host — Codex takes `$qa-explore`, Cursor
+ * matches on `/`, OpenCode's agent loads skills itself — and a user who types the
+ * wrong one concludes the install failed. The registry records each host's own
+ * convention beside the paths it reads, so this prints what will work here rather
+ * than a generic "/qa-explore" that is wrong in two of the five hosts.
+ */
+function reportInvocation(agents, logger) {
+  const named = agents.filter((a) => a.invoke && a.id !== 'agent-skills');
+  if (named.length === 0) {
+    const fallback = agents.find((a) => a.invoke);
+    if (fallback) {
+      logger.info(`  → no specific agent detected; ${fallback.invoke}`);
+      logger.info('  → the skills are on the standard Agent Skills path, which every');
+      logger.info('    supported host reads: Cursor, Codex, OpenCode, Antigravity, Gemini, Copilot');
+    }
+    return;
+  }
+  for (const agent of named) {
+    logger.info(`  → in ${agent.name}: ${agent.invoke}`);
+  }
+}
+
+/**
  * Say plainly which commands this project can actually use.
  *
  * A project with no supported end-to-end framework still gets all thirteen
@@ -251,6 +276,7 @@ export async function executeInstall({
   } else if (!json) {
     logger.ok(`installed ${unique.length} file(s); lockfile ${lockPath(root)}`);
     for (const step of INSTALL_STEPS) logger.ok(step.label);
+    reportInvocation(agents, logger);
     reportFrameworkFit(root, logger);
   }
 

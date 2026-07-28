@@ -11,6 +11,49 @@ For run id `R`:
 - `qa-artifacts/explore-R/explore-result.json`
 - `qa-artifacts/explore-R/screenshots/…`
 
+## Write for a reader who has never seen the product
+
+The report is forwarded. A founder, a designer, and the developer who owns one
+finding will each open it without the conversation that produced it, and often
+without knowing what the feature does. Write for that reader:
+
+- **Name things, do not point at them.** "the Sign in button on /login", not "the
+  button". A reader cannot see your screen.
+- **No unexplained jargon.** IDOR, CLS, and *soft assertion* need a clause of
+  explanation or a plainer word.
+- **State the consequence.** A reader who does not know the product cannot infer
+  why a duplicate request matters; say that it can trip rate limiting and charge
+  twice.
+
+The renderer supplies the standing furniture — what an exploratory QA pass is, what
+each dimension means, what the severity labels mean, and what could not be run. You
+supply what only this run knows: the `scope` block below, and findings whose
+`actual` and `expected` read as complete sentences.
+
+## Scope: what you did, and what you left alone
+
+Fill `scope` on every run. It is what makes the report legible to someone who was
+not there, and without it the report opens on a wall of findings.
+
+| Field | What goes in it |
+| --- | --- |
+| `objective` | One or two sentences: which feature you exercised and what you were trying to establish. Written for someone who does not know the app. |
+| `covered` | The concrete things you actually touched — screens, controls, flows, request paths. Not dimension names: the renderer already explains those. |
+| `notCovered` | Every boundary of the run, **each with its reason**. A boundary without a reason reads as an omission. |
+
+`notCovered` is the field that protects the reader. A login report that does not say
+"signing in successfully was never tested, because a QA run must not enter real
+credentials" invites the conclusion that login works. State the boundary:
+
+- what needed access or credentials you did not have, and why you did not ask
+- what a local or development environment cannot tell you (security headers, bundle
+  size, real latency) and where it must be re-checked
+- what would have caused damage to test (rate limits, lockout, destructive actions)
+- what was in scope but blocked, naming the case id
+
+Blocked cases and unrun dimensions are added by the renderer from the artifact — do
+not repeat them. Write the boundaries only it cannot know.
+
 ## Order of production
 
 `explore-result.json` is written **first** and validated; the Markdown and HTML are

@@ -75,6 +75,50 @@ _EVIDENCE_LABEL = {
     "diff": "Diff",
 }
 
+# What each QA dimension means to someone who has never read a QA report. The
+# contract stores dimension *names*, which are jargon: "ux" tells a reader nothing.
+# The report is read by founders, designers, and support staff, not only by the
+# engineer who will fix the defect.
+_DIMENSION_LABEL = {
+    "functional": "Functionality",
+    "api": "API",
+    "performance": "Performance",
+    "security": "Security (client-side)",
+    "ui": "UI",
+    "ux": "UX",
+    "data": "Data",
+}
+
+_DIMENSION_PLAIN = {
+    "functional": "Does the feature do what it is supposed to do, including when the input is wrong?",
+    "api": "The network requests the page makes — whether they are correct, and how the page handles a bad response",
+    "performance": "How much the page downloads and how quickly it becomes usable",
+    "security": "Client-side exposure only: where credentials and tokens are stored, what leaks into URLs and error messages",
+    "ui": "Layout and visual states — empty, loading, error — including a narrow mobile screen",
+    "ux": "Whether the flow makes sense to a person using it, and whether the wording helps them",
+    "data": "Whether the numbers and text on screen match the system of record behind them",
+}
+
+# What each severity is claiming, so a reader can calibrate without asking. These
+# are definitions, not opinions: they say what the label means in this report.
+_SEVERITY_MEANING = {
+    "critical": "Blocks release. Data loss, a security hole, or a core flow that cannot be completed.",
+    "high": "Fix before release. A user hits this on a normal path and the product does the wrong thing.",
+    "medium": "Fix soon. Real but survivable — a workaround exists, or the path is less common.",
+    "low": "Worth fixing. Polish, hygiene, or a measurement that needs confirming before it is acted on.",
+}
+
+# How each browser adapter observed the application, in one honest phrase. A
+# reader deciding how much to trust a finding needs to know what watched the page.
+_ADAPTER_PLAIN = {
+    "playwright-mcp": "a real browser driven by Playwright",
+    "cursor-browser": "the editor's built-in browser",
+    "cdp": "a real browser over the Chrome DevTools Protocol",
+    "cli-playwright": "a real browser driven by the Playwright CLI",
+    "cli-other": "a real browser driven from the command line",
+    "unavailable": "no browser automation — findings come from artifacts supplied to the run",
+}
+
 _STATUS_LABEL = {
     "confirmed": "Confirmed",
     "validated-user-report": "Validated user report",
@@ -123,6 +167,10 @@ h3{margin:0;font-size:1.0625rem;letter-spacing:-.01em}
 .meta{color:#667085;font-size:.8125rem}
 .meta strong{color:#344054;font-weight:600}
 .lead{margin:0 0 .25rem;font-size:1.0625rem;color:#475467;max-width:52rem}
+.intro p{margin:0 0 .75rem;max-width:52rem}
+.intro p:last-child{margin-bottom:0}
+.objective{margin:0 0 .875rem;max-width:52rem}
+.objective:last-child{margin-bottom:0}
 .verdict{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;
   padding:1rem 1.25rem;border-radius:10px;font-weight:600;margin:1.25rem 0}
 .counts{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.25rem 0}
@@ -348,6 +396,134 @@ def _test_case_table(test_cases, finding_ids=()):
     )
 
 
+def _orientation(result):
+    """Open the report for a reader who has never seen this product.
+
+    A QA report is forwarded to people who were not in the room: a founder, a
+    designer, the developer who owns one of the six findings. Landing straight on
+    "EXP-1 · high" asks them to work out what kind of document this is, who
+    produced it, how it was produced, and how much to trust it. So it says so.
+    Everything here is derived from the artifact — nothing is asserted about work
+    that was not recorded.
+    """
+    cases = result.get("testCases") or {}
+    executed = cases.get("total")
+    adapter = _ADAPTER_PLAIN.get(result.get("browserAdapter"))
+
+    how = ["opened the application"]
+    if adapter:
+        how = [f"opened the application in {adapter}"]
+    if executed:
+        how.append(f"worked through {executed} test case{'s' if executed != 1 else ''}")
+    how.append("captured proof for every defect it reports")
+
+    sentences = [
+        "This is an <strong>exploratory QA report</strong>. An AI QA engineer "
+        + ", ".join(how[:-1])
+        + f", and {how[-1]}.",
+        "Each finding below says what happens today, what should happen instead, "
+        "and how to see it for yourself — so nothing here has to be taken on trust.",
+    ]
+    return (
+        '<div class="card intro"><div class="card-body">'
+        + "".join(f"<p>{s}</p>" for s in sentences)
+        + "</div></div>"
+    )
+
+
+def _scope_block(result):
+    """What was tested and what was not, in plain language.
+
+    Dimension names are jargon and coverage counts are not scope: "18 cases" does
+    not tell a reader whether sign-up was looked at. The model supplies the
+    feature-level prose in `scope`; the dimension table and the not-covered
+    derivations are computed, so a run that omits `scope` still explains itself.
+    """
+    scope = result.get("scope") or {}
+    dimensions = result.get("dimensionsRun") or []
+    parts = []
+
+    if scope.get("objective"):
+        parts.append(f'<p class="objective">{_e(scope["objective"])}</p>')
+
+    if scope.get("covered"):
+        items = "".join(f"<li>{_e(x)}</li>" for x in scope["covered"])
+        parts.append(f'<ul class="clean">{items}</ul>')
+
+    if not parts and not dimensions:
+        return ""
+
+    body = (
+        f'<div class="card"><div class="card-body">{"".join(parts)}</div></div>'
+        if parts
+        else ""
+    )
+
+    if dimensions:
+        rows = "".join(
+            f'<tr><td><strong>{_e(_DIMENSION_LABEL.get(d, d))}</strong></td>'
+            f'<td>{_e(_DIMENSION_PLAIN.get(d, ""))}</td></tr>'
+            for d in dimensions
+        )
+        body += (
+            '<div class="card"><table><thead><tr><th>Area checked</th>'
+            f"<th>What that means</th></tr></thead><tbody>{rows}</tbody></table></div>"
+        )
+    return body
+
+
+def _not_covered_block(result):
+    """The boundary of the run, stated rather than left to inference.
+
+    An unstated boundary reads as "everything was checked". Blocked cases and
+    skipped dimensions are the two boundaries the artifact already knows about, so
+    they are added to whatever the run declared.
+    """
+    scope = result.get("scope") or {}
+    items = [str(x) for x in (scope.get("notCovered") or [])]
+
+    ran = set(result.get("dimensionsRun") or [])
+    if ran:
+        missing = [d for d in _DIMENSION_PLAIN if d not in ran]
+        for dimension in missing:
+            # Named with its plain-language meaning: "Data" alone tells a reader
+            # who does not work in QA nothing about what went unchecked.
+            items.append(
+                f"{_DIMENSION_LABEL.get(dimension, dimension)} was not examined — "
+                f"{_DIMENSION_PLAIN[dimension][0].lower()}{_DIMENSION_PLAIN[dimension][1:]}"
+            )
+
+    db = result.get("dbValidation") or {}
+    if db.get("inScope") is False and not db.get("summary"):
+        items.append("Data was not compared against the system of record — no access was provided.")
+
+    cases = result.get("testCases") or {}
+    blocked = [c for c in (cases.get("cases") or []) if c.get("status") == "blocked"]
+    if blocked:
+        listed = ", ".join(f'{c.get("id")} ({c.get("title")})' for c in blocked)
+        items.append(f"Could not be run: {listed}")
+
+    if not items:
+        return ""
+    listing = "".join(f"<li>{_e(x)}</li>" for x in items)
+    return (
+        '<h2>Not covered in this run</h2>'
+        f'<div class="card"><div class="card-body"><ul class="clean">{listing}</ul></div></div>'
+    )
+
+
+def _legend_block():
+    """What the severity labels mean, so nobody has to ask."""
+    rows = "".join(
+        f"<tr><td>{_severity_badge(key)}</td><td>{_e(meaning)}</td></tr>"
+        for key, meaning in _SEVERITY_MEANING.items()
+    )
+    return (
+        '<div class="card"><table><thead><tr><th>Severity</th><th>What it means</th></tr>'
+        f"</thead><tbody>{rows}</tbody></table></div>"
+    )
+
+
 def _evidence_index(evidence):
     """The run's evidence, listed once with its descriptions.
 
@@ -387,8 +563,6 @@ def render_explore(result):
         meta_bits.append(f'<strong>Generated</strong> {_e(result["generatedAt"])}')
     if result.get("browserAdapter"):
         meta_bits.append(f'<strong>Browser</strong> {_e(result["browserAdapter"])}')
-    if result.get("dimensionsRun"):
-        meta_bits.append(f'<strong>Dimensions</strong> {_e(", ".join(result["dimensionsRun"]))}')
     if result.get("reportVersion"):
         meta_bits.append(f'<strong>Report</strong> v{_e(result["reportVersion"])}')
 
@@ -414,6 +588,24 @@ def render_explore(result):
                 ["total", "passed", "failed", "blocked", "skipped"],
             )
         )
+
+    # Orientation before detail. A reader who has never seen this product needs to
+    # know what the document is, what was looked at, what was not, and what the
+    # labels mean — before the first finding, not in an appendix.
+    body.append("<h2>About this report</h2>")
+    body.append(_orientation(result))
+
+    scope = _scope_block(result)
+    if scope:
+        body.append("<h2>What was tested</h2>")
+        body.append(scope)
+
+    not_covered = _not_covered_block(result)
+    if not_covered:
+        body.append(not_covered)
+
+    body.append("<h2>How to read the findings</h2>")
+    body.append(_legend_block())
 
     body.append("<h2>Findings</h2>")
     if findings:
