@@ -1,8 +1,16 @@
 // A dependency-free validator for the JSON Schema subset this project uses.
-// It is the JavaScript twin of the Python contract validator in
-// shared/analysis/lib/qa_analysis/contracts.py: same supported subset, same
-// semantics, so a document that passes one passes the other. That promise is
-// tested, not asserted — tests/parity/validator-cases.json runs through both.
+//
+// This began as the JavaScript *twin* of a Python validator, kept in step by a
+// shared corpus. The engine's move to Node makes it the only implementation, so
+// it moved here from packages/installer/lib/core/schema-validate.mjs — the
+// installer and the analysis engine now validate through the same code rather
+// than two copies that agreed by test.
+//
+// Until the Python validator is deleted, tests/parity/validator-cases.json still
+// runs through both and both must agree on validity. Error *prose* is
+// deliberately not compared: the two produce different message text and
+// different path notation, and matching Python's `repr()` formatting in
+// JavaScript would be fragile busywork with nothing riding on it.
 //
 // Anything outside the subset is a programming error in the schema, reported
 // rather than silently ignored. `allOf`/`if`/`then`/`else` are in the subset

@@ -20,7 +20,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Transaction } from '../lib/core/fs-safe.mjs';
-import { validate } from '../lib/core/schema-validate.mjs';
+import { validate } from '../../engine/lib/analysis/contracts.mjs';
 import { LOCK_SCHEMA } from '../lib/core/lockfile.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
