@@ -95,7 +95,7 @@ jobs:
       - name: Every documented CLI command exists and runs
         run: node scripts/check-docs-commands.mjs
       - name: Release validation (identity, versions, tarball contents)
-        run: node scripts/release/validate-release.mjs
+        run: node scripts/release/validate-release.mjs   # unpacks and runs the CLI
       - name: Validate every JSON Schema parses
         run: |
           set -euo pipefail
