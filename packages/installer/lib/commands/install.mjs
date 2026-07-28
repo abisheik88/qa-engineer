@@ -60,10 +60,11 @@ function reportFrameworkFit(root, logger) {
     return;
   }
 
-  logger.warn('no supported end-to-end framework detected (Playwright, Selenium, Cypress, WebdriverIO)');
-  logger.info('  → /qa-run and /qa-generate need one; they will tell you so rather than guess');
-  logger.info('  → these work without one: /qa-review, /qa-api, /qa-report, /qa-audit, /qa-explore');
-  logger.info('  → unit tests only (Jest, Vitest, pytest)? That is expected — see the README');
+  logger.warn('no end-to-end framework detected (Playwright, Selenium, Cypress, WebdriverIO)');
+  logger.info('  → start with /qa-generate — it bootstraps a framework when none exists');
+  logger.info('  → /qa-run needs one first; it will say so rather than guess');
+  logger.info('  → these work today: /qa-review, /qa-api, /qa-audit, /qa-explore, /qa-report');
+  logger.info('  → unit tests only (Jest, Vitest, Jasmine, pytest)? That is expected');
 }
 
 /**
