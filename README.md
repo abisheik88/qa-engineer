@@ -8,11 +8,8 @@
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisites)
 [![Python](https://img.shields.io/badge/python-%E2%89%A53.8-3776AB.svg)](#step-1--check-your-prerequisites)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-spec--native-6E56CF.svg)](https://agentskills.io)
+[![CI](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-235%20passing-success.svg)](#how-this-is-verified)
-
-<!-- On publication, add the live workflow badge:
-     [![CI](https://github.com/<org>/qa-engineer/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
-     It is omitted today because an unpublished repository renders it as a broken image. -->
 
 **This page is everything you need.** Install, first run, every command, and what to do when something breaks — no other document required.
 

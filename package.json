@@ -4,13 +4,13 @@
   "description": "A vendor-neutral Agent Skills pack that teaches AI coding agents to work like senior QA automation engineers.",
   "license": "MIT",
   "type": "module",
-  "homepage": "https://github.com/qa-engineer/qa-engineer#readme",
+  "homepage": "https://github.com/abisheik88/qa-engineer#readme",
   "bugs": {
-    "url": "https://github.com/qa-engineer/qa-engineer/issues"
+    "url": "https://github.com/abisheik88/qa-engineer/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qa-engineer/qa-engineer.git"
+    "url": "git+https://github.com/abisheik88/qa-engineer.git"
   },
   "engines": {
     "node": ">=18.18.0"
