@@ -182,10 +182,18 @@ for (const fn of ['footer_html', 'footer_markdown', 'footer_text', 'append_to', 
 
 // The instruction must reach skills from one synced source, not per-skill copies.
 const knowledge = fs.readFileSync(path.join(root, 'shared/domains/evidence-and-reporting.md'), 'utf8');
-if (!knowledge.includes('qa_analysis.cli branding')) {
+if (!knowledge.includes('analysis branding')) {
   problems.push(
     'shared/domains/evidence-and-reporting.md must tell skills to render the footer with ' +
-      'qa_analysis.cli branding, so no skill types it by hand',
+      'the branding tool, so no skill types it by hand',
+  );
+}
+// And the whole report, not only its footer: a hand-written HTML report is where
+// both the footer and the required finding fields went missing on the first live run.
+if (!knowledge.includes('analysis report-html')) {
+  problems.push(
+    'shared/domains/evidence-and-reporting.md must tell skills to render HTML reports with ' +
+      'analysis report-html — a typed report is a lossy copy of the artifact',
   );
 }
 

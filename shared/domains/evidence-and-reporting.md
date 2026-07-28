@@ -26,17 +26,42 @@ Any skill that reaches a conclusion — a detected fact, a chosen strategy, a cl
 | Confidence | Calibrated per rule 4; omitted rather than invented when the skill did not weigh alternatives |
 | Recommendations | The next action, named concretely — often the next command and the artifact to feed it |
 
+## Rendering the HTML report
+
+**Never type the HTML.** When a skill's result conforms to a contract the renderer
+supports, the HTML report is generated from that artifact:
+
+```bash
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html <result.json> --out <report.html>
+```
+
+The reason is not tidiness. A hand-written report is a second, lossy copy of the
+artifact, and it loses exactly what the reader needs: the first live `/qa-explore`
+run wrote findings whose `actual`, `expected`, and `fixDirection` were all required,
+all present in the JSON, and all absent from the page — collapsed into one sentence
+that left the reader to guess what correct behaviour would have been. The renderer
+cannot make that mistake, because the fields are in its template.
+
+What the renderer guarantees per finding: severity, the defect, **what happens
+now**, **what should happen instead**, how to reproduce it, the fix direction, and
+every evidence entry — plus the attribution footer, in one self-contained file with
+no external assets.
+
+Run `qa_tool.py analysis report-html --help` for the supported contracts. For an
+artifact it does not support, write the HTML by hand from the contract's fields —
+and render **every** field a reader needs, in that order.
+
 ## Attribution on rendered reports
 
 A report a person opens carries a product attribution footer, the way a Lighthouse
 or Allure report does. It is rendered, never typed: the exact bytes come from the
 bundled analysis toolkit, so every report is identical and a wording change is a
-one-file edit.
+one-file edit. `report-html` already embeds it; for any other rendering, ask for it:
 
 ```bash
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format html
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format markdown
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli branding --format text
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format html
+python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format text
 ```
 
 Append the output as the last element of the rendered document: `html` inside

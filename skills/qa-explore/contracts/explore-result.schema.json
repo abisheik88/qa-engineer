@@ -66,6 +66,28 @@
         ]
       }
     },
+    "scope": {
+      "description": "What this run set out to do and what it deliberately left alone, in language a reader who has never seen the product can follow. dimensionsRun names the categories; this names the actual feature and the boundary of the run.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One or two plain sentences: which feature was exercised and what the run was trying to establish."
+        },
+        "covered": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Concrete things exercised — screens, controls, flows, request paths — not dimension names."
+        },
+        "notCovered": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Boundaries of the run, each with its reason: what was out of scope, unreachable, or blocked."
+        }
+      }
+    },
     "severityCounts": {
       "type": "object",
       "additionalProperties": false,
@@ -94,7 +116,8 @@
               "har",
               "db",
               "file",
-              "report"
+              "report",
+              "command"
             ]
           },
           "description": { "type": "string", "minLength": 1 },
@@ -162,7 +185,8 @@
                     "console",
                     "dom",
                     "har",
-                    "db"
+                    "db",
+                    "command"
                   ]
                 },
                 "source": { "type": "string", "minLength": 1 },

@@ -8,6 +8,100 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.9.2] — 2026-07-28
+
+### The report explains itself to a reader who was not there
+
+A QA report is forwarded. The person who opens it — a founder, a designer, the
+developer who owns one of six findings — was not in the room, and often does not
+know what the feature does. The previous report opened on `EXP-1 · high` and left
+them to work out what kind of document this was and how much of the product had
+actually been looked at. A report that lists only findings implies everything else
+was checked.
+
+- **Added** an orientation section ahead of the findings: what an exploratory QA
+  pass is and how this one observed the application (in words — "a real browser
+  driven by Playwright", or plainly "no browser automation" when there was none),
+  what each area checked actually means, what the severity labels claim, and **what
+  was not covered**.
+- **Added** an optional `scope` block to `explore-result` — `objective`, `covered`,
+  `notCovered` — for the part only the run knows: which feature was exercised, what
+  was touched, and every boundary *with its reason*. A login report that does not
+  say "signing in successfully was never tested, because a QA run must not enter
+  real credentials" invites the reader to conclude that login works.
+- **Derived** the boundaries the artifact already knows: dimensions that were not
+  run (named with their plain meaning, not their jargon), blocked cases listed by
+  id and title, and data validation that was out of scope. A run that omits `scope`
+  still explains itself.
+- **Changed** `/qa-explore` to fill `scope` and to write findings for a reader who
+  has never seen the product — name the control, not "the button"; explain the
+  jargon; state the consequence. Added a guardrail: every report declares the
+  boundary of the run.
+
+### Verified compatibility with Claude Code, Cursor, Codex, OpenCode, and Antigravity
+
+Installing skills to a path the host does not read is a silent failure: every file
+is present, `qa doctor` is green, the agent sees nothing, and the user concludes the
+product is broken. Nothing in the pack could have caught it.
+
+- **Added** to each registry entry the paths that host documents reading, the
+  documentation URL they were read from, and how a user reaches a skill there.
+  Re-read from each vendor's own docs on 2026-07-28.
+- **Added** `packages/installer/test/hosts.test.mjs`: the directory the installer
+  writes to must be one the host documents reading, and for each of the five hosts,
+  a real install into a project with that host's marker must put
+  `qa-explore/SKILL.md` somewhere that host looks. Verified by pointing Codex at
+  `.codex/skills` (which does not exist — Codex documents `.agents/skills`
+  exclusively) and OpenCode at the singular `.opencode/command`, and watching both
+  fail.
+- **Added** per-host invocation guidance to `qa install`. The keystroke differs —
+  Codex takes `$qa-explore`, Cursor matches on `/`, OpenCode's agent calls a `skill`
+  tool — and a user who types the wrong one cannot tell a wrong keystroke from a
+  failed install. An undetected project is told which hosts read the path it got,
+  rather than being given a product name nothing detected.
+- **Changed** COMPATIBILITY.md to carry the verified paths, the invocation surface,
+  and a source link per host, and to stop saying "no versions have been released
+  yet" three releases in. `check-doc-claims` now fails if a registered host is
+  missing from that matrix, or if the matrix omits the path the installer writes or
+  the source it was read from.
+
+### The HTML report is rendered, not typed
+
+The first live `/qa-explore` run produced a valid artifact and a lossy report. The
+`explore-result` contract requires `actual`, `expected`, `repro`, and `fixDirection`
+on every finding; the hand-written HTML collapsed all four into one sentence — three
+findings had no body text at all — and omitted the attribution footer entirely. Both
+failures had one cause: the page was typed by the model rather than rendered from the
+artifact.
+
+- **Added** `qa_analysis.report_html` and the `report-html` subcommand, which render
+  `explore-result` and `report-result` as one self-contained HTML document. Each
+  finding is a card stating, in this order: the defect, **current behaviour**,
+  **expected behaviour**, numbered reproduction steps, fix direction, and every
+  evidence entry — screenshots as images, everything else as a captioned excerpt.
+  Severity ordering, summary tiles, the test-case table with each failure linked to
+  the finding it raised, the evidence index, data-validation comparisons, fix order,
+  and the footer come with it. No stylesheet, script, font, or remote asset: the
+  report opens from an email attachment offline.
+- **Changed** `/qa-explore` to write and validate the JSON first and render the HTML
+  from it, with a `## Tooling` section and the bundled launcher. `/qa-report` renders
+  its HTML the same way. The instruction that permitted "a short md→html snippet" is
+  gone.
+- **Added** `qa_analysis` to `/qa-explore`'s bundle in both bundlers, so the renderer
+  is present where the skill runs.
+- **Added** `command` to the `explore-result` evidence type enum. The new Tooling
+  section tells the agent to run a tool and cite it, and without this the citation
+  would not have validated — caught by `check-doc-claims`, not by review.
+- **Added** 26 renderer tests that read the contract's own `required` list, so adding
+  a required finding field fails the suite until the renderer renders it. The bundle
+  smoke test now renders a report from inside the bundle rather than importing the
+  module. Both verified by deleting `expected` from the renderer and confirming they
+  go red.
+- **Fixed** the footer instruction in `evidence-and-reporting`, which still used the
+  POSIX-only `QA_LIB`/`PYTHONPATH=` recipe that the launcher replaced everywhere
+  else — the one command the report skills were told to run was the one that would
+  have failed on Windows.
+
 ## [0.9.1] — 2026-07-28
 
 ### Renamed: the product is QA Engineer Pack

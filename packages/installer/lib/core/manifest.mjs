@@ -18,6 +18,9 @@ export const BUNDLE_MANIFEST = Object.freeze({
   'qa-debug': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: ['playwright_analysis'] }),
   'qa-fix': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: [] }),
   'qa-report': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: [] }),
+  // qa-explore renders its HTML report with qa_analysis.report_html rather than
+  // typing it, so every required finding field reaches the page.
+  'qa-explore': Object.freeze({ packages: ['qa_analysis'], modules: [] }),
   'qa-flaky': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: [] }),
   'qa-api': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: [] }),
   'qa-audit': Object.freeze({ packages: ['qa_analysis', 'qa_diagnostics'], modules: [] }),

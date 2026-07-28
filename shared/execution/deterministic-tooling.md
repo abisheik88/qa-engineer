@@ -60,6 +60,8 @@ Framework-agnostic parsing, redaction, and validation.
 | `validate` | `python3 <skill-dir>/scripts/qa_tool.py analysis validate <instance.json> <schema.json>` | `{valid: bool, errors: [...]}`; exit 1 when invalid |
 | `classify` | `python3 <skill-dir>/scripts/qa_tool.py analysis classify "<error message>" [--http-status N]` | `{classification, confidence, reason}` from the shared taxonomy |
 | `context` | `python3 <skill-dir>/scripts/qa_tool.py analysis context [--root DIR] [--path .qa/context.md]` | The parsed, schema-validated project context as JSON |
+| `report-html` | `python3 <skill-dir>/scripts/qa_tool.py analysis report-html <result.json> [--out report.html]` | The result rendered as one self-contained HTML report — every required field, footer included. Run it instead of writing HTML |
+| `branding` | `python3 <skill-dir>/scripts/qa_tool.py analysis branding --format markdown\|html\|text` | The exact attribution footer bytes for a **rendered** report (never for a JSON artifact) |
 
 ## 3. Diagnostic engine — `qa_tool.py diagnostics`
 

@@ -71,6 +71,10 @@ MANIFEST = {
     "qa-debug": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": ["playwright_analysis"]},
     "qa-fix": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": []},
     "qa-report": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": []},
+    # qa-explore drives a browser by judgment, but its *report* is rendered, not
+    # typed: the HTML comes from qa_analysis.report_html so no required finding
+    # field can be dropped on the way to the page.
+    "qa-explore": {"packages": ["qa_analysis"], "modules": []},
     "qa-flaky": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": []},
     "qa-api": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": []},
     "qa-audit": {"packages": ["qa_analysis", "qa_diagnostics"], "modules": []},
@@ -133,6 +137,18 @@ if "qa_analysis" in payloads:
     # The context contract must be reachable from the bundle, or `context`
     # silently degrades to a parse with no validation.
     assert analysis_cli._context_schema() is not None, "context schema not bundled"
+    # The HTML report renderer is the only thing standing between a valid
+    # artifact and a lossy report, so prove it renders here, not just imports.
+    from qa_analysis import report_html
+    page = report_html.render({
+        "contract": {"name": "qa-explore/explore-result", "version": "1.0.0"},
+        "summary": "smoke", "classification": "issues-found",
+        "findings": [{"id": "EXP-1", "severity": "high", "dimension": "functional",
+                      "title": "t", "repro": "r", "actual": "a", "expected": "e",
+                      "fixDirection": "f", "evidence": [], "status": "confirmed"}],
+    })
+    for required in ("Current behaviour", "Expected behaviour", "Powered by"):
+        assert required in page, "renderer dropped " + required
 
 if "qa_diagnostics" in payloads:
     from qa_diagnostics import engine

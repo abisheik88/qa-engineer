@@ -23,6 +23,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BUNDLE_MANIFEST } from '../packages/installer/lib/core/manifest.mjs';
+import { AGENTS, UNKNOWN_AGENT_ID } from '../packages/installer/lib/agents/registry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
@@ -212,6 +213,39 @@ if (/diff guard/i.test(fixBody) && !/qa_tool\.py analysis diff-guard/.test(fixBo
     'skills/qa-fix/SKILL.md claims the diff guard gates changes but never documents ' +
       'how to run it (qa_tool.py analysis diff-guard)',
   );
+}
+
+// --- agent compatibility claims ---------------------------------------------
+// COMPATIBILITY.md is the document a user reads to decide whether their editor is
+// supported; the registry is what the installer actually does. When those two
+// disagree, the document wins in the user's head and loses in practice — they
+// install, see nothing, and file a bug against a host the matrix promised.
+//
+// Every registered host must therefore appear in the matrix with the path the
+// installer really writes to and the documentation the path was read from. Adding
+// a host to the registry without documenting it now fails here.
+const compatibility = read('COMPATIBILITY.md');
+for (const agent of AGENTS) {
+  if (agent.id === UNKNOWN_AGENT_ID) continue; // not a product; it names no host
+  if (!compatibility.includes(agent.name)) {
+    problems.push(
+      `COMPATIBILITY.md does not mention "${agent.name}", which the installer supports — ` +
+        'a user cannot discover a host the matrix omits',
+    );
+    continue;
+  }
+  if (!compatibility.includes(`${agent.skillsDir}/`)) {
+    problems.push(
+      `COMPATIBILITY.md must state ${agent.skillsDir}/ — the path the installer writes ` +
+        `for ${agent.name}`,
+    );
+  }
+  if (agent.docs && !compatibility.includes(agent.docs)) {
+    problems.push(
+      `COMPATIBILITY.md must cite ${agent.docs} for ${agent.name}, so a reader can ` +
+        'check the discovery paths against the vendor rather than trusting this table',
+    );
+  }
 }
 
 if (problems.length) {

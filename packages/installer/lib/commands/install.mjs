@@ -24,6 +24,31 @@ import { detectFrameworks } from '../detect/frameworks.mjs';
 import { getFramework } from '../../../../shared/frameworks/registry.mjs';
 
 /**
+ * Say how to reach a skill in the host that was actually detected.
+ *
+ * The invocation surface differs per host — Codex takes `$qa-explore`, Cursor
+ * matches on `/`, OpenCode's agent loads skills itself — and a user who types the
+ * wrong one concludes the install failed. The registry records each host's own
+ * convention beside the paths it reads, so this prints what will work here rather
+ * than a generic "/qa-explore" that is wrong in two of the five hosts.
+ */
+function reportInvocation(agents, logger) {
+  const named = agents.filter((a) => a.invoke && a.id !== 'agent-skills');
+  if (named.length === 0) {
+    const fallback = agents.find((a) => a.invoke);
+    if (fallback) {
+      logger.info(`  → no specific agent detected; ${fallback.invoke}`);
+      logger.info('  → the skills are on the standard Agent Skills path, which every');
+      logger.info('    supported host reads: Cursor, Codex, OpenCode, Antigravity, Gemini, Copilot');
+    }
+    return;
+  }
+  for (const agent of named) {
+    logger.info(`  → in ${agent.name}: ${agent.invoke}`);
+  }
+}
+
+/**
  * Say plainly which commands this project can actually use.
  *
  * A project with no supported end-to-end framework still gets all thirteen
@@ -60,10 +85,11 @@ function reportFrameworkFit(root, logger) {
     return;
   }
 
-  logger.warn('no supported end-to-end framework detected (Playwright, Selenium, Cypress, WebdriverIO)');
-  logger.info('  → /qa-run and /qa-generate need one; they will tell you so rather than guess');
-  logger.info('  → these work without one: /qa-review, /qa-api, /qa-report, /qa-audit, /qa-explore');
-  logger.info('  → unit tests only (Jest, Vitest, pytest)? That is expected — see the README');
+  logger.warn('no end-to-end framework detected (Playwright, Selenium, Cypress, WebdriverIO)');
+  logger.info('  → start with /qa-generate — it bootstraps a framework when none exists');
+  logger.info('  → /qa-run needs one first; it will say so rather than guess');
+  logger.info('  → these work today: /qa-review, /qa-api, /qa-audit, /qa-explore, /qa-report');
+  logger.info('  → unit tests only (Jest, Vitest, Jasmine, pytest)? That is expected');
 }
 
 /**
@@ -250,6 +276,7 @@ export async function executeInstall({
   } else if (!json) {
     logger.ok(`installed ${unique.length} file(s); lockfile ${lockPath(root)}`);
     for (const step of INSTALL_STEPS) logger.ok(step.label);
+    reportInvocation(agents, logger);
     reportFrameworkFit(root, logger);
   }
 

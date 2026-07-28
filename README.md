@@ -256,9 +256,27 @@ qa-artifacts/
 
 Most teams **do** commit `.agents/skills/` and `qa-lock.json`, so everyone on the team gets the same skills.
 
-## All twelve commands
+## How you type a command in your assistant
 
-Type these in your AI assistant's chat, not the terminal.
+Type these in your AI assistant's **chat**, not the terminal. The keystroke differs
+by assistant, and typing the wrong one looks exactly like a failed install — so
+`qa install` prints the right one for whatever it detected. For reference:
+
+| Assistant | How to reach a skill |
+| --- | --- |
+| Claude Code | `/qa-explore`, or just describe the task |
+| Cursor | type `/` in Agent chat, then pick the skill from the list |
+| OpenAI Codex CLI | `$qa-explore` — or `/skills` to browse them |
+| OpenCode | `/qa-explore`, or describe the task and the agent loads the skill itself |
+| Antigravity | describe the task; skills activate on their own |
+| GitHub Copilot / Gemini CLI | `/qa-explore` |
+
+Every one of them also activates a skill on its own when your request matches — you
+never *have* to remember a command. "Find bugs on my login page at localhost:3000"
+reaches `/qa-explore` in all of them. Full details and the source for each path:
+[COMPATIBILITY.md](COMPATIBILITY.md).
+
+## All twelve commands
 
 | Command | What it does | Changes your files? |
 | --- | --- | --- |
