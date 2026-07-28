@@ -22,7 +22,7 @@ No skill states a conclusion it cannot support with a citation. A result without
 
 One skill, one responsibility. A skill that needs "and" to describe its job is two skills.
 
-**In practice:** the [router](../skills/qa/README.md) routes and never executes; [qa-init](../skills/qa-init/README.md) understands a repository and never runs tests; [qa-run](../skills/qa-run/README.md) plans a run and never repairs a test. Growth happens through composition and modes, not by widening a skill's remit. The user-facing command surface is budgeted and every addition is [zero-sum](architecture/overview.md) via an RFC (see [RFC-0001](../rfcs/RFC-0001-qa-explore.md)).
+**In practice:** the [router](../skills/qa/README.md) routes and never executes; [qa-init](../skills/qa-init/README.md) understands a repository and never runs tests; [qa-run](../skills/qa-run/README.md) plans a run and never repairs a test. Growth happens through composition and modes, not by widening a skill's remit. The user-facing command surface is budgeted and every addition is [zero-sum](architecture/overview.md) via an RFC (see [RFC-0001](rfcs/RFC-0001-qa-explore.md)).
 
 ## 4. Shared knowledge over duplicated prompts
 

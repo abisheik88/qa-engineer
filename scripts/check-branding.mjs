@@ -46,7 +46,7 @@ const GUARDED = ['tagline', 'website', 'authorPrefix']
   .map((key) => ({ key, value: metadata[key] }))
   .filter((entry) => entry.value);
 
-// Files allowed to contain the guarded values.
+// Files allowed to contain any guarded value.
 const ALLOWED = new Set([
   METADATA_REL,
   RENDERER_REL,
@@ -54,6 +54,16 @@ const ALLOWED = new Set([
   'docs/release/v1-excellence-audit.md',        // audits quote what was implemented
   'CHANGELOG.md',                                // release notes describe the footer
 ]);
+
+// Per-value exceptions. The rule this gate protects is "a *generated* footer has
+// one source" — not "the author's URL may never appear". A hand-written landing
+// page or maintainer list crediting the author is ordinary open-source practice
+// and is nobody's copy of a rendered footer. The footer-specific strings
+// (`tagline`, `authorPrefix`) stay guarded everywhere, so a pasted footer is still
+// caught wherever it lands.
+const VALUE_EXCEPTIONS = {
+  website: new Set(['README.md', 'MAINTAINERS.md', 'GOVERNANCE.md', 'SUPPORT.md']),
+};
 
 // Where a footer is legitimately rendered at runtime rather than hardcoded: the
 // synced knowledge module tells skills to CALL the renderer, so it may name the
@@ -88,6 +98,7 @@ for (const rel of files) {
 
   // Rule 1 — no duplicated branding values.
   for (const { key, value } of GUARDED) {
+    if (VALUE_EXCEPTIONS[key]?.has(rel)) continue;
     if (text.includes(value)) {
       problems.push(
         `${rel}: hardcodes the branding "${key}" ("${value}") — read it from ${METADATA_REL} ` +

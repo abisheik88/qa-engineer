@@ -62,7 +62,7 @@ and both were fixed rather than worked around:
    contracts had no way to express "I ran this command" — so following the skill
    produced an invalid artifact. `command` was added to every contract whose skill
    has a `## Tooling` section (an additive MINOR change per
-   [ADR-0003](../../../docs/architecture/ADR-0003-versioning-strategy.md)), and
+   [ADR-0003](../../../../docs/architecture/ADR-0003-versioning-strategy.md)), and
    `check-doc-claims.mjs` now fails if a tooling-bearing skill's contract omits it.
 
 2. **The diagnostic engine's `rootCause` carries a key the public contract

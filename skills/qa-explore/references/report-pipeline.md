@@ -32,7 +32,7 @@ For run id `R`:
 ## Findings
 ### EXP-1 · critical — title
 - Repro / Actual / Expected / Fix
-- Evidence: ![](screenshots/…)
+- Evidence: an image reference to the screenshot stored beside the report, such as screenshots/finding-01.png
 ## Performance
 ## Security summary
 ## Database validation  <!-- omit if not in scope -->

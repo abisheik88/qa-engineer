@@ -1,3 +1,26 @@
 # Issue template chooser configuration.
 # Blank issues are disabled so every report arrives with the context needed to act on it.
+# The links below carry the URL placeholder used across the repository; they resolve once
+# the project is published under its organization.
 blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/qa-automation-pack/qa-automation-pack/discussions
+    about: >-
+      Usage questions, ideas, and "how do I…" belong in Discussions. See SUPPORT.md for what
+      to expect — this is a volunteer project with no SLA.
+  - name: Report a security vulnerability (private)
+    url: https://github.com/qa-automation-pack/qa-automation-pack/security/advisories/new
+    about: >-
+      Never open a public issue for a vulnerability. Report it privately; SECURITY.md describes
+      the process and the 72-hour acknowledgement commitment.
+  - name: Troubleshooting guide
+    url: https://github.com/qa-automation-pack/qa-automation-pack/blob/main/docs/troubleshooting.md
+    about: >-
+      Symptoms to causes to fixes, with real exit codes. Most installation and skill-discovery
+      problems are solved here in under a minute.
+  - name: Capability matrix — what is actually supported
+    url: https://github.com/qa-automation-pack/qa-automation-pack/blob/main/docs/capability-matrix.md
+    about: >-
+      Before reporting a missing capability, check whether it is Beta, Planning, or absent. The
+      matrix is the canonical record and is honest about what is unproven.

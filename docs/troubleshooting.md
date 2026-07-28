@@ -69,7 +69,7 @@ In order of likelihood:
 2. **The agent needs a restart or a reload** to pick up newly added skills. This is
    agent behavior, not a pack behavior.
 3. **The host does not read either path.** Check
-   [COMPATIBILITY.md](COMPATIBILITY.md) and the per-agent guides in
+   [COMPATIBILITY.md](../COMPATIBILITY.md) and the per-agent guides in
    [docs/installation/](installation/README.md); some hosts need the thin wrappers
    that `--agent` writes.
 4. **A stale partial install.** `npx qa-automation-pack verify --project .` then
@@ -140,7 +140,7 @@ npx qa-automation-pack uninstall --project . --force
 A lockfile entry resolves outside the project root, directly or through a symlink.
 Nothing was modified. Regenerate the lockfile with a forced install. If you did not
 create that entry, treat the repository as untrusted and see
-[SECURITY.md](SECURITY.md).
+[SECURITY.md](../SECURITY.md).
 
 ## Results and reports
 

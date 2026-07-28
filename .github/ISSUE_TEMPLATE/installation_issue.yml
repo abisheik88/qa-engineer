@@ -1,0 +1,94 @@
+name: Installation issue
+description: The installer, verification, or skill discovery is not working in your project
+title: "install: "
+labels: ["installation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most installation problems are diagnosed by the pack itself. Before filing, please run:
+
+        ```bash
+        npx qa-automation-pack doctor --project .
+        npx qa-automation-pack self-test --project .
+        ```
+
+        and check [docs/troubleshooting.md](../../docs/troubleshooting.md) — it covers skills not
+        appearing, a missing Python engine, drift after a manual edit, and install conflicts.
+
+        **Security issues must not be reported here.** Follow [SECURITY.md](../../SECURITY.md)
+        so the report stays private until a fix exists.
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `npx qa-automation-pack doctor --project . --json`
+      description: >-
+        This answers most environment questions at once. Redact anything sensitive — the output
+        contains paths, not secrets, but check before pasting.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What went wrong
+      description: The exact command you ran, and what happened instead of what you expected.
+      placeholder: |
+        $ npx qa-automation-pack install --yes --project .
+        error refusing to overwrite 1 file(s) not owned by a previous install
+      render: shell
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where it failed
+      options:
+        - Installing (install / onboard)
+        - Verifying (verify / self-test)
+        - Skills not appearing in my agent
+        - Running the bundled Python engine
+        - Updating or repairing
+        - Uninstalling
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: AI coding agent and version
+      description: Claude Code, Cursor, Codex CLI, OpenCode, Gemini CLI, Copilot, Antigravity, Kimi, other.
+      placeholder: Cursor 0.4x
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `npx qa-automation-pack --version`, `node --version`, `python3 --version`.
+      placeholder: pack 0.9.0 · node v20.11.0 · Python 3.11.6
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Windows (WSL)
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I ran `doctor` and `self-test` and included the output
+          required: true
+        - label: I checked [troubleshooting.md](../../docs/troubleshooting.md)
+          required: true
+        - label: I have not hand-edited files under `.agents/skills/` or `.claude/skills/` (if I have, I ran `verify` and said so above)
+          required: false

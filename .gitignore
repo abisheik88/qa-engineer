@@ -58,3 +58,27 @@ skills/*/scripts/lib/
 .env
 .env.*
 !.env.example
+
+# --- Additional Python artifacts ---
+*.pyc
+*.pyo
+.mypy_cache/
+htmlcov/
+*.egg-info/
+.eggs/
+
+# --- Additional Node/package-manager artifacts ---
+pnpm-debug.log*
+
+# --- Build and cache output ---
+build/
+out/
+tmp/
+.cache/
+
+# --- Release artifacts (built by `npm pack`, never committed) ---
+*.tgz
+
+# --- Temporary and editor scratch files ---
+*.tmp
+*.bak
