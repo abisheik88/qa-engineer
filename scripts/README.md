@@ -15,7 +15,7 @@ Repository maintenance tooling — zero-dependency Node.js (18+), run directly w
 | `check-architecture-fitness.mjs` | Architecture invariants, eval coverage, constitution docs | Every pull request, blocking |
 | `check-spec-code-sync.mjs` | Spec ⇄ code envelope and boundary consistency | Every pull request, blocking |
 | `release/validate-release.mjs` | Version/package identity/changelog checks (no publish) | Every pull request, blocking |
-| `bundle_python.py` | Bundle self-containment for diagnostic skills | Every pull request, blocking |
+| `packages/installer/lib/core/bundle.mjs` | Bundle self-containment for diagnostic skills | Every pull request, blocking |
 
 ## Usage
 

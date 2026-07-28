@@ -127,9 +127,7 @@ test('context: with a schema, a conforming document is valid and a wrong one is 
 });
 
 test('context: the real generated fixture parses to its full structure', () => {
-  const fixture = path.resolve(
-    'shared/analysis/lib/tests/fixtures/valid-context.md',
-  );
+  const fixture = new URL('./fixtures/valid-context.md', import.meta.url).pathname;
   const { context } = parseFile(fixture);
   assert.equal(context.schemaVersion, 1);
   assert.equal(context.testFramework.e2e, 'playwright');

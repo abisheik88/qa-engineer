@@ -54,17 +54,17 @@ Do not investigate failures here (that is `/qa-debug`) or plan repairs (`/qa-fix
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-report` or `.claude/skills/qa-report`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-report` or `.claude/skills/qa-report`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Report aggregator | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
-| One-shot pipeline | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
-| Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
-| HTML report renderer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html <report-result.json> --out report.html` | The self-contained HTML rendering of the validated result, footer included | Write the HTML by hand from the contract fields and say it was not machine-rendered |
-| Attribution footer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown` | The exact footer bytes to append to the **Markdown** rendering (`report-html` already embeds it) | Omit the footer; never retype it |
+| Report aggregator | `node <SKILL_DIR>/scripts/qa-tool.mjs diagnostics summarize --execution-result <path> --diagnosis <path>` | Totals, by-classification breakdown, top-priority findings, release-readiness verdict | Aggregate the structured results manually per the report-aggregation module and mark the report degraded |
+| One-shot pipeline | `node <SKILL_DIR>/scripts/qa-tool.mjs diagnostics report --execution-result <path>` | Diagnosis, plans, and summary in a single call when no diagnosis exists yet | Run `diagnose` then `summarize` separately |
+| Contract self-check | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis validate <report.json> <schema.json>` | `{valid, errors}` before the report is declared complete | None: an unvalidated report is not complete |
+| HTML report renderer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html <report-result.json> --out report.html` | The self-contained HTML rendering of the validated result, footer included | Write the HTML by hand from the contract fields and say it was not machine-rendered |
+| Attribution footer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis branding --format markdown` | The exact footer bytes to append to the **Markdown** rendering (`report-html` already embeds it) | Omit the footer; never retype it |
 
-A missing `qa_tool.py` means the engine is not installed.
+A missing `qa-tool.mjs` means the engine is not installed.
 
 The release verdict is the engine's, not a judgment call: `releaseReadiness` comes from `summarize`. The contract rejects `ready` over any failing test, so a green verdict must be backed by zero failures.
 

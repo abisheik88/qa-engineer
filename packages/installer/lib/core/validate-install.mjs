@@ -5,8 +5,8 @@ import path from 'node:path';
 import { LOCKFILE, SHARED_SKILLS_DIR, CLAUDE_SKILLS_DIR } from '../constants.mjs';
 import { readLock } from './lockfile.mjs';
 import { hashFile } from './hash.mjs';
-import { findPython, verifyImports, packHasBundles } from './bundle.mjs';
-import { BUNDLE_DEST, BUNDLE_MANIFEST, bundlePackagesForSkill } from './manifest.mjs';
+import { verifyEngine, packHasBundles } from './bundle.mjs';
+import { BUNDLE_DEST, BUNDLE_MANIFEST } from './manifest.mjs';
 
 /**
  * @typedef {{ id: string, ok: boolean, hard: boolean, message: string, hint?: string }} CheckResult
@@ -114,28 +114,21 @@ export function validateInstall(projectRoot) {
       hint: bundleOk ? undefined : 'run: qa repair',
     });
 
-    const python = findPython();
-    if (bundleOk && python) {
-      const packages = bundlePackagesForSkill(bundledSkill);
-      const result = verifyImports({ pythonBin: python.bin, libDir, packages });
+    // The engine runs under the Node that is already here — no second runtime to
+    // find, and nothing to skip when it is absent.
+    if (bundleOk) {
+      const result = verifyEngine({ libDir });
       checks.push({
-        id: 'python-imports',
+        id: 'engine-runs',
         ok: result.ok,
-        hard: false,
+        hard: true,
         message: result.ok
-          ? `Python imports OK (${python.bin} ${python.version})`
-          : `Python import check failed: ${result.stderr || 'unknown error'}`,
-        hint: result.ok ? undefined : 'install Python 3.8+ or run: qa doctor',
-      });
-    } else if (bundleOk && !python) {
-      checks.push({
-        id: 'python-imports',
-        ok: false,
-        hard: false,
-        message: 'Python not found — analysis engine import check skipped',
-        hint: 'install Python 3.8+ for full diagnostics',
+          ? `bundled engine runs (node ${process.versions.node})`
+          : `bundled engine failed to run: ${result.stderr || 'unknown error'}`,
+        hint: result.ok ? undefined : 'run: qa repair',
       });
     }
+
   }
 
   const major = Number(process.versions.node.split('.')[0]);

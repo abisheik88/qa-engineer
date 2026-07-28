@@ -98,7 +98,7 @@ Keep branding **neutral** — no org-specific colors or hosting assumptions. Loc
 Write `explore-result.json` matching `contracts/explore-result.schema.json`. Validate before completion:
 
 ```bash
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate \
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis validate \
   qa-artifacts/explore-R/explore-result.json \
   <SKILL_DIR>/contracts/explore-result.schema.json
 ```
@@ -109,7 +109,7 @@ Render it from the validated JSON. Do not write it by hand and do not write a
 throwaway md→html script:
 
 ```bash
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html \
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html \
   qa-artifacts/explore-R/explore-result.json \
   --out qa-artifacts/explore-R/explore-report.html
 ```
@@ -136,7 +136,7 @@ Screenshots are referenced as paths relative to the HTML file (`screenshots/find
 so the run folder stays portable as a whole.
 
 For an evidence excerpt that could carry a token or credential, run it through
-`qa_tool.py analysis redact` before it goes into the JSON — the renderer escapes
+`qa-tool.mjs analysis redact` before it goes into the JSON — the renderer escapes
 markup, it does not redact secrets.
 
 ## Versioning

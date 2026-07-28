@@ -7,11 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import {
-  BUNDLE_SOURCES,
-  BUNDLE_MODULE_SOURCES,
-  BUNDLE_PACKAGE_DATA,
-} from '../../packages/installer/lib/core/manifest.mjs';
+import { ENGINE_SOURCE, BUNDLE_LAUNCHER } from '../../packages/installer/lib/core/manifest.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const problems = [];
@@ -114,16 +110,17 @@ if (pack.status !== 0) {
   const shippedSet = new Set(shipped);
   const ships = (rel) => shippedSet.has(rel) || shipped.some((f) => f.startsWith(`${rel}/`));
 
-  for (const rel of Object.values(BUNDLE_SOURCES)) {
-    if (!ships(rel)) problems.push(`tarball omits bundled package source: ${rel}`);
+  // The installer bundles the engine into consumer projects, so the engine — and
+  // the launcher each skill carries — must actually be in the package. 0.9.2 shipped
+  // without the engine and every command died on a missing module.
+  if (!ships(ENGINE_SOURCE)) {
+    problems.push(`tarball omits the engine: ${ENGINE_SOURCE}`);
   }
-  for (const rel of Object.values(BUNDLE_MODULE_SOURCES)) {
-    if (!ships(rel)) problems.push(`tarball omits bundled module source: ${rel}`);
+  for (const rel of [`${ENGINE_SOURCE}/bin/qa-engine.mjs`, `${ENGINE_SOURCE}/lib/analysis/branding.json`]) {
+    if (!shippedSet.has(rel)) problems.push(`tarball omits ${rel}`);
   }
-  for (const dataList of Object.values(BUNDLE_PACKAGE_DATA)) {
-    for (const data of dataList) {
-      if (!ships(data.from)) problems.push(`tarball omits bundled package data: ${data.from}`);
-    }
+  if (!ships(BUNDLE_LAUNCHER.from)) {
+    problems.push(`tarball omits the launcher: ${BUNDLE_LAUNCHER.from}`);
   }
   if (!ships('shared/frameworks/registry.json')) {
     problems.push('tarball omits the canonical framework registry');

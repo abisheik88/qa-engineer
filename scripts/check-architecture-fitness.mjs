@@ -24,7 +24,7 @@ const requiredDocs = [
   'docs/architecture/ADR-0014-evaluation-platform.md',
   'docs/engineering-principles.md',
   'shared/frameworks/registry.json',
-  'shared/diagnostics/schemas/internal/diagnosis.schema.json',
+  'packages/engine/lib/diagnostics/schemas/internal/diagnosis.schema.json',
 ];
 for (const rel of requiredDocs) {
   if (!exists(rel)) problems.push(`missing required architecture artifact: ${rel}`);

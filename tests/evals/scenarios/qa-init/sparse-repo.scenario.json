@@ -8,7 +8,7 @@
     "fixture": "fixtures/bare-repo",
     "prompt": "Profile this repository and emit the .qa/context.md frontmatter as JSON."
   },
-  "contract": "shared/analysis/schemas/context.schema.json",
+  "contract": "packages/engine/lib/analysis/schemas/context.schema.json",
   "assertions": [
     { "path": "schemaVersion", "equals": 1 },
     { "path": "confidence", "in": ["high", "medium", "low"] },

@@ -10,14 +10,29 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const MARKER_PATTERN = /^<!-- synced-from: (shared\/\S+) /;
+// A synced file declares its source on line one. Markdown uses an HTML comment;
+// JavaScript uses a line comment. The launcher has to be *committed* into every
+// skill it serves — that is what lets a generic file copier install a working skill
+// — so it needs the same drift gate the knowledge modules have.
+const MARKER_PATTERN = /^(?:<!-- |\/\/ )synced-from: (shared\/\S+) /;
 
-function markerFor(source) {
-  return `<!-- synced-from: ${source} — do not edit; edit the source and run: node scripts/sync-shared.mjs --write -->`;
+const COMMENT_STYLES = {
+  '.md': (body) => `<!-- ${body} -->`,
+  '.mjs': (body) => `// ${body}`,
+  '.js': (body) => `// ${body}`,
+};
+
+function markerFor(source, dest) {
+  const body = `synced-from: ${source} — do not edit; edit the source and run: node scripts/sync-shared.mjs --write`;
+  const wrap = COMMENT_STYLES[path.extname(dest)];
+  if (!wrap) {
+    throw new Error(`no comment style for ${dest}; add one to COMMENT_STYLES in sync-shared.mjs`);
+  }
+  return wrap(body);
 }
 
-function composedContent(source) {
-  return `${markerFor(source)}\n${fs.readFileSync(source, 'utf8')}`;
+function composedContent(source, dest) {
+  return `${markerFor(source, dest)}\n${fs.readFileSync(source, 'utf8')}`;
 }
 
 /** Every marker-owned file under skills/. */
@@ -50,10 +65,12 @@ if (mode === '--add') {
     console.error(`source must be an existing file under shared/: ${source}`);
     process.exit(2);
   }
-  const destDir = path.join(skillDir, 'references');
+  // Knowledge goes to references/; executable tooling goes to scripts/, because
+  // that is where a skill's documented commands point.
+  const destDir = path.join(skillDir, path.extname(source) === '.md' ? 'references' : 'scripts');
   fs.mkdirSync(destDir, { recursive: true });
   const dest = path.join(destDir, path.basename(source));
-  fs.writeFileSync(dest, composedContent(source));
+  fs.writeFileSync(dest, composedContent(source, dest));
   console.log(`synced ${source} -> ${dest}`);
   process.exit(0);
 }
@@ -72,7 +89,7 @@ for (const { file, source } of synced) {
     drifted += 1;
     continue;
   }
-  const expected = composedContent(source);
+  const expected = composedContent(source, file);
   const actual = fs.readFileSync(file, 'utf8');
   if (actual === expected) continue;
   if (mode === '--write') {

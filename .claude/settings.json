@@ -13,7 +13,21 @@
       "Bash(node --test packages/engine/test/diff-guard.test.mjs)",
       "Bash(node -e ' *)",
       "Read(//home/abisheik/.npm-global/lib/node_modules/qa-engineer/packages/**)",
-      "Bash(npm view *)"
+      "Bash(npm view *)",
+      "Bash(node packages/engine/bin/qa-engine.mjs analysis context --path shared/analysis/lib/tests/fixtures/valid-context.md)",
+      "Bash(node packages/engine/bin/qa-engine.mjs analysis discover --path shared/analysis/lib/tests/fixtures/playwright-junit.xml --path shared/analysis/lib/tests/fixtures/sample.har)",
+      "Bash(node -e \"import\\('./packages/installer/lib/core/manifest.mjs'\\).then\\(m=>console.log\\('bundling skills:', Object.keys\\(m.BUNDLE_MANIFEST\\).length, '| dest:', m.BUNDLE_DEST\\)\\)\")",
+      "Bash(node -e \"import\\('./packages/installer/lib/core/validate-install.mjs'\\).then\\(\\(\\)=>console.log\\('validate-install loads'\\)\\).catch\\(e=>console.log\\('ERR',e.message\\)\\)\")",
+      "Bash(node packages/installer/bin/qa.mjs doctor --json)",
+      "Bash(node skills/qa-explore/scripts/qa-tool.mjs --where)",
+      "Bash(git mv *)",
+      "Bash(cp -r shared/diagnostics/schemas/internal packages/engine/lib/diagnostics/schemas/)",
+      "Bash(node packages/engine/bin/qa-engine.mjs analysis branding --format text)",
+      "Bash(node packages/installer/bin/qa.mjs --version)",
+      "Bash(node --test packages/engine/test/*.test.mjs)",
+      "Bash(node tests/evals/run-evals.mjs)",
+      "Bash(node --test packages/engine/test/corpus.test.mjs)",
+      "Bash(git ls-files *)"
     ]
   }
 }

@@ -54,14 +54,14 @@ This milestone plans repairs; it does not write or apply code. It never edits a 
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-fix` or `.claude/skills/qa-fix`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-fix` or `.claude/skills/qa-fix`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Repair planner | `python3 <SKILL_DIR>/scripts/qa_tool.py diagnostics plan-repairs --diagnosis <path>` | A repair plan per diagnosis entry, escalations included | Reason over the repair-strategy module manually and mark the plan degraded |
-| Diff guard | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis diff-guard <diff-file>` | `{issues, safe}` — `safe:false` means the change is unsafe | None: without the guard, record `diffGuardReview.status` as `not-run` and never claim a diff is safe |
+| Repair planner | `node <SKILL_DIR>/scripts/qa-tool.mjs diagnostics plan-repairs --diagnosis <path>` | A repair plan per diagnosis entry, escalations included | Reason over the repair-strategy module manually and mark the plan degraded |
+| Diff guard | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis diff-guard <diff-file>` | `{issues, safe}` — `safe:false` means the change is unsafe | None: without the guard, record `diffGuardReview.status` as `not-run` and never claim a diff is safe |
 
-A missing `qa_tool.py` means the engine is not installed.
+A missing `qa-tool.mjs` means the engine is not installed.
 
 **The diff guard is not advisory.** Whenever a diff exists — drafted here or supplied by the user — run it through the guard and record the verdict in `diffGuardReview`. A `fail` verdict forbids the disposition `repairable`; the contract rejects that combination, so escalate instead. A plan that carries no diff records `not-run` and claims nothing about safety.
 

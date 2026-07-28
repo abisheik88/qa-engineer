@@ -32,7 +32,7 @@ Any skill that reaches a conclusion — a detected fact, a chosen strategy, a cl
 supports, the HTML report is generated from that artifact:
 
 ```bash
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html <result.json> --out <report.html>
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html <result.json> --out <report.html>
 ```
 
 The reason is not tidiness. A hand-written report is a second, lossy copy of the
@@ -47,7 +47,7 @@ now**, **what should happen instead**, how to reproduce it, the fix direction, a
 every evidence entry — plus the attribution footer, in one self-contained file with
 no external assets.
 
-Run `qa_tool.py analysis report-html --help` for the supported contracts. For an
+Run `qa-tool.mjs analysis report-html --help` for the supported contracts. For an
 artifact it does not support, write the HTML by hand from the contract's fields —
 and render **every** field a reader needs, in that order.
 
@@ -59,9 +59,9 @@ bundled analysis toolkit, so every report is identical and a wording change is a
 one-file edit. `report-html` already embeds it; for any other rendering, ask for it:
 
 ```bash
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format markdown
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format html
-python3 <SKILL_DIR>/scripts/qa_tool.py analysis branding --format text
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis branding --format markdown
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis branding --format html
+node <SKILL_DIR>/scripts/qa-tool.mjs analysis branding --format text
 ```
 
 Append the output as the last element of the rendered document: `html` inside

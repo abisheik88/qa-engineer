@@ -3,7 +3,7 @@
 // The pack ships two validators — Python for output contracts, JavaScript for
 // installer config — and documents that "a document that passes one passes the
 // other". This test holds up the JavaScript half of that promise against the
-// shared corpus in tests/parity/validator-cases.json;
+// shared corpus in packages/engine/test/corpus/validator-cases.json;
 // shared/analysis/lib/tests/test_parity.py holds up the Python half against the
 // same file. It also asserts the two keyword sets are literally identical, so a
 // keyword added to one validator cannot quietly be missing from the other.
@@ -17,10 +17,7 @@ import { validate, SUPPORTED_KEYWORDS } from '../../engine/lib/analysis/contract
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..', '..');
-const corpusPath = path.join(repoRoot, 'tests', 'parity', 'validator-cases.json');
-const pythonValidator = path.join(
-  repoRoot, 'shared', 'analysis', 'lib', 'qa_analysis', 'contracts.py',
-);
+const corpusPath = path.join(repoRoot, 'packages', 'engine', 'test', 'corpus', 'validator-cases.json');
 
 test('every parity case matches its expected verdict', () => {
   const { cases } = JSON.parse(fs.readFileSync(corpusPath, 'utf8'));
@@ -40,16 +37,53 @@ test('an unsupported keyword is reported, never silently ignored', () => {
   assert.ok(errors.some((e) => e.includes('unsupported keyword')), JSON.stringify(errors));
 });
 
-test('the supported keyword set is identical in both validators', () => {
-  const source = fs.readFileSync(pythonValidator, 'utf8');
-  const block = source.match(/SUPPORTED_KEYWORDS = frozenset\(\{([\s\S]*?)\}\)/);
-  assert.ok(block, 'could not find SUPPORTED_KEYWORDS in contracts.py');
-  const pythonKeywords = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
-  assert.deepEqual(
-    SUPPORTED_KEYWORDS,
-    pythonKeywords,
-    'validator keyword sets have drifted between Python and JavaScript',
-  );
+test('every shipped contract stays inside the supported subset', () => {
+  // This replaces a comparison between two validators. With one validator, the
+  // question that still matters is the one the subset exists to answer: does every
+  // contract the pack ships use only keywords the validator actually enforces?
+  //
+  // A contract using an unsupported keyword is worse than a contract with no rule.
+  // The keyword looks like a constraint to whoever reads the schema, and enforces
+  // nothing at runtime — so a result that violates it passes validation and ships.
+  const schemas = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.schema.json')) schemas.push(full);
+    }
+  };
+  walk(path.join(repoRoot, 'skills'));
+  walk(path.join(repoRoot, 'packages', 'engine', 'lib'));
+  walk(path.join(repoRoot, 'packages', 'installer', 'schemas'));
+
+  assert.ok(schemas.length > 10, `expected to find the shipped contracts, found ${schemas.length}`);
+
+  const supported = new Set(SUPPORTED_KEYWORDS);
+  const offenders = [];
+  const inspect = (node, where, file) => {
+    if (Array.isArray(node)) {
+      node.forEach((item, index) => inspect(item, `${where}[${index}]`, file));
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    for (const [key, value] of Object.entries(node)) {
+      // Only keys in a *schema* position are keywords; the contents of `properties`
+      // are field names, and `enum`/`const` hold data.
+      if (key === 'properties') {
+        for (const [field, sub] of Object.entries(value)) inspect(sub, `${where}.${field}`, file);
+        continue;
+      }
+      if (key === 'enum' || key === 'const' || key === 'examples' || key === 'default') continue;
+      if (!supported.has(key)) offenders.push(`${path.relative(repoRoot, file)} at ${where}: "${key}"`);
+      if (['items', 'if', 'then', 'else'].includes(key)) inspect(value, `${where}.${key}`, file);
+      if (key === 'allOf') inspect(value, `${where}.allOf`, file);
+    }
+  };
+  for (const file of schemas) {
+    inspect(JSON.parse(fs.readFileSync(file, 'utf8')), '$', file);
+  }
+  assert.deepEqual(offenders, [], `contracts use keywords the validator does not enforce:\n  ${offenders.join('\n  ')}`);
 });
 
 test('the runtime invariant rejects a hallucinated-green execution result', () => {

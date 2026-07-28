@@ -16,11 +16,7 @@ import { validate } from '../analysis/contracts.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-// Ordered candidates: package-local data first, then the repository layout.
-const SCHEMA_DIRS = [
-  path.join(here, 'schemas', 'internal'),
-  path.resolve(here, '../../../../shared/diagnostics/schemas/internal'),
-];
+const SCHEMA_DIRS = [path.join(here, 'schemas', 'internal')];
 
 export class InternalContractError extends Error {}
 

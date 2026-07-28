@@ -4,11 +4,11 @@ How the one engine composes the other platforms into a diagnosis, and what lives
 
 ## What the engine does, in code
 
-The `qa_diagnostics` package (in lib/) implements the deterministic reasoning, reusing `qa_analysis`:
+The `diagnostics` package (in lib/) implements the deterministic reasoning, reusing `analysis`:
 
 | Step | Module | Reuses |
 | --- | --- | --- |
-| Classify the failure into a root cause | `root_cause` | `qa_analysis.taxonomy` |
+| Classify the failure into a root cause | `root_cause` | `the shared taxonomy` |
 | Assign severity, priority, impacts, owner, effort | `prioritization` | the taxonomy classes |
 | Reconstruct the ordered timeline | `timeline` | the evidence in findings |
 | Plan a repair (never code) | `repair` | the taxonomy; the diff guard's guarantees |
@@ -32,4 +32,4 @@ The engine calls the analysis platform for classification and evidence, the exec
 
 ## Bundling
 
-Because the diagnostic skills run the engine in a consumer's repository, the `qa_analysis` and `qa_diagnostics` packages are bundled into each skill's `scripts/lib/` from their canonical source in `shared/`. The bundle is a build artifact produced by the bundler; the source of truth is `shared/`. See ADR-0011.
+Because the diagnostic skills run the engine in a consumer's repository, the `analysis` and `diagnostics` packages are bundled into each skill's `scripts/lib/` from their canonical source in `shared/`. The bundle is a build artifact produced by the bundler; the source of truth is `shared/`. See ADR-0011.

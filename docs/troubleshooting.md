@@ -100,7 +100,7 @@ confidence rather than guessing. The message names what was missing. If the tool
 
 ```bash
 QA_LIB="$(ls -d .agents/skills/qa-debug/scripts/lib .claude/skills/qa-debug/scripts/lib 2>/dev/null | head -1)"
-PYTHONPATH="$QA_LIB" python3 -m qa_diagnostics.cli report --execution-result qa-artifacts/execution-result.json
+PYTHONPATH="$QA_LIB" python3 -m qa-engine diagnostics report --execution-result qa-artifacts/execution-result.json
 ```
 
 Exit `2` prints `{"error": ..., "detail": ...}` naming the problem — a malformed
@@ -166,7 +166,7 @@ removed or weakened assertions, added skips, early returns, excluded specs,
 files. A `fail` verdict cannot be reported `repairable`. Inspect any diff yourself:
 
 ```bash
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli diff-guard my-change.diff
+PYTHONPATH="$QA_LIB" python3 -m qa-engine analysis diff-guard my-change.diff
 ```
 
 `safe: false` with rule `assertion-modified` at severity `low` is *informational* —
@@ -183,7 +183,7 @@ non-empty inline collections are rejected rather than guessed at. See what the
 parser sees:
 
 ```bash
-PYTHONPATH="$QA_LIB" python3 -m qa_analysis.cli context --root .
+PYTHONPATH="$QA_LIB" python3 -m qa-engine analysis context --root .
 ```
 
 Exit `1` lists the contract errors; exit `2` means the file could not be parsed at

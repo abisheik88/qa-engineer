@@ -79,16 +79,16 @@ Load only what the situation requires:
 
 ## Tooling
 
-Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-explore` or `.claude/skills/qa-explore`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe; on Windows use `python` if `python3` is not on PATH.
+Invoke the bundled engine through its launcher, as documented in [references/deterministic-tooling.md](references/deterministic-tooling.md). `SKILL_DIR` below is this skill's own directory — `.agents/skills/qa-explore` or `.claude/skills/qa-explore`, whichever exists. The command shape is the same in bash, zsh, PowerShell, and cmd.exe, and it runs under the same Node that installed the pack — there is no second runtime to find.
 
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
-| Contract self-check | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis validate <explore-result.json> <SKILL_DIR>/contracts/explore-result.schema.json` | `{valid, errors}` — run this before rendering | None: an invalid result is not a report |
-| HTML report renderer | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis report-html <explore-result.json> --out explore-report.html` | The complete self-contained report: every finding's current vs expected behaviour, repro, fix direction, evidence, and the attribution footer | Write the HTML by hand from the contract fields, rendering all of them, and say the report was not machine-rendered |
-| Secret redaction | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis redact <file>` | The file with credentials and tokens masked, for evidence excerpts | Redact by hand before the excerpt is written |
-| Failure classification | `python3 <SKILL_DIR>/scripts/qa_tool.py analysis classify "<error message>"` | `{classification, confidence, reason}` for a console or network error | Classify per [finding-taxonomy.md](references/finding-taxonomy.md) |
+| Contract self-check | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis validate <explore-result.json> <SKILL_DIR>/contracts/explore-result.schema.json` | `{valid, errors}` — run this before rendering | None: an invalid result is not a report |
+| HTML report renderer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html <explore-result.json> --out explore-report.html` | The complete self-contained report: every finding's current vs expected behaviour, repro, fix direction, evidence, and the attribution footer | Write the HTML by hand from the contract fields, rendering all of them, and say the report was not machine-rendered |
+| Secret redaction | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis redact <file>` | The file with credentials and tokens masked, for evidence excerpts | Redact by hand before the excerpt is written |
+| Failure classification | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis classify "<error message>"` | `{classification, confidence, reason}` for a console or network error | Classify per [finding-taxonomy.md](references/finding-taxonomy.md) |
 
-A missing `qa_tool.py` means the engine is not installed; run `qa doctor`.
+A missing `qa-tool.mjs` means the engine is not installed; run `qa doctor`.
 
 **The HTML is rendered, not written.** The result JSON is the source of truth for the report, and `report-html` reads it. Hand-typing the page is how the first live run silently dropped `actual`, `expected`, and `fixDirection` from every finding while the JSON held all three.
 

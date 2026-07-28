@@ -76,7 +76,7 @@ regression tests. Implicit dictionary shapes are defects.
 
 | Principle | Mechanical enforcement |
 | --- | --- |
-| 1–3, 6–8 | [deterministic-execution-boundary.md](deterministic-execution-boundary.md); eval adversarial cases; `qa_analysis` / `qa_diagnostics` unit + seam tests |
+| 1–3, 6–8 | [deterministic-execution-boundary.md](deterministic-execution-boundary.md); eval adversarial cases; `analysis` / `diagnostics` unit + seam tests |
 | 4–5 | Framework registry + `scripts/check-framework-registry.mjs`; skill sync |
 | 9 | `scripts/validate-skills.mjs` envelope shape check |
 | 10 | `shared/*/schemas/internal/` + `tests/seams/` |

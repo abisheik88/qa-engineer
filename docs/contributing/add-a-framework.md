@@ -70,8 +70,8 @@ boundary.
 ```python
 """Robot Framework adapter for the analysis platform."""
 
-from qa_analysis.junit import parse_junit          # shared parser
-from qa_analysis import taxonomy                    # shared classifier
+from the shared JUnit parser import parse_junit          # shared parser
+import { classify } from '../analysis/taxonomy.mjs'; // shared classifier
 
 
 def parse_report(path):
@@ -92,7 +92,7 @@ def main(argv=None):
     """python -m robot_analysis report <output.xml>"""
 ```
 
-Follow [`playwright_analysis.py`](../../shared/frameworks/playwright/lib/playwright_analysis.py)
+Follow [`the Playwright adapter.py`](../../packages/engine/lib/frameworks/playwright.mjs)
 for the CLI contract: JSON to stdout, exit `0` on success, exit `2` on a malformed
 artifact.
 
@@ -104,13 +104,13 @@ each `tests/` directory for discovery. Add both entries.
 ## Step 5 — Prove parity, not just presence
 
 The cross-framework test is what makes the boundary real. Add your framework to
-[`shared/analysis/lib/tests/test_compat.py`](../../shared/analysis/lib/tests/test_compat.py),
+[`packages/engine/test/test_compat.py`](../../packages/engine/test/test_compat.py),
 which asserts every framework produces an **identical normalized shape and
 classification** from equivalent input. A framework that needs a special case
 downstream has not been integrated; it has been bolted on.
 
 ```bash
-python3 shared/analysis/lib/run_tests.py        # your adapter test + the parity test
+node --test packages/engine/test/*.test.mjs        # your adapter test + the parity test
 ```
 
 ## Step 6 — Update the capability claims
@@ -130,12 +130,12 @@ complete and respectable answer.
 
 ```bash
 npm run validate:registry && npm run validate:architecture && npm run validate:matrix
-python3 shared/analysis/lib/run_tests.py
+node --test packages/engine/test/*.test.mjs
 npm run validate:release        # fails if your lib/ is missing from the tarball
 ```
 
 If you added a `lib/` that skills bundle, add its path to `package.json` `files[]`
-and to the bundle manifests in **both** `scripts/bundle_python.py` and
+and to the bundle manifests in **both** `packages/installer/lib/core/bundle.mjs` and
 `packages/installer/lib/core/manifest.mjs` — a test asserts the two agree.
 
 ## Definition of done
