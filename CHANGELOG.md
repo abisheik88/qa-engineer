@@ -18,7 +18,7 @@ always was.
 
 ### The reporting platform: one renderer, one theme, every agent
 
-Two live `/qa-explore` runs exposed the same architectural gap from opposite ends. The
+Two live `/qa-explore` runs exposed the same architectural gap from opposite end. The
 first produced a valid artifact and a lossy report: every finding carried `repro`,
 `actual`, `expected`, and `fixDirection`, and the hand-written HTML collapsed all four
 into one sentence. The second used the renderer and still failed — **every screenshot
