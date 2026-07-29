@@ -25,6 +25,7 @@ import path from 'node:path';
 
 import * as junit from '../lib/analysis/junit.mjs';
 import * as har from '../lib/analysis/har.mjs';
+import * as network from '../lib/analysis/network.mjs';
 import * as discovery from '../lib/analysis/discovery.mjs';
 import * as diffGuard from '../lib/analysis/diff-guard.mjs';
 import * as redaction from '../lib/analysis/redaction.mjs';
@@ -56,6 +57,8 @@ const USAGE = `usage: qa-engine <tool> <subcommand> [args]
 analysis subcommands
   junit <report.xml>                        normalized {tests, executed}
   har <file.har> [--slow-ms N]              redacted network summary
+  network <file.har> [--slow-ms N]          the report's network block: totals,
+            [--large-bytes N]               per-endpoint timings, and an issue flag
   discover [--root DIR] [--path P ...]      artifacts found, by state
   diff-guard <diff-file>                    {issues, safe} — safe:false blocks a change
   redact <file>                             the file's text with secrets masked
@@ -193,6 +196,18 @@ function analysis(argv) {
       requirePositional(positional, 1, 'har <file.har>');
       emit(har.parseHar(positional[0], { slowMs: Number(flags.slowMs ?? 1000) }));
       return 0;
+
+    case 'network': {
+      // The report contract's `network` block, ready to paste into a result and
+      // validate. `har` gives the raw entries; this gives the counted, flagged,
+      // report-shaped answer, so no skill has to count requests by eye.
+      requirePositional(positional, 1, 'network <file.har>');
+      const options = {};
+      if (flags.slowMs !== undefined) options.slowMs = Number(flags.slowMs);
+      if (flags.largeBytes !== undefined) options.largeBytes = Number(flags.largeBytes);
+      emit(network.analyzeHar(positional[0], options));
+      return 0;
+    }
 
     case 'discover':
       emit(discovery.discover({ root: flags.root ?? '.', explicit: flags.path ?? null }));

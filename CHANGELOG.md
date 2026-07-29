@@ -93,6 +93,38 @@ is now *rendered*, from a schema, by code no agent can influence
 - **Regenerated** the corpus baseline for `reportHtml` only. Every parity-verified
   analysis section — redaction, headers, classify, junit, diff-guard — is byte-identical.
 
+### API analysis is parsed, not judged
+
+`qa-explore` claimed an API dimension and backed it with forty-eight lines of prose
+telling the model what to look for. The model then counted requests by eye, decided
+which were slow, and judged which were duplicates — three things a parser is perfect at
+and a model is not. The pack's founding rule is that deterministic code owns facts; for
+this dimension the model owned both the facts and the explanation.
+
+- **Added** `analysis network <capture.har>` — emits the report contract's `network`
+  block directly: totals, per-endpoint status, duration, size, call count, and start
+  offset, with one `issue` flag per endpoint. Drop it into a result and it validates.
+- **Added** seven detections, each by a stated rule over a stated threshold: `failed`,
+  `slow`, `polling` (three or more calls at an even cadence), `duplicate`, `n-plus-one`
+  (four or more distinct ids on one path shape within two seconds), `large-payload`, and
+  `uncached` (a static asset with neither `Cache-Control` nor `ETag`). An uncached *API*
+  response is deliberately not flagged — freshness is usually the point, and a detector
+  that cries wolf teaches readers to skip the section.
+- **Extended** the HAR parser with response size, start timestamp, and caching headers.
+  A HAR that does not record a size reports `null`, never a plausible zero: "we do not
+  know how big this was" and "this was empty" are different findings.
+- **Changed** the `qa-explore` API step to capture a HAR and run the parser over it,
+  with the instruction never to count requests by eye. What stays the model's job is the
+  judgement the parser cannot make — whether a duplicated analytics beacon and a
+  duplicated payment request, identical in a HAR, matter equally.
+- **Added** 21 tests, weighted toward the detectors *not* firing: a query-string
+  difference is not a duplicate, a burst is not polling, ids spread over a session are
+  not an N+1, and a cached asset is not uncached.
+
+Performance, security, and accessibility still have no analyzer behind them and remain
+model judgement. `qa-explore` stays **Experimental** for that reason, and because no
+live-application run has been measured.
+
 ### Install once per machine — global, workspace, and project are now real modes
 
 Installing "globally" used to mean pointing `--project` at your home directory. It

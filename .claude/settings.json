@@ -78,7 +78,15 @@
       "Bash(test -f ~/.agents/qa-lock.json -o -f ~/qa-lock.json)",
       "Bash(echo \"  ~/.agents/skills has no qa-lock.json: $\\(test -f ~/.agents/qa-lock.json -o -f ~/qa-lock.json && echo 'FOUND ONE' || echo confirmed\\)\")",
       "Bash(node -e \"console.log\\('installer reports:', require\\('./packages/installer/package.json'\\).version\\)\")",
-      "Bash(node scripts/release/release-notes.mjs --check)"
+      "Bash(node scripts/release/release-notes.mjs --check)",
+      "Bash(git commit *)",
+      "Bash(grep -iA12 \"level\\\\|maturity\\\\|production\\\\|beta\\\\|experimental\")",
+      "Bash(npm profile *)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('./packages/engine/test/corpus/expected.json'\\)\\)\\)\")",
+      "Bash(node -e \"const h=require\\('./packages/engine/test/fixtures/sample.har'\\); console.log\\(Object.keys\\(h.log.entries[0]\\)\\); console.log\\('response keys:', Object.keys\\(h.log.entries[0].response\\)\\)\")",
+      "Bash(node packages/engine/bin/qa-engine.mjs analysis network packages/engine/test/fixtures/sample.har)",
+      "Bash(node skills/qa-explore/scripts/qa-tool.mjs analysis network packages/engine/test/fixtures/sample.har)",
+      "Bash(node --test packages/engine/test/network.test.mjs)"
     ]
   }
 }
