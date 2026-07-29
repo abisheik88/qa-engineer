@@ -41,8 +41,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      # editorconfig-checker downloads its Go binary via the GitHub Releases API.
+      # Unauthenticated runners share a 60/hr quota and routinely 403; the job
+      # token lifts that to the authenticated limit (editorconfig-checker ≥ 6.1.1).
       - name: Check formatting against .editorconfig
-        run: npx --yes editorconfig-checker
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: npx --yes editorconfig-checker@6.1.1
 
   internal-links:
     name: Internal link check
