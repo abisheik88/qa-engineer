@@ -47,6 +47,9 @@ The execution, generation, and analysis platform specifications live under [shar
 | [ADR-0012](ADR-0012-knowledge-base.md) | The QA knowledge base is one authoritative document per domain | Accepted |
 | [ADR-0013](ADR-0013-framework-boundary.md) | The framework adapter boundary is permanent | Accepted |
 | [ADR-0014](ADR-0014-evaluation-platform.md) | The evaluation platform is a core architectural component | Accepted |
+| [ADR-0015](ADR-0015-no-reserved-empty-directories.md) | A directory exists only when it holds something a skill loads | Accepted |
+| [ADR-0016](ADR-0016-universal-report-rendering.md) | Reports are rendered centrally from a canonical schema, never authored by an agent | Accepted |
+| [ADR-0017](ADR-0017-installation-scopes.md) | Installation is scoped — global, workspace, or project — and each shares what it can | Accepted |
 
 ## What an ADR is
 

@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { hashFile } from './hash.mjs';
+import { entryDigest, entryPresent } from './integrity.mjs';
 
 /**
  * @param {object}   args
@@ -19,10 +19,11 @@ export function detectConflicts({ projectRoot, planned, priorLock }) {
   const owned = new Set((priorLock?.files ?? []).map((f) => f.path));
   const conflicts = [];
   for (const entry of planned) {
-    const abs = path.join(projectRoot, entry.path);
-    if (!fs.existsSync(abs)) continue; // brand-new file, no conflict
+    // `entryPresent` rather than `existsSync`: a link whose target is gone still
+    // occupies the path, and overwriting it blind would lose where it pointed.
+    if (!entryPresent(projectRoot, entry)) continue; // brand-new path, no conflict
     if (owned.has(entry.path)) continue; // pack-owned, safe to update
-    if (hashFile(abs) === entry.sha256) continue; // identical content, no-op
+    if (entryDigest(projectRoot, entry) === entry.sha256) continue; // already correct, no-op
     conflicts.push({ path: entry.path, reason: 'exists and is not owned by a previous install' });
   }
   return conflicts;

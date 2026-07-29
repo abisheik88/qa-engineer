@@ -20,8 +20,19 @@ export function lockPath(projectRoot) {
   return path.join(projectRoot, LOCKFILE);
 }
 
-export function readLock(projectRoot) {
-  const file = lockPath(projectRoot);
+/**
+ * The lockfile for a scope.
+ *
+ * A global install keeps its lockfile inside `~/.qa-engineer/`, never loose in the home
+ * directory — the whole point of owning a directory is that everything the tool wrote is
+ * in one place a user can inspect and delete.
+ */
+export function scopeLockPath(scope) {
+  return path.join(scope.root, scope.lockfile);
+}
+
+export function readLock(projectRoot, relative = LOCKFILE) {
+  const file = path.join(projectRoot, relative);
   if (!fs.existsSync(file)) return null;
   let raw;
   try {
@@ -40,12 +51,17 @@ export function readLock(projectRoot) {
  * Assemble a lockfile object. `now` is injected so tests are deterministic;
  * the CLI passes the real time.
  */
-export function buildLock({ agents, files, now }) {
+export function buildLock({ agents, files, now, scope = null }) {
   const lock = {
     lockfileVersion: LOCKFILE_VERSION,
     pack: { name: PACK_NAME, version: VERSION, specRevision: SPEC_REVISION },
     installer: VERSION,
     generatedAt: now,
+    // Recorded so every later command knows what it is operating on without being told
+    // again. Omitted for a project install, which is what a lockfile without one means.
+    ...(scope && scope.kind !== 'project'
+      ? { scope: { kind: scope.kind, qaRoot: scope.qaRootRelative, sharedEngine: scope.shareEngine } }
+      : {}),
     agents: agents.map((a) => ({
       id: a.id,
       name: a.name,

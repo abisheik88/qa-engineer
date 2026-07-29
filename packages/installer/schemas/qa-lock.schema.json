@@ -5,7 +5,14 @@
   "description": "qa-lock.json records exactly what was installed and a hash per file, so an install can be verified, updated, or removed without guessing. Written by the installer; not hand-edited.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["lockfileVersion", "pack", "installer", "generatedAt", "agents", "files"],
+  "required": [
+    "lockfileVersion",
+    "pack",
+    "installer",
+    "generatedAt",
+    "agents",
+    "files"
+  ],
   "properties": {
     "lockfileVersion": {
       "type": "integer",
@@ -14,11 +21,22 @@
     "pack": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version", "specRevision"],
+      "required": [
+        "name",
+        "version",
+        "specRevision"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" },
-        "specRevision": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+"
+        },
+        "specRevision": {
+          "type": "string"
+        }
       }
     },
     "installer": {
@@ -35,17 +53,31 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "name", "tier"],
+        "required": [
+          "id",
+          "name",
+          "tier"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
-          "name": { "type": "string" },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string"
+          },
           "tier": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 1,
             "maximum": 2,
-            "description": "Support tier, or null when the host is unknown — the shared Agent Skills path was installed without identifying a product."
+            "description": "Support tier, or null when the host is unknown \u2014 the shared Agent Skills path was installed without identifying a product."
           },
-          "skillsDir": { "type": "string" },
+          "skillsDir": {
+            "type": "string"
+          },
           "detected": {
             "type": "boolean",
             "description": "True only when project markers identified this host. False when it was requested explicitly or stands in as the unknown-agent path. Optional for lockfiles written before this field existed."
@@ -59,7 +91,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "sha256", "bytes", "owner"],
+        "required": [
+          "path",
+          "sha256",
+          "bytes",
+          "owner"
+        ],
         "properties": {
           "path": {
             "type": "string",
@@ -67,11 +104,36 @@
             "description": "Project-relative POSIX path. Must not be absolute and must not contain a '..' segment: a lockfile travels with a cloned repository, and uninstall deletes what it lists.",
             "pattern": "^(?!/)(?!.*(^|/)\\.\\.($|/)).+$"
           },
-          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-          "bytes": { "type": "integer", "minimum": 0 },
-          "owner": { "type": "string", "enum": ["skill", "wrapper", "config"] },
-          "skill": { "type": "string" },
-          "agent": { "type": "string" }
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "owner": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "wrapper",
+              "config",
+              "engine",
+              "link"
+            ],
+            "description": "What created the entry. `engine` is the shared deterministic engine, present once per scope. `link` is a symbolic link into the canonical skill tree, whose sha256 is the hash of its scope-relative target rather than of file content \u2014 a link has no content, and hashing the target is what lets verify catch one that has been repointed."
+          },
+          "skill": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string"
+          },
+          "linkTarget": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Absolute path a `link` entry points at. Absolute because the link is created with it verbatim; the hashed form in sha256 is scope-relative so the lockfile stays machine-independent."
+          }
         }
       }
     },
@@ -79,10 +141,46 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "skills": { "type": "integer", "minimum": 0 },
-        "files": { "type": "integer", "minimum": 0 },
-        "wrappers": { "type": "integer", "minimum": 0 },
-        "directories": { "type": "integer", "minimum": 0 }
+        "skills": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wrappers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "description": "Which installation mode wrote this lockfile. Absent means `project`: before 0.11 that was the only mode, so its absence is a fact rather than a gap.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "global",
+            "workspace",
+            "project"
+          ]
+        },
+        "qaRoot": {
+          "type": "string",
+          "description": "Scope-relative directory holding the shared engine and canonical skills. Absent for a project install, which shares nothing."
+        },
+        "sharedEngine": {
+          "type": "boolean"
+        }
       }
     }
   }

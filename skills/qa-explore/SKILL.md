@@ -63,7 +63,13 @@ Load only what the situation requires:
 6. **Security (client).** Run the client-side pass only — token storage, PII in URLs/payloads, error leakage, headers, optional read-only IDOR probe when in scope ([security.md](references/security.md)). No destructive tests.
 7. **UI / UX.** Check empty/loading/error states, consistency, mobile viewport spot-check; optional persona lens if the user named a role.
 8. **Optional DB.** Only if the user provided access: capture UI values with timestamps; query; separate data vs presentation bugs. Skip entirely otherwise and note "DB validation not in scope".
-9. **Report.** Assign stable IDs and severities ([finding-taxonomy.md](references/finding-taxonomy.md)). Every finding must include proof. Write `explore-result.json` **first** — including `scope` (what you set out to check, what you touched, and every boundary of the run with its reason) and findings written for a reader who has never seen the product — then validate it against the contract and **render** the HTML from it with the report renderer (see Tooling); never type the HTML. Write the Markdown from the same result ([report-pipeline.md](references/report-pipeline.md)). Include "what works well" and a prioritized fix order.
+9. **Report.** Assign stable IDs and severities ([finding-taxonomy.md](references/finding-taxonomy.md)). Every finding must include proof. Then, in this order ([report-pipeline.md](references/report-pipeline.md)):
+   1. Write `explore-result.json` — `artifacts[]` for every captured file, `scope` (what you set out to check, what you touched, and every boundary of the run with its reason), `executive` when a non-engineer will read it, and findings written for a reader who has never seen the product.
+   2. **Validate** it against the contract.
+   3. **Verify the artifacts** — `artifacts verify` must pass before anything is rendered. A missing or zero-byte file is reported, never quietly dropped.
+   4. **Build the bundle** with `report-bundle` — a portable folder that opens offline, with every link verified. That folder is the deliverable; point the user at its `index.html`. Never type HTML.
+
+   Include "what works well" and a prioritized fix order. Only report a score for a dimension the run actually measured.
 10. **Iterate.** On user feedback: validate live, add evidence, bump report version, never renumber IDs. After three stuck browser attempts on the same blocker, stop and escalate with findings.
 
 ## Guardrails
@@ -84,21 +90,30 @@ Invoke the bundled engine through its launcher, as documented in [references/det
 | Tool | Invocation | Output | Fallback |
 | --- | --- | --- | --- |
 | Contract self-check | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis validate <explore-result.json> <SKILL_DIR>/contracts/explore-result.schema.json` | `{valid, errors}` — run this before rendering | None: an invalid result is not a report |
-| HTML report renderer | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html <explore-result.json> --out explore-report.html` | The complete self-contained report: every finding's current vs expected behaviour, repro, fix direction, evidence, and the attribution footer | Write the HTML by hand from the contract fields, rendering all of them, and say the report was not machine-rendered |
+| Artifact check | `node <SKILL_DIR>/scripts/qa-tool.mjs artifacts verify <explore-result.json>` | `{ok, stats, missing}`; exit 1 when a file a finding points at is absent or empty. Run it **before** rendering | List the missing files in the report yourself; never delete the evidence entry to make it pass |
+| Portable report bundle | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-bundle <explore-result.json> --out report --zip` | **The canonical output.** A folder — `index.html` + `assets/` — that opens offline in any browser, with every link verified to resolve inside it, plus a `.zip` to send. | **None.** Report that the engine is missing and stop |
+| Single-file HTML | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-html <explore-result.json> --embed --out explore-report.html` | The complete self-contained report — nav, search, charts, timeline, expandable findings, evidence, attribution. `--embed` inlines images; `--mode full\|executive\|developer\|artifact` picks the audience | **None.** Report that the engine is missing and stop — a hand-written report is the failure this design removes |
+| Other renderings | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-export <explore-result.json> --format <markdown\|sarif\|junit\|csv\|json\|bundle> --out <file>` | The same validated result in the format the destination reads | Write the Markdown by hand; skip the machine formats |
+| Canonical schema | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis report-schema` · `… analysis report-versions` | The producer-neutral contract any agent writes to, and the schema/theme/renderer versions in force | Use the skill's own `contracts/explore-result.schema.json` |
 | Secret redaction | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis redact <file>` | The file with credentials and tokens masked, for evidence excerpts | Redact by hand before the excerpt is written |
 | Failure classification | `node <SKILL_DIR>/scripts/qa-tool.mjs analysis classify "<error message>"` | `{classification, confidence, reason}` for a console or network error | Classify per [finding-taxonomy.md](references/finding-taxonomy.md) |
 
 A missing `qa-tool.mjs` means the engine is not installed; run `qa doctor`.
 
-**The HTML is rendered, not written.** The result JSON is the source of truth for the report, and `report-html` reads it. Hand-typing the page is how the first live run silently dropped `actual`, `expected`, and `fixDirection` from every finding while the JSON held all three.
+**You produce structured data; the pack produces every document.** The result JSON is the source of truth and every format is rendered from it. You never write HTML, CSS, or styling of any kind — the contract has no field to carry a presentation hint, which is what makes a report from this skill identical whichever agent ran it. Hand-typing the page is how the first live run silently dropped `actual`, `expected`, and `fixDirection` from every finding while the JSON held all three.
+
+**Register artifacts; do not inline paths.** Every captured file gets an `artifacts[]` entry, and evidence points at it by `artifactId`. Paths are relative to the result JSON. That is what makes `artifacts verify` meaningful and what stopped the second live run's screenshots from rendering as broken images.
 
 ## Output
 
-Write under `qa-artifacts/explore-<run-id>/`:
+Write under `qa-artifacts/explore-<run-id>/`, so the whole run folder moves as a unit:
 
-- `screenshots/` — proof images referenced by findings
-- `explore-result.json` — machine-readable result conforming to [contracts/explore-result.schema.json](contracts/explore-result.schema.json); written first, and the source of the two renderings below
-- `explore-report.html` — the report a person reads, **rendered** from the JSON by `report-html`
-- `explore-report.md` — the same content as Markdown, with the rendered attribution footer appended
+- `explore-result.json` — machine-readable result conforming to [contracts/explore-result.schema.json](contracts/explore-result.schema.json); written first, and the source of every rendering below
+- `report/` — **the deliverable.** A portable bundle written by `report-bundle`: `index.html`, `report.json`, `report.md`, `manifest.json`, and `assets/`. It opens offline in any browser and every link is verified to resolve inside it. `--zip` adds `report.zip` for sending.
+- `screenshots/`, `network/`, `console/`, `dom/` — proof, registered in `artifacts[]` and referenced by `artifactId`; the bundle copies these into its own `assets/` tree
 
-Validate the JSON against the schema before rendering, and again before declaring completion. Present a short prose verdict (severity counts + top findings) in the conversation, and point to the artifact paths.
+Point the user at `report/index.html`. A hosted preview — a Claude Artifact, a Cursor preview, any cloud viewer — is an optional convenience that expires; it must never be presented as the deliverable.
+
+On request, also `report-html --embed` for one self-contained file, or `report-export` to SARIF (code-scanning viewers), JUnit (CI), or CSV (a tracking sheet). There is no PDF writer: the HTML has a print stylesheet that forces findings open and prints link targets, so **Print → Save as PDF** is the supported path.
+
+Validate the JSON and run `artifacts verify` before rendering, and again before declaring completion. Present a short prose verdict (severity counts + top findings) in the conversation, and point to the artifact paths.

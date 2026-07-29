@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { LOCKFILE, SHARED_SKILLS_DIR, CLAUDE_SKILLS_DIR } from '../constants.mjs';
 import { readLock } from './lockfile.mjs';
-import { hashFile } from './hash.mjs';
+import { entryDigest } from './integrity.mjs';
 import { verifyEngine, packHasBundles } from './bundle.mjs';
 import { BUNDLE_DEST, BUNDLE_MANIFEST } from './manifest.mjs';
 
@@ -17,17 +17,18 @@ import { BUNDLE_DEST, BUNDLE_MANIFEST } from './manifest.mjs';
  * @param {string} projectRoot
  * @returns {{ ok: boolean, checks: CheckResult[] }}
  */
-export function validateInstall(projectRoot) {
+export function validateInstall(projectRoot, { scope = null } = {}) {
   /** @type {CheckResult[]} */
   const checks = [];
 
-  const lock = readLock(projectRoot);
+  const lockRelative = scope?.lockfile ?? LOCKFILE;
+  const lock = readLock(projectRoot, lockRelative);
   if (!lock) {
     checks.push({
       id: 'lockfile',
       ok: false,
       hard: true,
-      message: `${LOCKFILE} missing`,
+      message: `${lockRelative} missing`,
       hint: 'run: qa install',
     });
     return { ok: false, checks };
@@ -37,17 +38,12 @@ export function validateInstall(projectRoot) {
     id: 'lockfile',
     ok: true,
     hard: true,
-    message: `${LOCKFILE} present (${lock.files.length} files, pack ${lock.pack?.version ?? '?'})`,
+    message: `${lockRelative} present (${lock.files.length} files, pack ${lock.pack?.version ?? '?'})`,
   });
 
   let drift = 0;
   for (const entry of lock.files) {
-    const abs = path.join(projectRoot, entry.path);
-    if (!fs.existsSync(abs)) {
-      drift += 1;
-      continue;
-    }
-    if (hashFile(abs) !== entry.sha256) drift += 1;
+    if (entryDigest(projectRoot, entry) !== entry.sha256) drift += 1;
   }
   checks.push({
     id: 'integrity',
@@ -92,7 +88,36 @@ export function validateInstall(projectRoot) {
         : 'no contract schemas found (optional for minimal installs)',
   });
 
-  if (packHasBundles()) {
+  // Where the engine should be depends on how it was installed: a shared scope has
+  // exactly one copy in its qaRoot, a project install has one inside each bundling
+  // skill. Looking only for the second is what made the first report a broken install.
+  const sharedScope = scope?.shareEngine || lock.scope?.sharedEngine;
+  if (sharedScope) {
+    const qaRootRelative = scope?.qaRootRelative ?? lock.scope?.qaRoot ?? '.';
+    const libDir = path.join(projectRoot, qaRootRelative, 'engine');
+    const bundleOk = fs.existsSync(path.join(libDir, 'bin', 'qa-engine.mjs'));
+    checks.push({
+      id: 'engine',
+      ok: bundleOk,
+      hard: true,
+      message: bundleOk
+        ? `deterministic engine shared at ${path.relative(projectRoot, libDir) || '.'}`
+        : 'shared deterministic engine missing',
+      hint: bundleOk ? undefined : 'run: qa repair',
+    });
+    if (bundleOk) {
+      const result = verifyEngine({ libDir });
+      checks.push({
+        id: 'engine-runs',
+        ok: result.ok,
+        hard: true,
+        message: result.ok
+          ? `shared engine runs (node ${process.versions.node})`
+          : `shared engine failed to run: ${result.stderr || 'unknown error'}`,
+        hint: result.ok ? undefined : 'run: qa repair',
+      });
+    }
+  } else if (packHasBundles()) {
     const bundledSkill = Object.keys(BUNDLE_MANIFEST)[0];
     let libDir = null;
     for (const base of [SHARED_SKILLS_DIR, CLAUDE_SKILLS_DIR]) {

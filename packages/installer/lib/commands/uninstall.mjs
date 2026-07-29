@@ -16,9 +16,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EXIT, LOCKFILE, BACKUP_DIR } from '../constants.mjs';
-import { resolveProjectRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { readLock, lockPath } from '../core/lockfile.mjs';
-import { hashFile } from '../core/hash.mjs';
+import { entryDigest } from '../core/integrity.mjs';
 import { Transaction, pruneEmptyDirs } from '../core/fs-safe.mjs';
 import { conflictError, verifyError } from '../core/errors.mjs';
 import { createLogger } from '../core/logger.mjs';
@@ -40,7 +40,7 @@ function findPycache(dir) {
   return found;
 }
 
-export async function runUninstall(argv, { log } = {}) {
+export async function runUninstall(argv, { log, env = process.env } = {}) {
   const opts = parseCommonFlags(argv);
   const logger = log ?? createLogger();
   if (opts.help) {
@@ -54,8 +54,11 @@ Only pack-owned files are removed; anything else is left alone.
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
-  const lock = readLock(root);
+  // `env` is injected by the test suite so a global uninstall can be exercised
+  // against a temporary home rather than the developer's own.
+  const scope = resolveOperatingScope({ ...opts, env });
+  const root = scope.root;
+  const lock = readLock(root, scope.lockfile);
   if (!lock) {
     if (!opts.json) {
       logger.error(`FAIL  no ${LOCKFILE} in ${root}`);
@@ -73,7 +76,7 @@ Only pack-owned files are removed; anything else is left alone.
       missing.push(entry.path);
       continue;
     }
-    if (hashFile(abs) !== entry.sha256) drifted.push(entry.path);
+    if (entryDigest(root, entry) !== entry.sha256) drifted.push(entry.path);
     present.push(entry.path);
   }
 
@@ -97,9 +100,12 @@ Only pack-owned files are removed; anything else is left alone.
   }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const tx = new Transaction(root, path.join(root, BACKUP_DIR, stamp), { dryRun: opts.dryRun });
+  // Same rule as install: a scope that owns a directory keeps its backups inside it,
+  // rather than dropping `.qa/backups` into the user's home.
+  const backupRoot = scope.qaRootRelative ? path.join(scope.qaRootRelative, 'backups') : BACKUP_DIR;
+  const tx = new Transaction(root, path.join(root, backupRoot, stamp), { dryRun: opts.dryRun });
   for (const rel of present) tx.delete(rel);
-  if (fs.existsSync(lockPath(root))) tx.delete(LOCKFILE);
+  if (fs.existsSync(path.join(root, scope.lockfile))) tx.delete(scope.lockfile);
   const summary = tx.commit();
 
   // Byproducts of the pack's own bundled code: Python writes __pycache__ next to

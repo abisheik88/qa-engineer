@@ -4,18 +4,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { BACKUP_DIR, LOCKFILE, EXIT } from '../constants.mjs';
-import { resolveSourceRoot, resolveProjectRoot, toPosix } from '../core/paths.mjs';
-import { listSkills, skillFiles } from '../core/manifest.mjs';
-import { bundleFilesForSkill } from '../core/bundle.mjs';
-import { hashBytes } from '../core/hash.mjs';
+import { resolveSourceRoot } from '../core/paths.mjs';
 import { detectConflicts } from '../core/conflict.mjs';
-import { Transaction } from '../core/fs-safe.mjs';
-import { buildLock, readLock, serializeLock, lockPath } from '../core/lockfile.mjs';
+import { Transaction, readLinkTarget, canLink } from '../core/fs-safe.mjs';
+import { buildLock, readLock, serializeLock, scopeLockPath } from '../core/lockfile.mjs';
+import { resolveScope } from '../core/scope.mjs';
+import { buildPlan, dedupePlan } from '../core/plan.mjs';
+import { resolveScopeTargets, describeUnservedAgents } from '../agents/targets.mjs';
 import { loadConfig } from '../core/config.mjs';
-import { readSkillMeta } from '../core/skill-meta.mjs';
-import { renderWrapper } from '../core/wrappers.mjs';
 import { conflictError, verifyError } from '../core/errors.mjs';
-import { resolveInstallTargets } from '../agents/registry.mjs';
 import { createLogger } from '../core/logger.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
 import { validateInstall } from '../core/validate-install.mjs';
@@ -93,6 +90,19 @@ function reportFrameworkFit(root, logger) {
 }
 
 /**
+ * Name the hosts a global install could not serve, and what to do about them.
+ *
+ * Staying quiet here would leave a Cursor user waiting for slash commands that are never
+ * going to appear, with an install that reported success.
+ */
+function reportUnserved(unserved, logger) {
+  if (!unserved || unserved.length === 0) return;
+  logger.info(`  → not installed for ${unserved.map((entry) => entry.id).join(', ')}:`);
+  for (const entry of unserved) logger.info(`      ${entry.id} — ${entry.reason}`);
+  logger.info('  → run `qa install --project .` inside a repository to serve those hosts');
+}
+
+/**
  * Core install implementation shared by install / onboard / repair / update.
  *
  * @param {{
@@ -108,7 +118,9 @@ function reportFrameworkFit(root, logger) {
  */
 export async function executeInstall({
   projectRoot,
+  scope: providedScope = null,
   agentIds = [],
+  allAgents = false,
   force = false,
   dryRun = false,
   skipValidate = false,
@@ -118,85 +130,58 @@ export async function executeInstall({
 } = {}) {
   const logger = log ?? createLogger();
   const sourceRoot = resolveSourceRoot();
-  const root = resolveProjectRoot(projectRoot);
+  // A caller that names a scope gets it; everything else is a project install at the
+  // path it asked for, which is what every pre-0.11 caller means.
+  const scope = providedScope ?? resolveScope({ project: projectRoot ?? process.cwd() });
+  const root = scope.root;
   const { config } = loadConfig(root);
   const explicit = agentIds.length > 0 ? agentIds : config.agents ?? [];
-  const agents = resolveInstallTargets(root, explicit);
-  const skills = listSkills(sourceRoot);
+  const agents = resolveScopeTargets(scope, { explicitIds: explicit, allAgents });
+  const unserved = describeUnservedAgents(scope, agents);
+
+  if (agents.length === 0) {
+    throw conflictError(
+      `no agent can be served by a ${scope.kind} install here`,
+      scope.kind === 'global'
+        ? 'no supported host has a user-level skills directory on this machine; ' +
+          'install per project with: qa install --project .'
+        : 'pass --agent <id> to name one explicitly',
+    );
+  }
+
+  // Probe once, before planning. A filesystem that cannot hold a directory link — FAT,
+  // some network and container mounts, Windows without junction support — gets copies
+  // instead of a failed install.
+  const linksSupported = scope.shareEngine ? canLink(scope.root) : false;
+  const { skills, files, links } = buildPlan({
+    sourceRoot,
+    scope,
+    targets: agents,
+    preferLinks: linksSupported,
+  });
 
   if (!json) {
     logger.step(`source: ${sourceRoot}`);
-    logger.step(`project: ${root}`);
+    logger.step(`scope: ${scope.label}`);
     logger.step(`agents: ${agents.map((a) => a.id).join(', ')}`);
     logger.step(`skills: ${skills.length}`);
-  }
-
-  /** @type {Array<{path:string, sha256:string, bytes:number, owner:string, skill?:string, agent?:string, content:Buffer}>} */
-  const planned = [];
-
-  for (const agent of agents) {
-    for (const skill of skills) {
-      const files = skillFiles(sourceRoot, skill);
-      for (const rel of files) {
-        if (rel.startsWith('tests/') || rel.includes('/tests/')) continue;
-        const abs = path.join(sourceRoot, 'skills', skill, rel);
-        const content = fs.readFileSync(abs);
-        const dest = toPosix(path.join(agent.skillsDir, skill, rel));
-        planned.push({
-          path: dest,
-          sha256: hashBytes(content),
-          bytes: content.length,
-          owner: 'skill',
-          skill,
-          agent: agent.id,
-          content,
-        });
-      }
-      for (const bundled of bundleFilesForSkill(sourceRoot, skill)) {
-        const dest = toPosix(path.join(agent.skillsDir, skill, bundled.rel));
-        planned.push({
-          path: dest,
-          sha256: hashBytes(bundled.content),
-          bytes: bundled.content.length,
-          owner: 'skill',
-          skill,
-          agent: agent.id,
-          content: bundled.content,
-        });
-      }
-    }
-
-    if (agent.wrapperFormat && agent.wrapperDir) {
-      for (const skill of skills) {
-        const meta = readSkillMeta(path.join(sourceRoot, 'skills', skill, 'SKILL.md'));
-        if (!meta.name) continue;
-        const { filename, content } = renderWrapper(agent.wrapperFormat, meta);
-        const buf = Buffer.from(content, 'utf8');
-        const dest = toPosix(path.join(agent.wrapperDir, filename));
-        planned.push({
-          path: dest,
-          sha256: hashBytes(buf),
-          bytes: buf.length,
-          owner: 'wrapper',
-          skill,
-          agent: agent.id,
-          content: buf,
-        });
+    if (scope.shareEngine) {
+      logger.step(`shared engine: ${path.join(scope.qaRoot, 'engine')}`);
+      if (!linksSupported) {
+        logger.warn('this filesystem does not support directory links — copying skills instead');
+        logger.info('  → the install works the same; it uses more disk and each agent gets its own copy');
       }
     }
   }
 
-  const byPath = new Map();
-  for (const entry of planned) {
-    const prev = byPath.get(entry.path);
-    if (prev && prev.sha256 !== entry.sha256) {
-      throw conflictError(`conflicting content for ${entry.path}`);
-    }
-    if (!prev) byPath.set(entry.path, entry);
+  const { unique: uniqueFiles, conflicts: contentConflicts } = dedupePlan(files);
+  if (contentConflicts.length > 0) {
+    throw conflictError(`conflicting content for ${contentConflicts[0]}`);
   }
-  const unique = [...byPath.values()];
+  const { unique: uniqueLinks } = dedupePlan(links);
+  const unique = [...uniqueFiles, ...uniqueLinks];
 
-  const priorLock = readLock(root);
+  const priorLock = readLock(root, scope.lockfile);
   const conflicts = detectConflicts({
     projectRoot: root,
     planned: unique,
@@ -220,10 +205,15 @@ export async function executeInstall({
   reportProgress(INSTALL_STEPS[0].label, 1);
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupDir = path.join(root, BACKUP_DIR, stamp);
+  // A scope that owns a directory keeps its backups inside it. Otherwise a global
+  // install writes them to `~/.qa/backups`, which is loose in the user's home — the
+  // exact thing owning a directory was meant to stop.
+  const backupRoot = scope.qaRootRelative ? path.join(scope.qaRootRelative, 'backups') : BACKUP_DIR;
+  const backupDir = path.join(root, backupRoot, stamp);
   const tx = new Transaction(root, backupDir, { dryRun });
   for (const entry of unique) {
-    tx.write(entry.path, entry.content);
+    if (entry.owner === 'link') tx.link(entry.path, entry.linkTarget);
+    else tx.write(entry.path, entry.content);
   }
 
   // Files the previous install owned that this one does not: remove them.
@@ -243,8 +233,11 @@ export async function executeInstall({
   if (priorLock && !dryRun) {
     const stillOwned = new Set(unique.map((entry) => entry.path));
     for (const previous of priorLock.files ?? []) {
-      if (previous.path === LOCKFILE || stillOwned.has(previous.path)) continue;
-      if (!fs.existsSync(path.join(root, previous.path))) continue;
+      if (previous.path === scope.lockfile || stillOwned.has(previous.path)) continue;
+      const absolute = path.join(root, previous.path);
+      // A stale link still counts as present even when its target is gone, so lstat
+      // rather than exists — otherwise a broken link survives every upgrade.
+      if (!fs.existsSync(absolute) && readLinkTarget(absolute) === null) continue;
       orphans.push(previous.path);
       tx.delete(previous.path);
     }
@@ -261,18 +254,24 @@ export async function executeInstall({
       skillsDir: a.skillsDir,
       detected: a.detected,
     })),
-    files: unique.map(({ path: p, sha256, bytes, owner, skill, agent }) => ({
+    // Shared entries — the engine, and the canonical skill tree — belong to no single
+    // agent, so the optional keys are omitted rather than set to undefined. The schema
+    // types them as strings, and a present-but-undefined key fails that as loudly as a
+    // wrong one.
+    files: unique.map(({ path: p, sha256, bytes, owner, skill, agent, linkTarget }) => ({
       path: p,
       sha256,
       bytes,
       owner,
-      skill,
-      agent,
+      ...(skill ? { skill } : {}),
+      ...(agent ? { agent } : {}),
+      ...(linkTarget ? { linkTarget } : {}),
     })),
     now: new Date().toISOString(),
+    scope,
   });
   if (!dryRun) {
-    tx.write(LOCKFILE, Buffer.from(serializeLock(lock), 'utf8'));
+    tx.write(scope.lockfile, Buffer.from(serializeLock(lock), 'utf8'));
   }
 
   const summary = tx.commit();
@@ -282,7 +281,7 @@ export async function executeInstall({
 
   let validation = null;
   if (!dryRun && !skipValidate) {
-    validation = validateInstall(root);
+    validation = validateInstall(root, { scope });
     if (!validation.ok) {
       const failed = validation.checks.filter((c) => c.hard && !c.ok);
       throw verifyError(
@@ -298,23 +297,37 @@ export async function executeInstall({
   if (dryRun) {
     if (!json) logger.ok(`dry run: would write ${summary.written} file(s)`);
   } else if (!json) {
-    logger.ok(`installed ${unique.length} file(s); lockfile ${lockPath(root)}`);
+    const linked = unique.filter((entry) => entry.owner === 'link').length;
+    logger.ok(
+      `installed ${unique.length - linked} file(s)` +
+        (linked > 0 ? ` and ${linked} link(s)` : '') +
+        `; lockfile ${scopeLockPath(scope)}`,
+    );
     if (orphans.length > 0) {
       logger.ok(`removed ${orphans.length} file(s) the previous version owned and this one does not`);
     }
     for (const step of INSTALL_STEPS) logger.ok(step.label);
     reportInvocation(agents, logger);
-    reportFrameworkFit(root, logger);
+    // A global install has no project to inspect, and reporting "no framework detected"
+    // about the user's home directory would be noise pretending to be a diagnosis.
+    if (scope.kind !== 'global') reportFrameworkFit(root, logger);
+    reportUnserved(unserved, logger);
   }
 
   return {
     ok: true,
     dryRun,
+    scope: scope.kind,
+    root,
+    // Kept under its original name so every existing caller and test keeps working.
     projectRoot: root,
+    qaRoot: scope.qaRoot,
     agents: agents.map((a) => a.id),
+    unservedAgents: unserved,
     skills: skills.length,
-    files: unique.length,
-    lockfile: dryRun ? null : LOCKFILE,
+    files: unique.filter((entry) => entry.owner !== 'link').length,
+    links: unique.filter((entry) => entry.owner === 'link').length,
+    lockfile: dryRun ? null : scope.lockfile,
     removed: orphans,
     validation,
   };
@@ -324,17 +337,45 @@ export async function runInstall(argv, { log } = {}) {
   const opts = parseCommonFlags(argv);
   const logger = log ?? createLogger();
   if (opts.help) {
-    logger.result(`Usage: qa install [--agent <id>]... [--force] [--dry-run] [--yes] [--json] [--project <dir>]
+    logger.result(`Usage: qa install [scope] [--agent <id>]... [--all-agents]
+                  [--force] [--dry-run] [--yes] [--json]
 
-Copy QA Engineer Pack skills into Agent Skills discovery paths
-(.agents/skills/ and .claude/skills/ when applicable), write qa-lock.json,
-and generate thin slash wrappers for agents that need them.`);
+Scope — choose one; --project is the default:
+
+  --global, -g          Install once for this machine, in ~/.qa-engineer.
+                        One engine, one copy of the skills, linked into the
+                        user-level skills directory of every host that has one.
+                        Every project then works with no per-project install.
+                        Override the location with QA_ENGINEER_HOME.
+
+  --workspace, -w       Install once at the root of the monorepo containing the
+                        current directory, shared by every package in it.
+                        Detects pnpm, npm/yarn workspaces, Nx, Turborepo, Lerna,
+                        Rush, Go, and Cargo.
+
+  --project [dir], -C   Install into one project (default: this directory).
+                        Self-contained: the engine travels inside each skill, so
+                        the repository works on a machine with nothing installed.
+
+Other:
+  --all-agents          Install for every host that has a user-level directory,
+                        not just the ones detected here.
+  --agent <id>          Target a specific host; repeatable.
+  --force               Overwrite files a previous install does not own.
+  --dry-run             Report what would change and write nothing.`);
     return EXIT.OK;
   }
 
+  const scope = resolveScope({
+    global: opts.global,
+    workspace: opts.workspace,
+    project: opts.project,
+  });
+
   const result = await executeInstall({
-    projectRoot: opts.project ?? process.cwd(),
+    scope,
     agentIds: opts.agents,
+    allAgents: opts.allAgents,
     force: opts.force,
     dryRun: opts.dryRun,
     json: opts.json,

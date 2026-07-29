@@ -19,6 +19,9 @@ export function parseCommonFlags(argv, { strict = true } = {}) {
     dryRun: false,
     help: false,
     project: null,
+    global: false,
+    workspace: false,
+    allAgents: false,
     agents: [],
     rest: /** @type {string[]} */ ([]),
   };
@@ -38,9 +41,24 @@ export function parseCommonFlags(argv, { strict = true } = {}) {
       const id = argv[++i];
       if (!id) throw usageError('--agent requires an id');
       flags.agents.push(id);
+    } else if (a === '--global' || a === '-g') {
+      flags.global = true;
+    } else if (a === '--workspace' || a === '-w') {
+      flags.workspace = true;
+    } else if (a === '--all-agents') {
+      flags.allAgents = true;
     } else if (a === '--project' || a === '-C') {
-      flags.project = argv[++i];
-      if (!flags.project) throw usageError('--project requires a path');
+      // `--project` doubles as a scope selector and as a path. Bare, it means "this
+      // directory"; with a value it names one. Requiring a path made `--project` alone
+      // an error while `--global` alone worked, which reads as an inconsistency rather
+      // than as a rule.
+      const next = argv[i + 1];
+      if (next && !next.startsWith('-')) {
+        flags.project = next;
+        i += 1;
+      } else {
+        flags.project = '.';
+      }
     } else if (strict) {
       throw usageError(`unknown option: ${a}`);
     } else {

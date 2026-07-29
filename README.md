@@ -2,13 +2,13 @@
 
 > Teach your AI coding assistant to work like a senior QA engineer — and stop it from telling you tests pass when they don't.
 
-[![Version](https://img.shields.io/badge/version-0.10.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.11.0-blue.svg)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-public%20preview-orange.svg)](docs/release/v0.9-release-checklist.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisite)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-spec--native-6E56CF.svg)](https://agentskills.io)
 [![CI](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml/badge.svg)](https://github.com/abisheik88/qa-engineer/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-165%20passing-success.svg)](#how-this-is-verified)
+[![Tests](https://img.shields.io/badge/tests-245%20passing-success.svg)](#how-this-is-verified)
 
 **This page is everything you need.** Install, first run, every command, and what to do when something breaks — no other document required.
 
@@ -45,13 +45,13 @@ If you use an **AI coding assistant** — Claude Code, Cursor, GitHub Copilot, C
 
 That last one is the dangerous part. A green test suite that checks nothing is worse than a red one, because you stop looking.
 
-**This project installs twelve QA skills into your project** that your AI assistant reads and follows. Think of it as handing your assistant a senior QA engineer's playbook, plus a set of tools it must actually run — so its answers come from real measurements instead of guesses.
+**This project installs thirteen QA skills** — twelve commands plus a worked example — that your AI assistant reads and follows. Think of it as handing your assistant a senior QA engineer's playbook, plus a set of tools it must actually run — so its answers come from real measurements instead of guesses.
 
 <details>
 <summary><b>New to this? Three terms explained</b></summary>
 
 - **AI coding assistant / agent** — a tool where you chat with an AI inside your codebase, and it can read and edit files. Claude Code, Cursor, and GitHub Copilot are examples.
-- **Skill** — a Markdown file with instructions your assistant reads when a task matches. It's like a checklist the AI follows. This project installs twelve of them into a folder in your project.
+- **Skill** — a Markdown file with instructions your assistant reads when a task matches. It's like a checklist the AI follows. This project installs thirteen of them — twelve commands you use, plus one worked example.
 - **Slash command** — how you trigger a skill: you type `/qa-run` in your assistant's chat. If your assistant doesn't support slash commands, plain English works too ("run my tests and report the result").
 
 You do not need to learn a new language, framework, or config file. You install once and then talk to your assistant normally.
@@ -84,7 +84,7 @@ that runs on the same Node you just checked.
 <details>
 <summary><b>"command not found" — how to install Node.js</b></summary>
 
-Node.js gives you the `npx` command used to install this pack, and it runs the
+Node.js gives you the `npm` command used to install this pack, and it runs the
 analysis tools afterwards.
 
 - **macOS** — `brew install node` (needs [Homebrew](https://brew.sh)), or download from [nodejs.org](https://nodejs.org).
@@ -99,69 +99,133 @@ You also need **an AI coding assistant** open on your project — Claude Code, C
 
 ## Step 2 — Install it
 
-Open a terminal, go to **your own project folder** (the one with your code in it, not this repository), and run:
+**Install once for your whole machine.** Every project then works with no further setup:
 
 ```bash
-npx qa-engineer --yes --project .
+npm install -g qa-engineer
+qa-engineer install --global
 ```
 
-That's the whole installation. Line by line:
+That's it. Open any project, and the QA commands are already there.
 
-| Part | Meaning |
+What those two lines do, one at a time:
+
+| Line | What it does |
 | --- | --- |
-| `npx` | Comes with Node. Downloads and runs a tool without installing it permanently. |
-| `qa-engineer` | The name of this package. |
-| `--yes` | Don't ask me questions, just use sensible defaults. |
-| `--project .` | Install into the current folder (`.` means "here"). |
+| `npm install -g qa-engineer` | Puts the `qa-engineer` command on your system, so you can type it anywhere. `-g` means "global" — available everywhere, not just in one folder. |
+| `qa-engineer install --global` | Installs the QA skills your assistant reads, once, for every project on this machine. |
 
-> **First time you run `npx`,** it may ask `Need to install the following packages … Ok to proceed? (y)`. That is npm asking permission to download the package. Type `y` and press Enter.
-
-You should see something like this:
+Here is what the second command prints:
 
 ```text
-› project: /Users/you/my-app
-› agents: agent-skills
+› scope: global (/Users/you/.qa-engineer)
+› agents: claude-code, antigravity
 › skills: 13
+› shared engine: /Users/you/.qa-engineer/engine
 › ██████████████████ 100%  Configuration complete
-✓ installed 335 file(s); lockfile /Users/you/my-app/qa-lock.json
+✓ installed 214 file(s) and 26 link(s); lockfile /Users/you/.qa-engineer/qa-lock.json
+  → in Claude Code: type /qa-explore, or just describe the task — skills auto-activate
 ```
+
+**Everything lives in one folder, `~/.qa-engineer/`.** Nothing is scattered around your
+home directory, so removing it later is one clean step.
+
+> **On "not installed for cursor, codex, …"** — you may see a note listing assistants
+> that were skipped, each with a reason. That is expected and honest: those assistants
+> only look for skills *inside a project*, so there is no machine-wide folder to put
+> them in. For those, use a project install (below). Claude Code and Antigravity do have
+> a machine-wide folder, so they are set up for you.
 
 <details>
-<summary><b>Not published to npm yet — install from a local copy</b></summary>
+<summary><b>Installing from a clone instead</b></summary>
 
-This is a public preview and the package is not on the npm registry yet, so the command above will not find it. Until it is published, install from a clone:
+To run the newest code, or to work on the pack itself, install from a clone rather than
+from npm:
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/abisheik88/qa-engineer.git
 cd qa-engineer
 npm install
-npm run qa -- --yes --project /path/to/your-app
+npm install -g .              # puts `qa-engineer` on your PATH
+qa-engineer install --global
 ```
 
-Replace `/path/to/your-app` with the full path to your project. Everything else in this README works the same; just use `npm run qa -- <command>` wherever it says `npx qa-engineer <command>`.
+Everything else in this README works exactly the same afterwards. Use `npm link` in
+place of `npm install -g .` if you are editing the pack — it symlinks, so your changes
+take effect without reinstalling.
+
+</details>
+
+### Three ways to install — pick one
+
+Most people want the first. The other two exist for real situations, not as clutter.
+
+| Command | Installs | Choose it when |
+| --- | --- | --- |
+| `qa-engineer install --global` | Once per machine, in `~/.qa-engineer/` | **The usual choice.** You want every project to just work. |
+| `qa-engineer install --workspace` | Once at the top of a monorepo | You have many packages in one repository and want them to share an install. |
+| `qa-engineer install --project .` | Into the current project only | The install should be committed to the repository and shared with your team. |
+
+**They can coexist.** If a project has its own install, that one is used; otherwise the
+machine-wide one is. This is the same rule you already rely on: a package installed in
+your project beats the same package installed globally. So a repository can pin the
+version it wants, and nothing else on your machine changes.
+
+<details>
+<summary><b>What a project install is for</b></summary>
+
+A project install is **self-contained**: the analysis engine is copied inside each
+skill, so the repository works on a machine where nothing else is installed. That costs
+more disk, and it is exactly what you want when the install is committed to git and a
+colleague clones the repository.
+
+```bash
+cd /path/to/your-project
+qa-engineer install --project .
+```
+
+A machine-wide install shares one copy of the engine instead — about 2 MB total,
+compared with 13 MB per project — which is why it is the default recommendation.
+
+</details>
+
+<details>
+<summary><b>Extra options you may want later</b></summary>
+
+| Option | What it does |
+| --- | --- |
+| `--all-agents` | Set up every assistant with a machine-wide skills folder, not only the ones detected here. |
+| `--yes` | Don't ask any questions; use sensible defaults. Useful in scripts and CI. |
+| `--dry-run` | Show what would change and write nothing. |
+| `--force` | Overwrite files a previous install doesn't own. Backs them up first. |
+| `QA_ENGINEER_HOME` | An environment variable that moves `~/.qa-engineer/` somewhere else entirely. |
 
 </details>
 
 ## Step 3 — Confirm it worked
 
 ```bash
-npx qa-engineer self-test --project .
+qa-engineer self-test --global
 ```
 
-Real output from a healthy install:
+Real output from a healthy machine-wide install:
 
 ```text
-✓ [PASS] lockfile: qa-lock.json present (335 files, pack 0.9.0)
+✓ [PASS] lockfile: .qa-engineer/qa-lock.json present (240 files, pack 0.10.0)
 ✓ [PASS] integrity: all installed files match lockfile hashes
 ✓ [PASS] skills: 13 skill(s) installed
 ✓ [PASS] contracts: 12 contract schema(s) present
-✓ [PASS] engine: deterministic engine bundled under .agents/skills/qa-init/scripts/lib
-✓ [PASS] engine-runs: bundled engine runs cleanly
+✓ [PASS] engine: deterministic engine shared at .qa-engineer/engine
+✓ [PASS] engine-runs: shared engine runs (node 24.18.0)
 ✓ [PASS] node: Node v24.18.0
 ✓ self-test PASSED
 ```
 
-Every line `[PASS]`? You're done installing. If anything says `[FAIL]`, jump to [When something goes wrong](#when-something-goes-wrong).
+Every line `[PASS]`? You're done installing. If anything says `[FAIL]`, jump to
+[When something goes wrong](#when-something-goes-wrong).
+
+> Checking a **project** install instead? Drop the `--global`: run
+> `qa-engineer self-test` from inside the project, and it finds the right one on its own.
 
 ## Step 4 — Your first real task
 
@@ -223,29 +287,51 @@ That's the core loop: **`/qa-init` once, then `/qa-run` and `/qa-debug` whenever
 
 ## What got installed
 
-Four things appeared in your project:
+**With a machine-wide install**, everything lives in one folder:
+
+```text
+~/.qa-engineer/
+├── engine/          ← the analysis tools, one shared copy
+├── skills/          ← the thirteen skills your assistant reads
+└── qa-lock.json     ← every installed file and its checksum
+```
+
+Your assistant is pointed at those skills by a shortcut in its own folder
+(`~/.claude/skills/` for Claude Code). **Your projects get nothing at all** until you
+actually run a command — at which point you'll see:
 
 ```text
 your-app/
-├── .agents/skills/      ← the twelve skills your assistant reads (plus one demo)
-│   ├── qa-run/
-│   ├── qa-debug/
-│   └── …
-├── .claude/skills/      ← same files again, only if you use Claude Code
-├── qa-lock.json         ← a list of every installed file and its checksum
-└── (later) .qa/context.md and qa-artifacts/   ← created when you run the commands
+├── .qa/context.md     ← what this project is, written by /qa-init
+└── qa-artifacts/      ← reports and evidence from the commands you run
 ```
 
-**Nothing else was touched.** Your source code, your tests, and your config are untouched by installation. `qa-lock.json` records exactly what was written so `uninstall` can remove precisely that and nothing more.
+<details>
+<summary><b>What a project install puts in your repository instead</b></summary>
 
-Worth adding to your `.gitignore` if you don't want the artifacts committed:
+```text
+your-app/
+├── .agents/skills/      ← the thirteen skills your assistant reads
+├── .claude/skills/      ← the same skills again, only if you use Claude Code
+├── qa-lock.json         ← every installed file and its checksum
+└── (later) .qa/context.md and qa-artifacts/
+```
+
+Worth adding to your `.gitignore` if you don't want the outputs committed:
 
 ```gitignore
 qa-artifacts/
 .qa/backups/
 ```
 
-Most teams **do** commit `.agents/skills/` and `qa-lock.json`, so everyone on the team gets the same skills.
+Most teams **do** commit `.agents/skills/` and `qa-lock.json`, so everyone gets the same
+skills from a single `git clone`.
+
+</details>
+
+**Nothing else is touched.** Your source code, your tests, and your config are left
+exactly as they were. `qa-lock.json` records precisely what was written, so `uninstall`
+removes that and nothing more.
 
 ## How you type a command in your assistant
 
@@ -314,24 +400,24 @@ reaches `/qa-explore` in all of them. Full details and the source for each path:
 Start here. It fixes most problems:
 
 ```bash
-npx qa-engineer doctor --project .
+qa-engineer doctor
 ```
 
 `doctor` checks your environment and your install and prints a hint for anything it finds. Items marked `warn` with an "optional" hint are fine to ignore.
 
 ### The commands don't appear in my assistant
 
-1. **Are you in the right folder?** Run `ls .agents/skills` in your project — you should see `qa-run`, `qa-debug`, and the rest. If not, the install went somewhere else; re-run it with `--project .` from the correct folder.
+1. **Is it actually installed?** Run `qa-engineer self-test`. If it reports a missing lockfile, the install did not land where you think — re-run `qa-engineer install --global`.
 2. **Restart your assistant.** Most only look for new skills at startup.
 3. **Try plain English.** Instead of `/qa-run`, ask *"run my tests and report the result"*. Slash-command support varies by assistant; the skills work either way.
-4. **Check your assistant reads the standard path.** Most read `.agents/skills/`. Claude Code uses `.claude/skills/`, which the installer also writes when it detects Claude. To force it: `npx qa-engineer install --agent claude-code --yes --project .`
+4. **Check your assistant reads the standard path.** Most read `.agents/skills/`. Claude Code uses `.claude/skills/`, which the installer also writes when it detects Claude. To force it: `qa-engineer install --global --agent claude-code`
 
 ### "refusing to overwrite N file(s) not owned by a previous install"
 
 You already have a file where the pack wants to write one. It will not silently overwrite your work. Either move your file, or overwrite deliberately:
 
 ```bash
-npx qa-engineer install --yes --force --project .
+qa-engineer install --force
 ```
 
 `--force` backs everything up to `.qa/backups/<timestamp>/` first.
@@ -341,8 +427,8 @@ npx qa-engineer install --yes --force --project .
 The deterministic engine isn't reachable. Fix in this order:
 
 ```bash
-npx qa-engineer repair --project .         # reinstall the bundled tools
-npx qa-engineer doctor --project .         # should now say "bundled engine runs cleanly"
+qa-engineer repair      # reinstall the analysis tools
+qa-engineer doctor      # should now report the engine runs
 ```
 
 "Degraded" is not a bug — it is the skill telling you it could not run a tool and therefore trusts its own answer less. That's the honest behaviour.
@@ -352,7 +438,7 @@ npx qa-engineer doctor --project .         # should now say "bundled engine runs
 Someone edited an installed skill file. Restore them:
 
 ```bash
-npx qa-engineer repair --project .
+qa-engineer repair
 ```
 
 If the edit was deliberate, note that `update` will overwrite it again — keep customisations outside `.agents/skills/`.
@@ -364,7 +450,7 @@ That is the exact failure this project exists to prevent, and it has three defen
 ### Still stuck
 
 ```bash
-npx qa-engineer doctor --project . --json
+qa-engineer doctor --json
 ```
 
 Open an issue and paste that output. It answers most questions before they're asked.
@@ -372,12 +458,34 @@ Open an issue and paste that output. It answers most questions before they're as
 ## Updating and uninstalling
 
 ```bash
-npx qa-engineer update --project .      # refresh to the current version
-npx qa-engineer verify --project .      # check nothing was corrupted
-npx qa-engineer uninstall --project .   # remove everything it installed
+qa-engineer update      # refresh to the current version
+qa-engineer verify      # check nothing was corrupted
+qa-engineer doctor      # diagnose problems and suggest fixes
+qa-engineer repair      # reinstall anything missing or damaged
+qa-engineer uninstall   # remove everything it installed
 ```
 
-`uninstall` removes exactly the files listed in `qa-lock.json`, backs each one up first, and leaves everything else alone. If you edited an installed file it stops and tells you rather than destroying your change; `--force` proceeds anyway. Add `--dry-run` to any command to see what it *would* do without doing it.
+**You don't have to say which install you mean.** Each command looks for a project
+install where you're standing, and falls back to the machine-wide one. Add `--global` or
+`--project .` when you want to be explicit.
+
+`uninstall` removes exactly the files listed in `qa-lock.json`, backs each one up first,
+and leaves everything else alone. If you edited an installed file it stops and tells you
+rather than destroying your change; `--force` proceeds anyway. Add `--dry-run` to any
+command to see what it *would* do without doing it.
+
+<details>
+<summary><b>Removing it completely</b></summary>
+
+```bash
+qa-engineer uninstall --global    # the machine-wide install
+npm uninstall -g qa-engineer      # the qa-engineer command itself
+```
+
+Run `qa-engineer uninstall --project .` inside any repository that has its own install
+first — those are separate and are not removed by the global uninstall.
+
+</details>
 
 ## How it works
 
@@ -439,7 +547,7 @@ Stated plainly, so nothing surprises you:
 - **It is not a test runner.** It drives Playwright; it doesn't replace it.
 - **It doesn't run your tests in CI by itself.** The skills need an AI assistant to read them. The installer works fine in CI, and `verify` makes a good pipeline check.
 - **It can't stop an assistant that ignores it.** The defences make dishonest answers *fail loudly* rather than pass quietly — they can't force a model to read the skill.
-- **It has not been benchmarked across AI models.** The tooling is thoroughly tested (235 automated tests). How faithfully each assistant follows the skills is measured for one model, in one session, and [documented as such](docs/release/v1-excellence-audit.md). If you need a published accuracy number before adopting a tool, this one doesn't have it yet.
+- **It has not been benchmarked across AI models.** The tooling is thoroughly tested (245 automated tests, 27 evaluation cases). How faithfully each assistant follows the skills is measured for one model, in one session, and [documented as such](docs/release/v1-excellence-audit.md). If you need a published accuracy number before adopting a tool, this one doesn't have it yet.
 - **It sends nothing anywhere.** No telemetry, no network calls, no accounts.
 - **It is version 0.9.0** — a public preview. Solid and heavily tested, still pre-1.0.
 
@@ -449,10 +557,10 @@ Everything below is reproducible from a clone with the command beside it.
 
 | Evidence | Command |
 | --- | --- |
-| 82 engine tests: analysis, diagnostics, frameworks, seams | `node --test packages/engine/test/*.test.mjs` |
+| 151 engine tests: analysis, diagnostics, reporting, artifacts, frameworks, seams | `node --test packages/engine/test/*.test.mjs` |
 | The recorded corpus, proven against a second implementation | `node --test packages/engine/test/corpus.test.mjs` |
-| 50 installer tests — including security and repeated-use stress | `npm test` |
-| 21 evaluation cases, including deliberately dishonest outputs the scorer must reject | `npm run validate:evals` |
+| 94 installer tests — installation scopes, security, and repeated-use stress | `npm test` |
+| 27 evaluation cases, including deliberately dishonest outputs the scorer must reject | `npm run validate:evals` |
 | 4 real AI-produced results, scored | `node tests/evals/run-live.mjs --captures claude-opus-5` |
 | 17 repository checks — including "documentation matches implementation" | `npm run validate:skills` … |
 
@@ -470,7 +578,7 @@ Nothing below is required to use the pack.
 | [docs/report-format.md](docs/report-format.md) | Consuming the JSON output from your own tooling |
 | [docs/installation/](docs/installation/README.md) | Per-assistant installation guides |
 | [COMPATIBILITY.md](COMPATIBILITY.md) | Supported assistants, runtimes, and frameworks |
-| [docs/architecture/README.md](docs/architecture/README.md) | 15 decision records explaining every major choice |
+| [docs/architecture/README.md](docs/architecture/README.md) | 17 decision records explaining every major choice |
 | [docs/release/v0.9-release-checklist.md](docs/release/v0.9-release-checklist.md) | Exactly what was verified for this release, and what wasn't |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, including what regressed |
 
@@ -502,7 +610,7 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md). Everyone is bound by the [Code of
 
 | Need | Where |
 | --- | --- |
-| Something is broken | Run `npx qa-engineer doctor --project .`, then read [When something goes wrong](#when-something-goes-wrong) |
+| Something is broken | Run `qa-engineer doctor`, then read [When something goes wrong](#when-something-goes-wrong) |
 | A question | GitHub Discussions — see [SUPPORT.md](SUPPORT.md) |
 | A bug | GitHub Issues, with your `doctor --json` output |
 | A security problem | **Privately** — see [SECURITY.md](SECURITY.md). Never a public issue. |

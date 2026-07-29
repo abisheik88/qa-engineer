@@ -33,6 +33,11 @@ import * as taxonomy from '../lib/analysis/taxonomy.mjs';
 import * as contextModule from '../lib/analysis/context.mjs';
 import * as branding from '../lib/analysis/branding.mjs';
 import * as reportHtml from '../lib/analysis/report-html.mjs';
+import * as markdownExport from '../lib/report/export/markdown.mjs';
+import * as machineExport from '../lib/report/export/machine.mjs';
+import * as bundleExport from '../lib/report/export/bundle.mjs';
+import * as artifacts from '../lib/artifacts/manager.mjs';
+import { SchemaError } from '../lib/report/core/normalize.mjs';
 import * as diagnostics from '../lib/diagnostics/engine.mjs';
 import {
   InternalContractError, validateAnalysisResult, validateExecutionResultMin, validateDiagnosis,
@@ -43,7 +48,8 @@ import * as junitFrameworks from '../lib/frameworks/junit-frameworks.mjs';
 const USAGE = `usage: qa-engine <tool> <subcommand> [args]
 
   analysis     parse artifacts, classify errors, validate contracts, diff-guard,
-              read .qa/context.md, render an HTML report, print the footer
+              read .qa/context.md, render a report, print the footer
+  artifacts    check that the evidence a result points at is really on disk
   diagnostics  root cause, timeline, priority, repair plans, release readiness
   playwright   normalize a Playwright report or summarize a trace
 
@@ -57,7 +63,24 @@ analysis subcommands
   classify "<message>" [--http-status N]    {classification, confidence, reason}
   context [--root DIR] [--path P]           parsed, schema-checked project context
   report-html <result.json> [--out FILE]    a self-contained HTML report
+            [--embed] [--mode M]           --embed inlines images as data URIs
+                                            M: full executive developer artifact
+                                            (artifact = body only, for an embedding host)
+  report-export <result.json> --format F    F: html markdown sarif junit csv json bundle
+            [--out FILE] [--embed]
+            [--mode M]
+  report-bundle <result.json> [--out DIR]   a portable folder — index.html + assets/ —
+            [--zip] [--zip-out FILE]        with every link verified to resolve inside
+            [--mode M] [--force]            it. The canonical local output.
+  report-schema [--out FILE]                the canonical producer-neutral contract
+  report-versions                           schema / theme / renderer versions in force
   branding [--format html|markdown|text]    the exact footer bytes for a report
+
+artifacts subcommands
+  verify <result.json> [--base-dir D]       {ok, stats, missing}; exit 1 when a file
+            [--out-dir D]                  a finding points at is not there
+  scan <directory> [--root D]               every file found, with size and type
+  hash <file>                               the file's SHA-256
 
 diagnostics subcommands
   diagnose --execution-result P [--analysis-result P]
@@ -71,7 +94,11 @@ playwright subcommands
 
 examples
   qa-engine analysis junit test-results/results.xml
-  qa-engine analysis report-html qa-artifacts/explore-result.json --out report.html
+  qa-engine artifacts verify qa-artifacts/explore-R/explore-result.json
+  qa-engine analysis report-html qa-artifacts/explore-R/explore-result.json \\
+    --out qa-artifacts/explore-R/explore-report.html
+  qa-engine analysis report-export qa-artifacts/explore-R/explore-result.json \\
+    --format sarif --out qa-artifacts/explore-R/findings.sarif
   qa-engine diagnostics report --execution-result qa-artifacts/run.json
 `;
 
@@ -99,8 +126,15 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
-/** Flags, parsed the way the Python argparse CLIs accepted them. */
-function parseFlags(argv, { repeatable = [] } = {}) {
+/**
+ * Flags, parsed the way the Python argparse CLIs accepted them.
+ *
+ * `boolean` names matter: without them a switch consumes the token after it, so
+ * `--embed --out report.html` set `embed` to `"--out"` and left the output path as a
+ * stray positional. The report then went to stdout and the flag did nothing — a
+ * failure that looks like the feature is broken rather than the parser.
+ */
+function parseFlags(argv, { repeatable = [], boolean = [] } = {}) {
   const flags = {};
   const positional = [];
   for (let index = 0; index < argv.length; index += 1) {
@@ -111,6 +145,10 @@ function parseFlags(argv, { repeatable = [] } = {}) {
     }
     const [name, inline] = token.slice(2).split('=', 2);
     const camel = name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    if (boolean.includes(camel)) {
+      flags[camel] = inline === undefined ? true : inline !== 'false' && inline !== '0';
+      continue;
+    }
     const value = inline !== undefined ? inline : argv[++index];
     if (repeatable.includes(camel)) {
       flags[camel] = [...(flags[camel] ?? []), value];
@@ -126,9 +164,24 @@ function parseFlags(argv, { repeatable = [] } = {}) {
 // everywhere handed `context` an array and it failed on "path must be a string".
 const REPEATABLE = { discover: ['path'] };
 
+// Switches that take no value. Declared per subcommand so `--embed --out f.html` reads
+// as two flags rather than one flag whose value is the word "--out".
+const BOOLEAN = {
+  'report-html': ['embed'],
+  'report-export': ['embed'],
+  // `--zip` is a switch and `--zip-out` carries the path. One flag doing both would
+  // need a third parser mode that guesses from the next token, and a guess here writes
+  // the archive to a filename taken from an unrelated flag.
+  'report-bundle': ['force', 'zip', 'markdown'],
+  branding: ['metadata'],
+};
+
 function analysis(argv) {
   const [subcommand, ...rest] = argv;
-  const { flags, positional } = parseFlags(rest, { repeatable: REPEATABLE[subcommand] ?? [] });
+  const { flags, positional } = parseFlags(rest, {
+    repeatable: REPEATABLE[subcommand] ?? [],
+    boolean: BOOLEAN[subcommand] ?? [],
+  });
 
   switch (subcommand) {
     case 'junit':
@@ -187,15 +240,74 @@ function analysis(argv) {
 
     case 'report-html': {
       requirePositional(positional, 1, 'report-html <result.json>');
-      const document = reportHtml.renderFile(positional[0], { title: flags.title ?? null });
-      if (flags.out) {
-        fs.writeFileSync(flags.out, document);
+      // The output path is handed to the renderer, not just used to write the file:
+      // every evidence href is computed relative to it. Rendering to stdout falls back
+      // to the result's own directory, which is where a report normally lands.
+      const outPath = flags.out ? path.resolve(flags.out) : null;
+      const document = reportHtml.renderFile(positional[0], {
+        title: flags.title ?? null,
+        outPath,
+        // --embed inlines every image as a data URI, producing one file that survives
+        // being forwarded without its screenshots folder.
+        embed: flags.embed === true,
+        // --mode picks the audience: full, executive, developer, or artifact (the
+        // body-only rendering a host page supplies its own <head> for).
+        mode: flags.mode ?? 'full',
+      });
+      if (outPath) {
+        fs.writeFileSync(outPath, document);
         emit({ written: flags.out, bytes: document.length });
       } else {
         process.stdout.write(document);
       }
       return 0;
     }
+
+    case 'report-export': {
+      requirePositional(positional, 1, 'report-export <result.json> --format <format>');
+      return reportExport(positional[0], flags);
+    }
+
+    case 'report-bundle': {
+      requirePositional(positional, 1, 'report-bundle <result.json> [--out DIR]');
+      const file = path.resolve(positional[0]);
+      const summary = bundleExport.writeBundle(readJson(file), {
+        resultPath: file,
+        outDir: flags.out ? path.resolve(flags.out) : undefined,
+        mode: flags.mode ?? 'full',
+        zip: flags.zipOut ?? flags.zip === true,
+        markdown: flags.markdown !== false,
+        force: flags.force === true,
+      });
+      emit(summary);
+      return 0;
+    }
+
+    case 'report-schema': {
+      // Any agent can fetch the canonical contract and validate against it before it
+      // hands anything over. Emitting it from the engine rather than documenting it in
+      // prose is what keeps the schema an agent writes to and the schema the renderer
+      // reads the same object.
+      const schema = readJson(
+        new URL('../lib/report/schemas/qa-report.schema.json', import.meta.url).pathname,
+      );
+      if (flags.out) {
+        fs.writeFileSync(flags.out, `${JSON.stringify(schema, null, 2)}\n`);
+        emit({ written: flags.out });
+      } else {
+        process.stdout.write(`${JSON.stringify(schema, null, 2)}\n`);
+      }
+      return 0;
+    }
+
+    case 'report-versions':
+      // What this renderer is: schema it reads, theme it paints, code that did it.
+      emit({
+        ...reportHtml.versionStamp(),
+        supportedContracts: reportHtml.supportedContracts(),
+        supportedModes: reportHtml.supportedModes(),
+      });
+      return 0;
 
     case 'branding':
       // Written to stdout verbatim, not as JSON: the caller embeds these exact
@@ -206,6 +318,97 @@ function analysis(argv) {
 
     default:
       throw new UsageError(`unknown analysis subcommand: ${subcommand ?? '(none)'}`);
+  }
+}
+
+// Every non-HTML rendering of a validated result. Text formats go to stdout or a file
+// verbatim; JSON formats are emitted through the same sorted serializer as everything
+// else, so a diff of two runs is a diff of the findings and not of key ordering.
+const EXPORT_FORMATS = {
+  html: { text: true, render: (result, options) => reportHtml.render(result, options) },
+  markdown: { text: true, render: (result, options) => markdownExport.renderMarkdown(result, options) },
+  md: { text: true, render: (result, options) => markdownExport.renderMarkdown(result, options) },
+  sarif: { text: false, render: (result, options) => machineExport.renderSarif(result, options) },
+  junit: { text: true, render: (result, options) => machineExport.renderJUnit(result, options) },
+  csv: { text: true, render: (result, options) => machineExport.renderCsv(result, options) },
+  json: { text: false, render: (result) => result },
+  bundle: { text: false, render: (result, options) => machineExport.bundleManifest(result, options) },
+};
+
+function reportExport(file, flags) {
+  const format = String(flags.format ?? 'markdown').toLowerCase();
+  const exporter = EXPORT_FORMATS[format];
+  if (!exporter) {
+    throw new UsageError(
+      `unknown export format '${format}'; expected one of: ${Object.keys(EXPORT_FORMATS).sort().join(', ')}`,
+    );
+  }
+
+  const result = readJson(file);
+  const outPath = flags.out ? path.resolve(flags.out) : null;
+  const rendered = exporter.render(result, {
+    resultPath: path.resolve(file),
+    outPath,
+    embed: flags.embed === true,
+    mode: flags.mode ?? 'full',
+  });
+  const body = exporter.text ? rendered : `${JSON.stringify(rendered, sortedReplacer(), 2)}\n`;
+
+  if (outPath) {
+    fs.writeFileSync(outPath, body);
+    emit({ written: flags.out, format, bytes: body.length });
+  } else {
+    process.stdout.write(body);
+  }
+  return 0;
+}
+
+/**
+ * The artifact tool group: does the evidence this result points at actually exist?
+ *
+ * Separate from `analysis` because it answers a question about the *filesystem* rather
+ * than about a document, and because a skill runs it at a different moment — after
+ * capture and before rendering, as the gate that stops a report full of broken images
+ * from being written at all.
+ */
+function artifactsCommand(argv) {
+  const [subcommand, ...rest] = argv;
+  const { flags, positional } = parseFlags(rest);
+
+  switch (subcommand) {
+    case 'verify': {
+      requirePositional(positional, 1, 'verify <result.json>');
+      const file = path.resolve(positional[0]);
+      const report = artifacts.verify(readJson(file), {
+        baseDir: flags.baseDir ? path.resolve(flags.baseDir) : path.dirname(file),
+        outDir: flags.outDir ? path.resolve(flags.outDir) : undefined,
+      });
+      emit(report);
+      // Exit 1, matching `validate`: the document was readable and did not hold up.
+      return report.ok ? 0 : 1;
+    }
+
+    case 'scan': {
+      requirePositional(positional, 1, 'scan <directory>');
+      const found = artifacts.scan(positional[0], { root: flags.root ?? positional[0] });
+      emit({
+        directory: positional[0],
+        count: found.length,
+        empty: found.filter((entry) => entry.empty).length,
+        bytes: found.reduce((sum, entry) => sum + entry.bytes, 0),
+        files: found,
+      });
+      return 0;
+    }
+
+    case 'hash': {
+      requirePositional(positional, 1, 'hash <file>');
+      emit({ path: positional[0], sha256: artifacts.hashFile(path.resolve(positional[0])) });
+      return 0;
+    }
+
+    default:
+      throw new UsageError(`unknown artifacts subcommand: ${subcommand ?? '(none)'}`);
   }
 }
 
@@ -306,6 +509,7 @@ export function main(argv = process.argv.slice(2)) {
   const [tool, ...rest] = argv;
   try {
     if (tool === 'analysis') return analysis(rest);
+    if (tool === 'artifacts') return artifactsCommand(rest);
     if (tool === 'diagnostics') return diagnosticsCommand(rest);
     if (tool === 'playwright') return playwrightCommand(rest);
     process.stderr.write(USAGE);
@@ -314,6 +518,11 @@ export function main(argv = process.argv.slice(2)) {
     if (error instanceof junit.MalformedArtifact) return fail('malformed-artifact', error.message);
     if (error instanceof contextModule.MalformedContext) return fail('malformed-context', error.message);
     if (error instanceof reportHtml.ReportError) return fail('report-error', error.message);
+    // The non-HTML exporters go through the normalizer directly, so its refusals
+    // surface here rather than wrapped as a ReportError.
+    if (error instanceof SchemaError) return fail('schema-error', error.message);
+    if (error instanceof bundleExport.BundleError) return fail('bundle-error', error.message);
+    if (error instanceof artifacts.ArtifactError) return fail('artifact-error', error.message);
     if (error instanceof branding.BrandingError) return fail('branding-error', error.message);
     if (error instanceof InternalContractError) return fail('invalid-payload', error.message);
     if (error instanceof UsageError) return fail('usage-error', error.message);

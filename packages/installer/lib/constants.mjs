@@ -11,6 +11,19 @@ export const LOCKFILE = 'qa-lock.json';
 export const QA_DIR = '.qa';
 export const BACKUP_DIR = `${QA_DIR}/backups`;
 
+// The directory QA Engineer owns. In a global install it sits in the user's home; in a
+// workspace install it sits at the monorepo root. Same name in both, so a developer who
+// has seen one recognises the other.
+export const QA_HOME_DIR_NAME = '.qa-engineer';
+
+// Full override for where the global install lives. Also what makes global installs
+// testable — the suite points it at a temporary directory instead of a real $HOME.
+export const QA_HOME_ENV = 'QA_ENGINEER_HOME';
+
+// Where the shared engine lands inside a qaRoot, and where the canonical skills live.
+export const SHARED_ENGINE_DIR = 'engine';
+export const SHARED_SKILLS_STORE = 'skills';
+
 // Marker line prepended to every generated invocation wrapper. Wrappers are
 // disposable build artifacts; this line tells humans and `verify` that the file
 // is pack-owned and regenerated, never hand-edited.
