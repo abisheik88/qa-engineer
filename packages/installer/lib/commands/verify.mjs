@@ -3,9 +3,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EXIT, LOCKFILE } from '../constants.mjs';
-import { resolveProjectRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { readLock } from '../core/lockfile.mjs';
-import { hashFile } from '../core/hash.mjs';
+import { entryDigest } from '../core/integrity.mjs';
 import { verifyError } from '../core/errors.mjs';
 import { createLogger } from '../core/logger.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
@@ -21,8 +21,9 @@ On failure: run qa repair`);
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
-  const lock = readLock(root);
+  const scope = resolveOperatingScope(opts);
+  const root = scope.root;
+  const lock = readLock(root, scope.lockfile);
   if (!lock) {
     if (!opts.json) {
       logger.error(`FAIL  no ${LOCKFILE}`);
@@ -33,14 +34,14 @@ On failure: run qa repair`);
 
   const problems = [];
   for (const entry of lock.files) {
-    const abs = path.join(root, entry.path);
-    if (!fs.existsSync(abs)) {
-      problems.push({ path: entry.path, reason: 'missing' });
-      continue;
-    }
-    const actual = hashFile(abs);
-    if (actual !== entry.sha256) {
-      problems.push({ path: entry.path, reason: 'hash mismatch' });
+    const actual = entryDigest(root, entry);
+    if (actual === null) {
+      problems.push({ path: entry.path, reason: entry.owner === 'link' ? 'link missing' : 'missing' });
+    } else if (actual !== entry.sha256) {
+      problems.push({
+        path: entry.path,
+        reason: entry.owner === 'link' ? 'link points somewhere else' : 'hash mismatch',
+      });
     }
   }
 

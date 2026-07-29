@@ -29,6 +29,7 @@
 // `node qa-tool.mjs …`, which needs none.
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -53,14 +54,25 @@ examples:
 /**
  * Where the engine is, and how we found it.
  *
- * Ordered by cost: a bundled copy needs no resolution and no network, a
- * node_modules copy needs no network, and npx needs both on first use. Reporting
- * *which* one answered matters when a skill degrades — "the engine is missing" and
- * "the engine is being fetched" are different problems.
+ * Ordered by cost: a bundled copy needs no resolution and no network, a shared copy
+ * needs one stat per ancestor, a node_modules copy needs no network, and npx needs both
+ * on first use. Reporting *which* one answered matters when a skill degrades — "the
+ * engine is missing" and "the engine is being fetched" are different problems.
+ *
+ * The shared lookup is what lets one skill directory serve a project, a workspace, and a
+ * machine-wide install without knowing which installed it. Walking up for
+ * `.qa-engineer/engine` finds a workspace install from a skill inside the repository,
+ * and finds a global install from a skill linked into an agent's user-level directory —
+ * `~/.claude/skills/qa-explore` walks up to `~`, where `~/.qa-engineer/engine` is.
  */
 function resolveEngine() {
   const bundled = path.join(here, 'lib', 'bin', 'qa-engine.mjs');
   if (fs.existsSync(bundled)) return { kind: 'bundled', command: [process.execPath, bundled] };
+
+  for (const root of candidateSharedRoots()) {
+    const shared = path.join(root, 'bin', 'qa-engine.mjs');
+    if (fs.existsSync(shared)) return { kind: 'shared', command: [process.execPath, shared] };
+  }
 
   for (const base of candidateModuleRoots()) {
     const installed = path.join(base, 'qa-engineer', 'packages', 'engine', 'bin', 'qa-engine.mjs');
@@ -73,6 +85,30 @@ function resolveEngine() {
     kind: 'npx',
     command: [npxCommand(), '--yes', 'qa-engineer', 'engine'],
   };
+}
+
+/** Shared engine directories worth checking, most specific first. */
+function candidateSharedRoots() {
+  const roots = [];
+
+  // An explicit home wins over anything discovered, so a user who moved the install can
+  // rely on it rather than on whatever the walk happens to find first.
+  const override = process.env.QA_ENGINEER_HOME;
+  if (override && override.trim()) roots.push(path.join(path.resolve(override.trim()), 'engine'));
+
+  let dir = here;
+  for (let depth = 0; depth < 12; depth += 1) {
+    roots.push(path.join(dir, '.qa-engineer', 'engine'));
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  // The default machine home, for the case where the skill lives outside it entirely.
+  const home = os.homedir();
+  if (home) roots.push(path.join(home, '.qa-engineer', 'engine'));
+
+  return roots;
 }
 
 /** node_modules directories worth checking, nearest first. */

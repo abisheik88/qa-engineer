@@ -1,0 +1,555 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:qa-pack:contract:qa-engineer:qa-report:2",
+  "title": "qa-engineer canonical QA report",
+  "description": "The producer-neutral report contract. Any agent — Claude Code, Cursor, Codex, Gemini, a future one — emits this and nothing else; the renderer turns it into every output format. There is deliberately no field for a colour, a class, a font, a template, or any other presentation hint: an agent has no mechanism to make its report look different, which is what makes two agents' reports identical.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "schemaVersion", "metadata", "summary"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "qa-engineer/qa-report" },
+        "version": { "type": "string", "pattern": "^2\\.[0-9]+(\\.[0-9]+)?$" }
+      }
+    },
+    "schemaVersion": { "const": "2.0" },
+
+    "metadata": {
+      "description": "What was tested, when, by what. Provenance only — the renderer records it and never varies its behaviour on it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generatedAt"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 },
+        "environment": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "reportVersion": { "type": "string", "minLength": 1 },
+        "browserAdapter": {
+          "enum": ["playwright-mcp", "cursor-browser", "cdp", "cli-playwright", "cli-other", "unavailable"]
+        },
+        "producer": {
+          "description": "Which agent produced the data. Displayed in the appendix; never branched on.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "agent": {
+              "type": "string",
+              "minLength": 1,
+              "description": "claude-code, cursor, opencode, codex, gemini-cli, copilot, chatgpt, antigravity, kimi, or another agent's own name."
+            },
+            "model": { "type": "string", "minLength": 1 },
+            "skill": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 }
+          }
+        },
+        "authentication": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean" },
+            "method": {
+              "enum": ["none", "form", "sso", "oauth", "saml", "azure-ad", "okta", "auth0", "google", "microsoft", "magic-link", "jwt", "cookie", "session", "basic", "api-key", "unknown"]
+            },
+            "detectedBy": { "type": "string", "minLength": 1 },
+            "sessionSource": { "enum": ["manual-login", "reused-session", "not-required", "failed"] },
+            "profile": { "type": "string", "minLength": 1 },
+            "note": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+
+    "summary": {
+      "description": "The decision, and the numbers behind it. Read first and often read alone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "classification": { "enum": ["pass", "issues-found", "blocked", "insufficient-data"] },
+        "verdict": { "enum": ["ship", "ship-with-risks", "do-not-ship", "insufficient-data"] },
+        "headline": { "type": "string", "minLength": 1 },
+        "health": { "type": "string", "minLength": 1 },
+        "risks": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "recommendedAction": { "type": "string", "minLength": 1 },
+        "estimatedFixHours": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["low", "high"],
+          "properties": {
+            "low": { "type": "number", "minimum": 0 },
+            "high": { "type": "number", "minimum": 0 }
+          }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "severityCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["critical", "high", "medium", "low"],
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "scores": {
+          "description": "Omit any dimension the run did not measure. A fabricated score is worse than a missing one, because a blank prompts a question and a plausible number ends one.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "overall": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "functional": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "performance": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "accessibility": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "security": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "ux": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        }
+      }
+    },
+
+    "coverage": {
+      "description": "What was looked at, and — just as important — what was not.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "objective": { "type": "string", "minLength": 1 },
+        "covered": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "notCovered": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Each boundary with its reason. A boundary without a reason reads as an omission."
+        },
+        "dimensionsRun": {
+          "type": "array",
+          "items": {
+            "enum": ["functional", "api", "performance", "security", "ui", "ux", "data", "accessibility", "console"]
+          }
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["url", "status"],
+            "properties": {
+              "url": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["ok", "issues", "failed", "blocked", "skipped"] },
+              "httpStatus": { "type": "integer", "minimum": 100, "maximum": 599 },
+              "findingIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "loadMs": { "type": "integer", "minimum": 0 },
+              "requests": { "type": "integer", "minimum": 0 },
+              "consoleErrors": { "type": "integer", "minimum": 0 },
+              "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "note": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "testCases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "passed", "failed", "blocked", "skipped", "cases"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "blocked": { "type": "integer", "minimum": 0 },
+            "skipped": { "type": "integer", "minimum": 0 },
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "status"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "title": { "type": "string", "minLength": 1 },
+                  "status": { "enum": ["pass", "fail", "blocked", "skipped"] },
+                  "findingId": { "type": "string", "minLength": 1 },
+                  "source": { "enum": ["user-supplied", "derived", "exploratory"] },
+                  "page": { "type": "string", "minLength": 1 },
+                  "note": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "timeline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["phase", "label"],
+            "properties": {
+              "phase": {
+                "enum": ["launch", "authentication", "navigation", "functional", "api", "performance", "security", "accessibility", "ui", "data", "analysis", "reporting"]
+              },
+              "label": { "type": "string", "minLength": 1 },
+              "startedAt": { "type": "string", "format": "date-time" },
+              "durationMs": { "type": "integer", "minimum": 0 },
+              "status": { "enum": ["ok", "warned", "failed", "skipped"] },
+              "detail": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "issues": {
+      "description": "The defects. Called issues here and rendered as findings; same thing.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "severity", "dimension", "title", "actual", "expected", "fixDirection", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["critical", "high", "medium", "low"] },
+          "dimension": {
+            "enum": ["functional", "api", "performance", "security", "ui", "ux", "data", "accessibility", "console"]
+          },
+          "title": { "type": "string", "minLength": 1 },
+          "actual": { "type": "string", "minLength": 1 },
+          "expected": { "type": "string", "minLength": 1 },
+          "fixDirection": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": ["confirmed", "validated-user-report", "could-not-reproduce", "partial", "fixed-in-run"]
+          },
+          "repro": { "type": "string", "minLength": 1 },
+          "steps": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "businessImpact": { "type": "string", "minLength": 1 },
+          "developerNotes": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "page": { "type": "string", "minLength": 1 },
+          "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "affectedApis": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "rootCause": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["summary"],
+            "properties": {
+              "summary": { "type": "string", "minLength": 1 },
+              "chain": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "layer": {
+                "enum": ["frontend", "backend", "network", "data", "infrastructure", "third-party", "unknown"]
+              }
+            }
+          },
+          "regressionRisk": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["level"],
+            "properties": {
+              "level": { "enum": ["high", "medium", "low"] },
+              "note": { "type": "string", "minLength": 1 },
+              "retest": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            }
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["label", "value"],
+              "properties": {
+                "label": { "type": "string", "minLength": 1 },
+                "value": { "type": "string", "minLength": 1 },
+                "budget": { "type": "string", "minLength": 1 },
+                "breached": { "type": "boolean" }
+              }
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Every entry locates its file, by artifactId when registered or by source when not.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "enum": ["screenshot", "network", "console", "dom", "har", "db", "command", "video", "trace", "performance", "accessibility", "security", "log"]
+                },
+                "source": { "type": "string", "minLength": 1 },
+                "artifactId": { "type": "string", "minLength": 1 },
+                "caption": { "type": "string", "minLength": 1 },
+                "excerpt": { "type": "string" }
+              },
+              "allOf": [
+                {
+                  "if": { "required": ["artifactId"] },
+                  "then": {},
+                  "else": { "required": ["source"] }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+
+    "artifacts": {
+      "description": "Every file the run produced, registered once. Paths are relative to this JSON.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "path"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+          "kind": {
+            "enum": ["screenshot", "video", "trace", "har", "dom", "console", "network", "performance", "accessibility", "security", "api", "coverage", "log", "diff", "report", "file"]
+          },
+          "path": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "mimeType": { "type": "string", "minLength": 1 },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "capturedAt": { "type": "string", "format": "date-time" },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "thumbnail": { "type": "string", "minLength": 1 },
+          "compares": { "type": "string", "minLength": 1 },
+          "note": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+
+    "evidence": {
+      "description": "The run-level evidence index.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "description", "source"],
+        "properties": {
+          "type": {
+            "enum": ["screenshot", "network", "console", "dom", "har", "db", "file", "report", "command", "video", "trace", "performance", "accessibility", "security", "log"]
+          },
+          "description": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "artifactId": { "type": "string", "minLength": 1 },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+
+    "performance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lcpMs": { "type": "number", "minimum": 0 },
+        "fcpMs": { "type": "number", "minimum": 0 },
+        "ttfbMs": { "type": "number", "minimum": 0 },
+        "inpMs": { "type": "number", "minimum": 0 },
+        "cls": { "type": "number", "minimum": 0 },
+        "longTasks": { "type": "integer", "minimum": 0 },
+        "longTaskMs": { "type": "number", "minimum": 0 },
+        "domNodes": { "type": "integer", "minimum": 0 },
+        "jsBytes": { "type": "integer", "minimum": 0 },
+        "cssBytes": { "type": "integer", "minimum": 0 },
+        "imageBytes": { "type": "integer", "minimum": 0 },
+        "totalBytes": { "type": "integer", "minimum": 0 },
+        "jsHeapBytes": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "totalRequests": { "type": "integer", "minimum": 0 },
+        "failedRequests": { "type": "integer", "minimum": 0 },
+        "slowRequests": { "type": "integer", "minimum": 0 },
+        "duplicateRequests": { "type": "integer", "minimum": 0 },
+        "totalBytes": { "type": "integer", "minimum": 0 },
+        "slowThresholdMs": { "type": "integer", "minimum": 0 },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["method", "url"],
+            "properties": {
+              "method": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "minLength": 1 },
+              "status": { "type": "integer", "minimum": 0, "maximum": 599 },
+              "durationMs": { "type": "integer", "minimum": 0 },
+              "bytes": { "type": "integer", "minimum": 0 },
+              "count": { "type": "integer", "minimum": 1 },
+              "startedMs": { "type": "integer", "minimum": 0 },
+              "issue": {
+                "enum": ["failed", "slow", "duplicate", "large-payload", "uncached", "polling", "n-plus-one", "race", "retry"]
+              },
+              "findingId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checked": { "type": "boolean" },
+        "summary": { "type": "string", "minLength": 1 },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["check", "status"],
+            "properties": {
+              "check": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["pass", "fail", "warn", "not-checked"] },
+              "detail": { "type": "string", "minLength": 1 },
+              "findingId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checked": { "type": "boolean" },
+        "summary": { "type": "string", "minLength": 1 },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule", "impact", "count"],
+            "properties": {
+              "rule": { "type": "string", "minLength": 1 },
+              "impact": { "enum": ["critical", "serious", "moderate", "minor"] },
+              "count": { "type": "integer", "minimum": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "selector": { "type": "string", "minLength": 1 },
+              "findingId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "console": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "unhandledRejections": { "type": "integer", "minimum": 0 },
+        "deprecations": { "type": "integer", "minimum": 0 },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["level", "message"],
+            "properties": {
+              "level": { "enum": ["error", "warning", "info", "debug"] },
+              "message": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 },
+              "source": { "type": "string", "minLength": 1 },
+              "findingId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "dataValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inScope": { "type": "boolean" },
+        "summary": { "type": "string" },
+        "comparisons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "uiValue", "sourceValue", "match"],
+            "properties": {
+              "metric": { "type": "string", "minLength": 1 },
+              "uiValue": { "type": "string" },
+              "sourceValue": { "type": "string" },
+              "match": { "type": "boolean" },
+              "capturedAt": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "recommendations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fixOrder": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "whatWorksWell": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "priority"],
+            "properties": {
+              "action": { "type": "string", "minLength": 1 },
+              "priority": { "enum": ["high", "medium", "low"] },
+              "rationale": { "type": "string", "minLength": 1 },
+              "owner": { "enum": ["frontend", "backend", "platform", "design", "qa", "product", "security"] },
+              "effort": { "enum": ["small", "medium", "large"] },
+              "findingIds": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A `ship` verdict cannot stand over a critical or high issue. The severity legend the report prints says critical blocks release and high must be fixed before it, so a run that counts one and then recommends shipping contradicts itself — invisibly to a reader who only reads the banner. `ship-with-risks` is the honest verdict for knowingly releasing over a high; there is no honest verdict for releasing over a critical.",
+      "if": {
+        "type": "object",
+        "required": ["summary"],
+        "properties": {
+          "summary": {
+            "type": "object",
+            "required": ["verdict"],
+            "properties": { "verdict": { "const": "ship" } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "severityCounts": {
+                "properties": {
+                  "critical": { "maximum": 0 },
+                  "high": { "maximum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

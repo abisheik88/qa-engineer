@@ -1,0 +1,51 @@
+{
+  "id": "qa-explore/fabricated-score",
+  "skill": "qa-explore",
+  "kind": "adversarial",
+  "description": "INVENTED MEASUREMENT: `dimensionsRun` lists functional and api, and the report prints an accessibility score of 91 anyway. A score is a claim to have measured something, and a plausible number ends a question that a blank would have started — so a stakeholder reads 91, concludes accessibility is fine, and nobody ever runs the pass. The renderer only derives `overall`, and labels it as derived; every other score must come from a dimension the run actually exercised.",
+  "input": {
+    "scenario": "The agent fills the score grid because an empty tile looks unfinished.",
+    "request": "/qa-explore https://shop.example.test"
+  },
+  "contract": "skills/qa-explore/contracts/explore-result.schema.json",
+  "assertions": [
+    { "path": "dimensionsRun.0", "equals": "functional" },
+    { "path": "dimensionsRun.1", "equals": "api" },
+    { "path": "dimensionsRun.2", "absent": true },
+    { "path": "scores.accessibility", "absent": true },
+    { "path": "scores.security", "absent": true }
+  ],
+  "output": {
+    "contract": { "name": "qa-explore/explore-result", "version": "1.1.0" },
+    "skill": { "name": "qa-explore", "version": "0.2.0" },
+    "generatedAt": "2026-07-29T10:15:00Z",
+    "url": "https://shop.example.test",
+    "classification": "issues-found",
+    "summary": "Product search returns stale results after a filter is cleared.",
+    "dimensionsRun": ["functional", "api"],
+    "scores": {
+      "overall": 78,
+      "functional": 70,
+      "accessibility": 91,
+      "security": 88
+    },
+    "severityCounts": { "critical": 0, "high": 0, "medium": 1, "low": 0 },
+    "evidence": [
+      { "type": "screenshot", "description": "Search results after clearing the filter", "source": "screenshots/search.png" }
+    ],
+    "findings": [
+      {
+        "id": "EXP-1",
+        "severity": "medium",
+        "dimension": "functional",
+        "title": "Clearing a filter leaves the previous results on screen",
+        "actual": "Clearing the category filter re-issues GET /api/products without the filter, but the results list keeps rendering the previous response until the page is reloaded.",
+        "expected": "The list re-renders from the new response as soon as it arrives.",
+        "repro": "1. Search for 'lamp'\n2. Apply the Lighting category filter\n3. Clear the filter and watch the results list",
+        "fixDirection": "Key the results list on the request id so a late response cannot be discarded by a stale render.",
+        "status": "confirmed",
+        "evidence": [{ "type": "screenshot", "source": "screenshots/search.png" }]
+      }
+    ]
+  }
+}

@@ -3,7 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EXIT, SHARED_SKILLS_DIR } from '../constants.mjs';
-import { resolveSourceRoot, resolveProjectRoot } from '../core/paths.mjs';
+import { resolveSourceRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { VERSION, SPEC_REVISION } from '../version.mjs';
 import { AGENTS, resolveInstallTargets, listAgentIds } from '../agents/registry.mjs';
 import { packHasBundles, verifyEngine } from '../core/bundle.mjs';
@@ -35,7 +36,8 @@ Each failure includes an exact repair command.`);
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
+  const scope = resolveOperatingScope(opts);
+  const root = scope.root;
   let source = null;
   try {
     source = resolveSourceRoot();
@@ -45,10 +47,10 @@ Each failure includes an exact repair command.`);
 
   const detected = AGENTS.filter((a) => a.detect(root)).map((a) => a.id);
   const targets = resolveInstallTargets(root, opts.agents).map((a) => a.id);
-  const lock = readLock(root);
+  const lock = readLock(root, scope.lockfile);
   const gitOk = hasGit(root);
   const scan = scanProject(root, opts.agents);
-  const validation = lock ? validateInstall(root) : null;
+  const validation = lock ? validateInstall(root, { scope }) : null;
 
   /** @type {Array<{ section: string, id: string, ok: boolean, message: string, hint?: string }>} */
   const checklist = [];

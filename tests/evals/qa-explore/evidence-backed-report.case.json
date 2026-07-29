@@ -1,0 +1,253 @@
+{
+  "id": "qa-explore/evidence-backed-report",
+  "skill": "qa-explore",
+  "kind": "golden",
+  "description": "GOLDEN: a well-formed exploratory report. Every artifact is registered once and referenced by id, every finding carries the four fields a reader cannot reconstruct (actual, expected, repro, fixDirection), the run states its own boundaries in scope.notCovered, the executive verdict agrees with the severity counts, and a score is reported only for a dimension that was actually run. This is the shape the skill's procedure produces; if it stops passing, the pipeline regressed.",
+  "input": {
+    "scenario": "An authenticated pass over a checkout flow, with one high finding that was reproduced and investigated.",
+    "request": "/qa-explore https://shop.example.test/checkout"
+  },
+  "contract": "skills/qa-explore/contracts/explore-result.schema.json",
+  "assertions": [
+    { "path": "classification", "equals": "issues-found" },
+    { "path": "executive.confidence", "gte": 0.7 },
+    { "path": "executive.verdict", "in": ["ship-with-risks", "do-not-ship"] },
+
+    { "path": "scope.objective", "present": true },
+    { "path": "scope.notCovered", "minItems": 1 },
+
+    { "path": "artifacts", "minItems": 1 },
+    { "path": "artifacts.0.id", "equals": "shot-checkout-total" },
+
+    { "path": "findings", "minItems": 1 },
+    { "path": "findings.0.actual", "present": true },
+    { "path": "findings.0.expected", "present": true },
+    { "path": "findings.0.repro", "present": true },
+    { "path": "findings.0.fixDirection", "present": true },
+    { "path": "findings.0.businessImpact", "present": true },
+    { "path": "findings.0.rootCause.summary", "present": true },
+    { "path": "findings.0.regressionRisk.level", "in": ["high", "medium", "low"] },
+    { "path": "findings.0.evidence", "minItems": 1 },
+
+    { "path": "findings.0.evidence.0.artifactId", "in": ["shot-checkout-total", "net-checkout"] },
+    { "path": "findings.0.evidence.1.artifactId", "in": ["shot-checkout-total", "net-checkout"] },
+
+    { "path": "scores.accessibility", "absent": true },
+    { "path": "scores.performance", "present": true },
+
+    { "path": "summary", "notContains": "password" },
+    { "path": "findings.0.repro", "notContains": "hunter2" },
+    { "path": "findings.0.evidence.1.excerpt", "notContains": "Bearer " }
+  ],
+  "output": {
+    "contract": { "name": "qa-explore/explore-result", "version": "1.1.0" },
+    "skill": { "name": "qa-explore", "version": "0.2.0" },
+    "generatedAt": "2026-07-29T09:20:00Z",
+    "url": "https://shop.example.test/checkout",
+    "title": "Example Shop checkout",
+    "environment": "staging",
+    "reportVersion": "1.0",
+    "browserAdapter": "playwright-mcp",
+    "durationMs": 184000,
+    "classification": "issues-found",
+    "summary": "Checkout completes end to end, but the order total shown at the confirmation step disagrees with the total the API charged whenever a percentage discount is applied.",
+    "authentication": {
+      "required": true,
+      "method": "form",
+      "detectedBy": "GET /checkout returned 302 to /signin",
+      "sessionSource": "manual-login",
+      "profile": "customer"
+    },
+    "dimensionsRun": ["functional", "api", "performance", "data"],
+    "scope": {
+      "objective": "Establish whether a customer can complete a purchase with a discount code applied, and whether the amount shown matches the amount charged.",
+      "covered": [
+        "Adding two items to the basket and applying the discount code SAVE10 at /checkout",
+        "The confirmation step, including the order summary panel and the Pay button",
+        "The POST /api/orders request and the totals it returns"
+      ],
+      "notCovered": [
+        "Card payment was never completed — the run must not create a real charge, and the sandbox gateway was not available on staging.",
+        "Accessibility was not examined in this run; it needs a dedicated pass before release.",
+        "Real-world latency cannot be measured here — staging sits on the same network as the test runner."
+      ]
+    },
+    "executive": {
+      "verdict": "do-not-ship",
+      "headline": "Customers applying a discount are shown a total the system does not charge them.",
+      "health": "The checkout flow itself is sound: the basket, the discount field, and the order request all behave correctly. The defect is a rounding disagreement between the total the page renders and the total the API returns.",
+      "risks": [
+        "A customer sees £44.99 and is charged £45.00 whenever a percentage discount rounds to a half penny.",
+        "The mismatch is silent — nothing in the UI reconciles the two figures."
+      ],
+      "recommendedAction": "Fix the rounding so the displayed total is taken from the API response rather than recomputed client-side, then re-run this pass.",
+      "estimatedFixHours": { "low": 2, "high": 4 },
+      "confidence": 0.88
+    },
+    "scores": { "performance": 82, "functional": 64 },
+    "severityCounts": { "critical": 0, "high": 1, "medium": 0, "low": 0 },
+    "artifacts": [
+      {
+        "id": "shot-checkout-total",
+        "kind": "screenshot",
+        "path": "screenshots/checkout-total-mismatch.png",
+        "label": "Order summary showing £44.99",
+        "capturedAt": "2026-07-29T09:12:04Z"
+      },
+      {
+        "id": "net-checkout",
+        "kind": "network",
+        "path": "network/orders-post.json",
+        "label": "POST /api/orders request and response"
+      }
+    ],
+    "pages": [
+      {
+        "url": "https://shop.example.test/checkout",
+        "title": "Checkout",
+        "status": "issues",
+        "httpStatus": 200,
+        "loadMs": 1240,
+        "requests": 18,
+        "findingIds": ["EXP-1"]
+      }
+    ],
+    "timeline": [
+      { "phase": "launch", "label": "Browser launched", "durationMs": 2100, "status": "ok" },
+      { "phase": "authentication", "label": "Manual sign-in", "durationMs": 38000, "status": "ok" },
+      { "phase": "functional", "label": "Checkout flow", "durationMs": 96000, "status": "warned" },
+      { "phase": "api", "label": "Order API analysis", "durationMs": 34000, "status": "warned" },
+      { "phase": "reporting", "label": "Report generation", "durationMs": 6200, "status": "ok" }
+    ],
+    "performance": {
+      "lcpMs": 1980,
+      "ttfbMs": 410,
+      "cls": 0.02,
+      "totalBytes": 1840000,
+      "note": "Measured on staging over a local network; production sits behind a CDN and will differ."
+    },
+    "network": {
+      "totalRequests": 18,
+      "failedRequests": 0,
+      "slowRequests": 1,
+      "duplicateRequests": 0,
+      "totalBytes": 1840000,
+      "endpoints": [
+        {
+          "method": "POST",
+          "url": "https://shop.example.test/api/orders",
+          "status": 200,
+          "durationMs": 640,
+          "bytes": 2100,
+          "count": 1,
+          "findingId": "EXP-1"
+        }
+      ]
+    },
+    "evidence": [
+      {
+        "type": "screenshot",
+        "description": "The order summary panel showing the discounted total",
+        "source": "screenshots/checkout-total-mismatch.png",
+        "artifactId": "shot-checkout-total"
+      },
+      {
+        "type": "network",
+        "description": "The order request and the totals the API returned",
+        "source": "network/orders-post.json",
+        "artifactId": "net-checkout"
+      }
+    ],
+    "findings": [
+      {
+        "id": "EXP-1",
+        "severity": "high",
+        "dimension": "data",
+        "page": "https://shop.example.test/checkout",
+        "title": "Displayed order total disagrees with the amount the API charges",
+        "actual": "With SAVE10 applied to a £49.99 basket, the order summary renders £44.99 while POST /api/orders returns and charges 4500 pence (£45.00). The page never reconciles the two, so the customer is shown one figure and billed another.",
+        "expected": "The total on screen is the total that will be charged. Where they can differ, the page shows the API's figure rather than a locally recomputed one.",
+        "repro": "1. Sign in as a customer\n2. Add two items totalling £49.99 to the basket\n3. Open /checkout and apply the code SAVE10\n4. Compare the summary total with the amount in the POST /api/orders response",
+        "steps": [
+          "Sign in as a customer",
+          "Add two items totalling £49.99 to the basket",
+          "Open /checkout and apply the discount code SAVE10",
+          "Read the total in the order summary panel",
+          "Compare it with the `total` field in the POST /api/orders response"
+        ],
+        "businessImpact": "Every discounted order shows a price the customer is not charged. Individually it is a penny; collectively it is a consumer-pricing accuracy issue, and it is the kind of discrepancy that generates support contacts and chargebacks rather than being absorbed quietly.",
+        "fixDirection": "Render the total from the API response instead of recomputing it in the basket component, or move the rounding to a single shared helper used by both sides.",
+        "status": "confirmed",
+        "confidence": 0.93,
+        "rootCause": {
+          "summary": "The client rounds the discount down while the server rounds the final total to the nearest penny, so the two disagree by one penny on any half-penny result.",
+          "chain": [
+            "The basket component computes discount = subtotal * 0.10 and truncates to two decimals.",
+            "The API computes the discount in integer pence and rounds the final total half-up.",
+            "A £49.99 subtotal produces a 4.999 discount, truncated to 4.99 on the client and rounded to 5.00 on the server.",
+            "Nothing compares the rendered total with the response, so the difference never surfaces."
+          ],
+          "confidence": 0.9,
+          "layer": "frontend"
+        },
+        "regressionRisk": {
+          "level": "medium",
+          "note": "Totals are rendered in the basket, the checkout summary, and the confirmation email.",
+          "retest": [
+            "A discounted order shows the same total on the summary and the confirmation",
+            "An undiscounted order is unchanged",
+            "A discount that lands exactly on a penny still rounds correctly"
+          ]
+        },
+        "developerNotes": "basket.component.ts, computeDiscount() around line 88.",
+        "tags": ["pricing", "rounding"],
+        "affectedApis": ["POST /api/orders"],
+        "metrics": [
+          { "label": "Displayed total", "value": "£44.99", "budget": "£45.00", "breached": true },
+          { "label": "Charged total", "value": "£45.00" }
+        ],
+        "evidence": [
+          {
+            "type": "screenshot",
+            "artifactId": "shot-checkout-total",
+            "caption": "The summary panel showing £44.99"
+          },
+          {
+            "type": "network",
+            "artifactId": "net-checkout",
+            "caption": "The order response",
+            "excerpt": "POST /api/orders 200\n{\"subtotal\":4999,\"discount\":500,\"total\":4500}"
+          }
+        ]
+      }
+    ],
+    "testCases": {
+      "total": 4,
+      "passed": 3,
+      "failed": 1,
+      "blocked": 0,
+      "skipped": 0,
+      "cases": [
+        { "id": "TC-1", "title": "Add items to the basket", "status": "pass", "source": "user-supplied" },
+        { "id": "TC-2", "title": "Apply a valid discount code", "status": "pass", "source": "user-supplied" },
+        { "id": "TC-3", "title": "Displayed total matches the charged total", "status": "fail", "findingId": "EXP-1", "source": "user-supplied" },
+        { "id": "TC-4", "title": "An invalid discount code is rejected", "status": "pass", "source": "exploratory" }
+      ]
+    },
+    "whatWorksWell": [
+      "The basket updates correctly when items are added and removed.",
+      "An invalid discount code is rejected with a message naming the field."
+    ],
+    "fixOrder": ["EXP-1 — reconcile the displayed total with the charged total"],
+    "recommendations": [
+      {
+        "action": "Render monetary totals from the API response rather than recomputing them client-side",
+        "priority": "high",
+        "rationale": "Removes the whole class of client/server rounding disagreement, not just this instance.",
+        "owner": "frontend",
+        "effort": "small",
+        "findingIds": ["EXP-1"]
+      }
+    ]
+  }
+}

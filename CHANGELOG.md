@@ -8,6 +8,217 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.11.0] — 2026-07-29
+
+A minor version. Two subsystems were rebuilt — the reporting platform and the
+installation model — and one long-standing defect class was closed: reports that
+referenced evidence which was not there. Nothing already installed breaks: a 0.10
+lockfile still verifies, and a project install is byte-for-byte the arrangement it
+always was.
+
+### The reporting platform: one renderer, one theme, every agent
+
+Two live `/qa-explore` runs exposed the same architectural gap from opposite ends. The
+first produced a valid artifact and a lossy report: every finding carried `repro`,
+`actual`, `expected`, and `fixDirection`, and the hand-written HTML collapsed all four
+into one sentence. The second used the renderer and still failed — **every screenshot
+was a broken image**, because the declared paths were relative to the project root while
+the report was written inside the run folder, so the browser resolved
+`qa-artifacts/explore-R/qa-artifacts/explore-R/screenshots/…`.
+
+Both are the same failure: a boundary that was documented rather than enforced. A report
+is now *rendered*, from a schema, by code no agent can influence
+([ADR-0016](docs/architecture/ADR-0016-universal-report-rendering.md)).
+
+- **Added** `packages/engine/lib/artifacts/` — the artifact registry. Every evidence
+  file is resolved against the result's own directory *and* every ancestor up to a
+  search root, stat'ed, hashed, and typed. `exists` is a measured fact, so a missing
+  file renders as a stated absence naming the path that was searched, never as a
+  browser's broken-image glyph. Resolution cannot escape the search root; a zero-byte
+  capture counts as missing, because a failed screenshot renders exactly as badly as an
+  absent one.
+- **Added** `artifacts verify` — the gate a skill runs before rendering. Exit 1 when a
+  file a finding points at is absent, empty, or hash-mismatched. Also `artifacts scan`
+  and `artifacts hash`.
+- **Rewrote** the HTML report. Sticky section navigation, live search across findings,
+  severity and dimension filters, expandable finding cards, hand-written SVG charts
+  (severity donut, page health, slowest endpoints, largest payloads, repeated requests,
+  request waterfall, Core Web Vitals bullets), an execution timeline, a screenshot
+  lightbox with zoom and before/after pairs, light and dark themes, a print stylesheet
+  that forces every finding open, and a mobile layout. Still one file, still no CDN, no
+  web font, and no external request — a report has to open from a mail attachment on a
+  plane.
+- **Added** the canonical `qa-engineer/qa-report` schema (2.0): a producer-neutral
+  contract with `metadata`, `summary`, `coverage`, `issues`, `artifacts`, `performance`,
+  `security`, `accessibility`, `console`, `network`, and `recommendations`. It has no
+  field for a colour, class, font, or template, and `additionalProperties: false` means
+  a producer cannot add one. A test asserts the schema exposes no presentation hook, and
+  another renders the same report as two different agents and asserts the documents are
+  byte-identical apart from the provenance line.
+- **Added** a normalizer registry, so `qa-engineer/qa-report`, `qa-explore/explore-result`,
+  and `qa-report/report-result` all fold into one internal shape and one renderer. An
+  unknown contract or unsupported schema version is refused by name rather than
+  half-rendered.
+- **Added** three independent versions — schema, theme, renderer — stamped into `<meta>`
+  tags and the appendix, so a theme change never forces a schema bump and a renderer fix
+  never invalidates an archived artifact. `analysis report-versions` and
+  `analysis report-schema` expose both to any agent.
+- **Added** rendering modes: `full`, `executive`, `developer`, and `artifact` (body-only,
+  for an embedding host such as Claude Artifacts). They filter sections from one model
+  and share one stylesheet, so they cannot disagree about a number and an embedded report
+  is visually identical to a standalone one.
+- **Added** `analysis report-export` — Markdown, SARIF, JUnit, CSV, JSON, and a bundle
+  manifest with per-file hashes, all from the same validated result. No PDF writer: the
+  print stylesheet makes Print → Save as PDF produce a better document with nothing to
+  install.
+- **Added** `--embed`, which inlines images as data URIs for a report that travels
+  without its folder.
+- **Extended** `explore-result` to 1.1 — `artifacts[]`, `executive`, `scores`, `pages[]`,
+  `timeline[]`, `network`, `performance`, `accessibility`, `security`, `console`,
+  `authentication`, and per-finding `businessImpact`, `rootCause` (with a causal chain),
+  `regressionRisk`, `confidence`, `metrics`, and `steps`. Every addition is optional, so
+  a 1.0 producer stays valid.
+- **Changed** `qa-explore` to write `artifacts[]`, verify them, and *then* render. The
+  "write the HTML by hand" fallback is withdrawn: a skill whose renderer is unreachable
+  now reports that the engine is missing and stops.
+- **Fixed** a duplicate `class` attribute on the API table's status cell, which every
+  browser silently drops — a 500 was rendering in body-text grey instead of red. A test
+  now sweeps the whole document for the same defect.
+- **Fixed** the engine CLI's flag parser, which had no notion of boolean switches, so
+  `--embed --out report.html` set `embed` to the string `"--out"` and sent the report to
+  stdout.
+- **Added** 44 tests covering artifact resolution, missing and empty artifacts, path
+  traversal refusal, rendering completeness, markup injection, self-containment, agent
+  agnosticism, the four modes, and every exporter.
+- **Regenerated** the corpus baseline for `reportHtml` only. Every parity-verified
+  analysis section — redaction, headers, classify, junit, diff-guard — is byte-identical.
+
+### API analysis is parsed, not judged
+
+`qa-explore` claimed an API dimension and backed it with forty-eight lines of prose
+telling the model what to look for. The model then counted requests by eye, decided
+which were slow, and judged which were duplicates — three things a parser is perfect at
+and a model is not. The pack's founding rule is that deterministic code owns facts; for
+this dimension the model owned both the facts and the explanation.
+
+- **Added** `analysis network <capture.har>` — emits the report contract's `network`
+  block directly: totals, per-endpoint status, duration, size, call count, and start
+  offset, with one `issue` flag per endpoint. Drop it into a result and it validates.
+- **Added** seven detections, each by a stated rule over a stated threshold: `failed`,
+  `slow`, `polling` (three or more calls at an even cadence), `duplicate`, `n-plus-one`
+  (four or more distinct ids on one path shape within two seconds), `large-payload`, and
+  `uncached` (a static asset with neither `Cache-Control` nor `ETag`). An uncached *API*
+  response is deliberately not flagged — freshness is usually the point, and a detector
+  that cries wolf teaches readers to skip the section.
+- **Extended** the HAR parser with response size, start timestamp, and caching headers.
+  A HAR that does not record a size reports `null`, never a plausible zero: "we do not
+  know how big this was" and "this was empty" are different findings.
+- **Changed** the `qa-explore` API step to capture a HAR and run the parser over it,
+  with the instruction never to count requests by eye. What stays the model's job is the
+  judgement the parser cannot make — whether a duplicated analytics beacon and a
+  duplicated payment request, identical in a HAR, matter equally.
+- **Added** 21 tests, weighted toward the detectors *not* firing: a query-string
+  difference is not a duplicate, a burst is not polling, ids spread over a session are
+  not an N+1, and a cached asset is not uncached.
+
+Performance, security, and accessibility still have no analyzer behind them and remain
+model judgement. `qa-explore` stays **Experimental** for that reason, and because no
+live-application run has been measured.
+
+### Install once per machine — global, workspace, and project are now real modes
+
+Installing "globally" used to mean pointing `--project` at your home directory. It
+worked, and it was a trick: it scattered `qa-lock.json`, `.agents/`, and `.claude/`
+straight into `$HOME`, no test covered it, nothing documented it, and any change to path
+handling would have broken it silently.
+
+It also duplicated heavily. One project install wrote **1213 files and 13 MB**, of which
+7 MB was **eighteen copies of the same engine** — nine bundling skills times the two
+discovery directories the installer writes. A global install now writes **215 files, 26
+links, and 1.9 MB, with one engine**
+([ADR-0017](docs/architecture/ADR-0017-installation-scopes.md)).
+
+- **Added** three named installation scopes. `--global` installs once per machine into
+  `~/.qa-engineer/`; `--workspace` installs once at the root of a monorepo, detected from
+  pnpm, npm/yarn workspaces, Nx, Turborepo, Lerna, Rush, Go, or Cargo; `--project` is the
+  original behaviour and remains the default.
+- **Added** the directory QA Engineer owns: `~/.qa-engineer/` holding `engine/`,
+  `skills/`, and `qa-lock.json`, plus `config/`, `sessions/`, `cache/`, `logs/`, and
+  `adapters/` created on demand. Nothing is written loose into `$HOME`.
+  `QA_ENGINEER_HOME` relocates the whole thing.
+- **Added** a shared engine. One copy per scope, found by the launcher walking up for
+  `.qa-engineer/engine` — so a skill does not know which scope installed it, which is
+  exactly why one skill directory serves all three.
+- **Added** skills reached by link rather than copy: a symlink on POSIX, a **junction**
+  on Windows so no administrator rights or Developer Mode are needed. Link support is
+  probed *before* planning; a filesystem that cannot hold one gets copies and a warning
+  rather than a failed install.
+- **Added** an honest table of user-level skills directories. Claude Code and Antigravity
+  have documented ones; Cursor, Codex, OpenCode, Gemini CLI, and Copilot do not, and the
+  install names them and says why instead of writing to a guessed path. Writing skills
+  where a host does not read them is a silent no-op that reads as a broken tool.
+- **Changed** `verify`, `doctor`, `repair`, `update`, `uninstall`, and `self-test` to
+  find the install themselves: a project lockfile in the current directory wins,
+  otherwise the machine install. All six accept `--global` and `--workspace` explicitly.
+- **Changed** the lockfile to record its scope, and to record a link's target so `verify`
+  can catch one that has been repointed. A lockfile with no `scope` block is read as a
+  project install, because before this that was the only kind — every install already on
+  disk keeps working untouched.
+- **Fixed** backups landing in `~/.qa/backups` for a global install. They now live inside
+  the directory the scope owns.
+- **Fixed** backups accumulating a complete copy of the install on every `update` and
+  `repair` — three engines after two commands. Rewriting a file with byte-identical
+  content is now a no-op that is neither written nor backed up.
+- **Fixed** `update --global` and `repair --global` silently reverting a global install
+  to a project-shaped one, because the resolved scope never reached the reinstall.
+- **Added** 25 tests covering all three scopes, monorepo detection for every supported
+  marker, link integrity, the copy fallback probe, and the backward-compatibility
+  guarantee that a pre-0.11 lockfile still reads as a project install.
+
+### The report is a folder on your disk, not a link that expires
+
+A report shared during development as a hosted preview URL had 404ed before the
+conversation using it was finished. A QA report is evidence attached to a release
+decision — reopened in a postmortem, quoted in a compliance review, read by someone who
+joins later. Anything that can expire is disqualified from being the deliverable.
+
+- **Added** `analysis report-bundle` — the canonical local output. It writes
+  `index.html`, `report.json`, `report.md`, `manifest.json` (a SHA-256 per file), and an
+  `assets/` tree — `css/`, `js/`, `screenshots/`, `videos/`, `traces/`, `network/`,
+  `dom/`, `console/`, `logs/` — holding a **copy** of every piece of evidence, with every
+  link rewritten to point inside the folder.
+- **Added** the completeness gate that makes that a guarantee rather than an intention:
+  after writing, the emitted HTML is re-read, every `src` and `href` is resolved against
+  the bundle root, and a reference that escapes the folder or names a file that is not
+  there **fails the command**. It found a real bug in the bundler on its first run — a
+  result with no `artifacts[]` block had its evidence resolved lazily by the renderer, so
+  nothing was copied and every link still pointed at the original folder.
+- **Added** a zero-dependency ZIP writer, so `--zip` emits the same tree as one archive a
+  stakeholder can actually be sent. Verified against the system `unzip` and round-tripped
+  through the pack's own ZIP reader.
+- **Added** `--force`, and a refusal to write a bundle into a directory holding unrelated
+  files — the bundler deletes and rewrites `assets/`, which is not something to do to a
+  folder chosen for another purpose.
+- **Changed** `qa-explore` to build the bundle as step four of reporting and to point the
+  user at `report/index.html`. The skill now states that a hosted preview — a Claude
+  Artifact, a Cursor preview, any cloud viewer — is an optional convenience that expires
+  and must never be presented as the deliverable.
+- **Fixed** the ZIP end-of-central-directory record, whose size and offset fields were
+  written two bytes late. Every extractor reported the archive as truncated by about a
+  gigabyte. A test now asserts the central directory ends exactly where the EOCD begins.
+- **Fixed** `--zip` silently doing nothing: it was not declared a boolean switch, so it
+  consumed the following token. It is now a switch, with `--zip-out` carrying a path.
+- **Added** eval coverage for `qa-explore`, which had none and is the pack's
+  broadest-scope command: one golden case and five adversarial ones — a `ship` verdict
+  standing over a critical finding (now rejected by a new cross-field contract
+  invariant), an evidence entry citing an unregistered artifact, an agent smuggling HTML
+  and inline styles into contract fields to style its own finding, a score reported for a
+  dimension that was never run, and credentials left in reproduction steps and an
+  evidence excerpt. The eval suite goes from 21 cases to 27.
+- **Added** the cross-field invariant to both report contracts: a `ship` verdict requires
+  zero critical and zero high findings. `ship-with-risks` is the honest verdict for
+  knowingly releasing over a high.
+
 ## [0.10.0] — 2026-07-28
 
 A minor version rather than a patch, deliberately. `0.9.3` was the number this

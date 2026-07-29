@@ -1,7 +1,8 @@
 // `qa update` — refresh an install from the current pack source.
 
 import { EXIT } from '../constants.mjs';
-import { resolveProjectRoot, resolveSourceRoot } from '../core/paths.mjs';
+import { resolveSourceRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { readLock } from '../core/lockfile.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
 import { executeInstall } from './install.mjs';
@@ -20,9 +21,10 @@ Always re-validates after updating.`);
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
+  const scope = resolveOperatingScope(opts);
+  const root = scope.root;
   const sourceRoot = resolveSourceRoot();
-  const lock = readLock(root);
+  const lock = readLock(root, scope.lockfile);
   const installedVersion = lock?.pack?.version ?? null;
 
   if (!opts.json) {
@@ -43,7 +45,10 @@ Always re-validates after updating.`);
     : (lock?.agents ?? []).map((a) => a.id).filter(Boolean);
 
   const result = await executeInstall({
-    projectRoot: root,
+    // The scope the command resolved, not just its root: without it the reinstall
+    // reverts a global install to a project-shaped one — 1225 files and a lockfile in
+    // the wrong place — while reporting success.
+    scope,
     agentIds,
     force: true,
     dryRun: opts.dryRun,

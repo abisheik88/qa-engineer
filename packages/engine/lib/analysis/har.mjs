@@ -36,6 +36,16 @@ export function parseHarData(data, { slowMs = 1000, label = '<input>' } = {}) {
       durationMs: toMillis(item?.time, label),
       requestHeaders: redactHeaders(request.headers ?? []),
       responseHeaders: redactHeaders(response.headers ?? []),
+      // Three facts a report needs that a summary of failures cannot supply: how big
+      // the response was, when it started relative to the others, and whether the
+      // server said anything about caching. All three are read straight from the HAR
+      // — none is inferred — and all three are absent from many HARs, which is why
+      // each has an explicit "unknown" rather than a plausible zero.
+      bytes: bodyBytes(response),
+      startedAt: typeof item.startedDateTime === 'string' ? item.startedDateTime : null,
+      cacheControl: headerValue(response.headers, 'cache-control'),
+      etag: headerValue(response.headers, 'etag'),
+      resourceType: typeof item._resourceType === 'string' ? item._resourceType : null,
     };
   });
 
@@ -56,6 +66,30 @@ export function parseHar(path, { slowMs = 1000 } = {}) {
     throw new MalformedArtifact(`could not parse HAR at ${path}: ${error.message}`);
   }
   return parseHarData(data, { slowMs, label: path });
+}
+
+/**
+ * Response body size in bytes, or null when the HAR does not say.
+ *
+ * `content.size` is the decoded size and `bodySize` the bytes on the wire; either is
+ * `-1` when the producer did not record it. Null rather than 0, because "we do not
+ * know how big this was" and "this response was empty" are different findings and a
+ * report that conflates them invents a fact.
+ */
+function bodyBytes(response) {
+  for (const candidate of [response?.content?.size, response?.bodySize]) {
+    const number = Number(candidate);
+    if (Number.isFinite(number) && number >= 0) return Math.trunc(number);
+  }
+  return null;
+}
+
+/** A header's value, case-insensitively, or null. */
+function headerValue(headers, name) {
+  if (!Array.isArray(headers)) return null;
+  const wanted = name.toLowerCase();
+  const found = headers.find((header) => String(header?.name ?? '').toLowerCase() === wanted);
+  return found ? String(found.value ?? '') : null;
 }
 
 /** A status that is absent or unreadable is 0 — "no response", which is a failure. */

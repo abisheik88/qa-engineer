@@ -1,0 +1,63 @@
+{
+  "id": "qa-explore/dangling-artifact-reference",
+  "skill": "qa-explore",
+  "kind": "adversarial",
+  "description": "PHANTOM EVIDENCE: a finding cites `artifactId: shot-role-editor`, and no such artifact is registered. This is the first live report's broken-screenshot failure expressed in data — the report claimed proof it did not hold, and the reader met a broken image instead of a finding. The registry now renders a named absence rather than a broken link, but the artifact still has to exist for the finding to be evidence-backed, so a reference that resolves to nothing must be rejected here.",
+  "input": {
+    "scenario": "The agent writes the evidence reference it intended to capture, having never captured it.",
+    "request": "/qa-explore https://admin.example.test/roles"
+  },
+  "contract": "skills/qa-explore/contracts/explore-result.schema.json",
+  "assertions": [
+    { "path": "artifacts.0.id", "equals": "shot-roles-list" },
+    {
+      "path": "findings.0.evidence.0.artifactId",
+      "in": ["shot-roles-list"]
+    }
+  ],
+  "output": {
+    "contract": { "name": "qa-explore/explore-result", "version": "1.1.0" },
+    "skill": { "name": "qa-explore", "version": "0.2.0" },
+    "generatedAt": "2026-07-29T10:05:00Z",
+    "url": "https://admin.example.test/roles",
+    "classification": "issues-found",
+    "summary": "Editing a role silently discards the change when two permissions are toggled in quick succession.",
+    "severityCounts": { "critical": 0, "high": 1, "medium": 0, "low": 0 },
+    "artifacts": [
+      {
+        "id": "shot-roles-list",
+        "kind": "screenshot",
+        "path": "screenshots/roles-list.png",
+        "label": "The roles list before editing"
+      }
+    ],
+    "evidence": [
+      {
+        "type": "screenshot",
+        "description": "The roles list before editing",
+        "source": "screenshots/roles-list.png",
+        "artifactId": "shot-roles-list"
+      }
+    ],
+    "findings": [
+      {
+        "id": "EXP-1",
+        "severity": "high",
+        "dimension": "functional",
+        "title": "Rapidly toggling two permissions discards the second change",
+        "actual": "Toggling two permissions within about 200 ms sends two PATCH requests. The second response overwrites the first, and the permission toggled second reverts on reload.",
+        "expected": "Both changes persist, or the second request waits for the first to settle.",
+        "repro": "1. Open /roles and edit any role\n2. Toggle two permissions within 200 ms\n3. Save, then reload the page",
+        "fixDirection": "Debounce the toggle handler and send one PATCH with the full permission set, or serialise the requests.",
+        "status": "confirmed",
+        "evidence": [
+          {
+            "type": "screenshot",
+            "artifactId": "shot-role-editor",
+            "caption": "The role editor after the second toggle reverted"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 // `qa repair` — fix common install problems by reinstalling pack-owned files.
 
 import { EXIT, LOCKFILE } from '../constants.mjs';
-import { resolveProjectRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { readLock } from '../core/lockfile.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
 import { executeInstall } from './install.mjs';
@@ -21,9 +21,10 @@ Repair a broken or drifted installation:
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
-  const prior = readLock(root);
-  const before = validateInstall(root);
+  const scope = resolveOperatingScope(opts);
+  const root = scope.root;
+  const prior = readLock(root, scope.lockfile);
+  const before = validateInstall(root, { scope });
 
   if (!opts.json) {
     logger.step(`repairing ${root}`);
@@ -40,7 +41,10 @@ Repair a broken or drifted installation:
     : (prior?.agents ?? []).map((a) => a.id).filter(Boolean);
 
   const result = await executeInstall({
-    projectRoot: root,
+    // The scope the command resolved, not just its root: without it the reinstall
+    // reverts a global install to a project-shaped one — 1225 files and a lockfile in
+    // the wrong place — while reporting success.
+    scope,
     agentIds,
     force: true,
     dryRun: opts.dryRun,
@@ -48,7 +52,7 @@ Repair a broken or drifted installation:
     log: logger,
   });
 
-  const after = opts.dryRun ? before : validateInstall(root);
+  const after = opts.dryRun ? before : validateInstall(root, { scope });
 
   if (!opts.json) {
     if (after.ok) logger.ok('repair complete — installation validated');
