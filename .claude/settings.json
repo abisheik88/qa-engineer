@@ -86,7 +86,11 @@
       "Bash(node -e \"const h=require\\('./packages/engine/test/fixtures/sample.har'\\); console.log\\(Object.keys\\(h.log.entries[0]\\)\\); console.log\\('response keys:', Object.keys\\(h.log.entries[0].response\\)\\)\")",
       "Bash(node packages/engine/bin/qa-engine.mjs analysis network packages/engine/test/fixtures/sample.har)",
       "Bash(node skills/qa-explore/scripts/qa-tool.mjs analysis network packages/engine/test/fixtures/sample.har)",
-      "Bash(node --test packages/engine/test/network.test.mjs)"
+      "Bash(node --test packages/engine/test/network.test.mjs)",
+      "Bash(git rev-list *)",
+      "Bash(awk '{print \"  main-only: \"$1\"  release-only: \"$2}')",
+      "Bash(xargs git log --oneline -1)",
+      "Bash(git merge-tree *)"
     ]
   }
 }
