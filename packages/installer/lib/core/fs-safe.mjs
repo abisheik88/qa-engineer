@@ -109,6 +109,80 @@ function ensureDir(dir, createdDirs) {
   }
 }
 
+/**
+ * The target of a symlink at `abs`, or null when there is no link there.
+ *
+ * `lstat` rather than `exists`, because a link pointing at something that has been
+ * deleted still exists as a link and still has to be replaced rather than written over.
+ */
+export function readLinkTarget(abs) {
+  try {
+    const stat = fs.lstatSync(abs);
+    if (!stat.isSymbolicLink()) return null;
+    return fs.readlinkSync(abs);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create a directory link, choosing the kind the platform will allow.
+ *
+ * On Windows a symbolic link needs either administrator rights or Developer Mode, while
+ * a *junction* needs neither and behaves the same for reading a directory. Preferring a
+ * junction there is the difference between a global install that works for every Windows
+ * developer and one that works only for those running an elevated shell.
+ */
+export function createLink(abs, target) {
+  const type = process.platform === 'win32' ? 'junction' : 'dir';
+  fs.symlinkSync(target, abs, type);
+}
+
+/**
+ * Can this filesystem hold a directory link at all?
+ *
+ * Asked once, before planning, rather than discovered halfway through a transaction.
+ * The answer is no more often than it looks: a FAT- or exFAT-formatted volume supports
+ * neither symlinks nor junctions, some container and network mounts refuse them, and a
+ * Windows host without Developer Mode refuses symlinks (which is why `createLink` asks
+ * for a junction there instead).
+ *
+ * When the answer is no the installer copies instead. A global install that fails
+ * outright on a USB stick would be a worse tool than one that uses more disk.
+ */
+export function canLink(root) {
+  const probe = path.join(root, `.qa-linkprobe-${process.pid}`);
+  const target = path.join(root, `.qa-linktarget-${process.pid}`);
+  try {
+    fs.mkdirSync(target, { recursive: true });
+    createLink(probe, target);
+    const ok = readLinkTarget(probe) !== null;
+    fs.unlinkSync(probe);
+    fs.rmdirSync(target);
+    return ok;
+  } catch {
+    // Clean up whatever got as far as existing, then report no.
+    try {
+      if (readLinkTarget(probe) !== null) fs.unlinkSync(probe);
+    } catch { /* nothing to undo */ }
+    try {
+      if (fs.existsSync(target)) fs.rmdirSync(target);
+    } catch { /* nothing to undo */ }
+    return false;
+  }
+}
+
+/** True when the file already holds exactly these bytes. */
+function sameContent(file, content) {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile() || stat.size !== content.length) return false;
+    return fs.readFileSync(file).equals(content);
+  } catch {
+    return false;
+  }
+}
+
 /** Write content to file via a temp file + rename, so readers never see a partial write. */
 function atomicWrite(file, content) {
   const tmp = `${file}.qa-tmp-${process.pid}`;
@@ -132,6 +206,24 @@ export class Transaction {
   delete(relPath) {
     resolveInside(this.root, relPath);
     this.ops.push({ kind: 'delete', rel: relPath });
+  }
+
+  /**
+   * Stage a symbolic link at `relPath` pointing at `targetAbs`.
+   *
+   * Links are how a global install serves an agent without copying the skills again.
+   * They go through the transaction rather than around it so a half-linked install
+   * rolls back like a half-written one — and because replacing a link silently would
+   * lose where the old one pointed.
+   *
+   * Only a link may be replaced by a link. A real directory at the target path belongs
+   * to someone else, and the conflict detector is what decides whether the user wants it
+   * overwritten; reaching here with one is a bug, so it throws rather than deleting a
+   * directory nobody agreed to lose.
+   */
+  link(relPath, targetAbs) {
+    resolveInside(this.root, relPath);
+    this.ops.push({ kind: 'link', rel: relPath, target: targetAbs });
   }
 
   /** Directories the transaction will need to write into, deduplicated. */
@@ -169,6 +261,8 @@ export class Transaction {
     const created = []; // files that did not exist before (remove on rollback)
     const createdDirs = []; // directories we made (remove on rollback if empty)
     const backups = []; // { abs, backup } for files that existed (restore on rollback)
+    let unchanged = 0; // already byte-identical: neither written nor backed up
+    const replacedLinks = []; // { abs, target } symlinks removed (recreate on rollback)
     let backedUp = 0;
 
     const backup = (abs, rel) => {
@@ -185,21 +279,65 @@ export class Transaction {
         // other code, and containment is cheap to reassert.
         const abs = resolveInside(this.root, op.rel);
         if (op.kind === 'write') {
-          if (fs.existsSync(abs)) backup(abs, op.rel);
-          else created.push(abs);
+          if (fs.existsSync(abs)) {
+            // Reinstalling identical content is the common case for update and repair.
+            // Backing it up copies the whole install into a dated directory on every
+            // run — three copies of the engine after two commands — and restoring a
+            // byte-identical file on rollback achieves nothing.
+            if (sameContent(abs, op.content)) {
+              unchanged += 1;
+              continue;
+            }
+            backup(abs, op.rel);
+          } else {
+            created.push(abs);
+          }
           ensureDir(path.dirname(abs), createdDirs);
           atomicWrite(abs, op.content);
         } else if (op.kind === 'delete') {
-          if (fs.existsSync(abs)) {
+          // A link is deleted by unlinking it, and "backed up" by remembering where it
+          // pointed. Copying it would follow the link and try to copy a directory as a
+          // file, which is how uninstall crashed on a global install.
+          const linkTarget = readLinkTarget(abs);
+          if (linkTarget !== null) {
+            replacedLinks.push({ abs, target: linkTarget });
+            fs.unlinkSync(abs);
+          } else if (fs.existsSync(abs)) {
             backup(abs, op.rel);
             fs.rmSync(abs);
           }
+        } else if (op.kind === 'link') {
+          const existing = readLinkTarget(abs);
+          if (existing !== null) {
+            replacedLinks.push({ abs, target: existing });
+            fs.unlinkSync(abs);
+          } else if (fs.existsSync(abs)) {
+            throw environmentError(
+              `refusing to replace ${abs} with a link: it is a real file or directory, not a link ` +
+                'this installer created',
+            );
+          } else {
+            created.push(abs);
+          }
+          ensureDir(path.dirname(abs), createdDirs);
+          createLink(abs, op.target);
         }
       }
     } catch (error) {
-      // Roll back: remove created files, restore backups, drop created dirs.
+      // Roll back: remove created files and links, restore backups and replaced links,
+      // drop created dirs.
       for (const abs of created) {
-        if (fs.existsSync(abs)) fs.rmSync(abs, { force: true });
+        if (readLinkTarget(abs) !== null) fs.unlinkSync(abs);
+        else if (fs.existsSync(abs)) fs.rmSync(abs, { force: true });
+      }
+      for (const { abs, target } of replacedLinks) {
+        if (!fs.existsSync(abs) && readLinkTarget(abs) === null) {
+          try {
+            createLink(abs, target);
+          } catch {
+            /* best effort: the original error is what matters */
+          }
+        }
       }
       for (const { abs, backup: from } of backups) {
         fs.copyFileSync(from, abs);
@@ -215,8 +353,10 @@ export class Transaction {
     }
 
     return {
-      written: this.ops.filter((o) => o.kind === 'write').length,
+      written: this.ops.filter((o) => o.kind === 'write').length - unchanged,
+      unchanged,
       deleted: this.ops.filter((o) => o.kind === 'delete').length,
+      linked: this.ops.filter((o) => o.kind === 'link').length,
       backedUp,
       backupDir: backedUp > 0 ? this.backupDir : null,
       dryRun: false,

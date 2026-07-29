@@ -1,7 +1,7 @@
 {
   "name": "@qa-engineer/engine",
-  "version": "0.9.2",
-  "description": "Deterministic QA analysis engine — zero dependencies, Node only",
+  "version": "0.11.0",
+  "description": "Deterministic QA analysis engine \u2014 zero dependencies, Node only",
   "license": "MIT",
   "private": true,
   "type": "module",

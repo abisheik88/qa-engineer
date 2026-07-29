@@ -1,7 +1,7 @@
 // `qa self-test` — verify an installation is operational.
 
 import { EXIT } from '../constants.mjs';
-import { resolveProjectRoot } from '../core/paths.mjs';
+import { resolveOperatingScope } from '../core/scope.mjs';
 import { parseCommonFlags } from '../cli/flags.mjs';
 import { validateInstall } from '../core/validate-install.mjs';
 import { createLogger } from '../core/logger.mjs';
@@ -17,8 +17,9 @@ Prints PASS/FAIL per check. Does not invoke live AI agents.`);
     return EXIT.OK;
   }
 
-  const root = resolveProjectRoot(opts.project ?? process.cwd());
-  const { ok, checks } = validateInstall(root);
+  const scope = resolveOperatingScope(opts);
+  const root = scope.root;
+  const { ok, checks } = validateInstall(root, { scope });
 
   if (!opts.json) {
     logger.step(`self-test — ${root}`);

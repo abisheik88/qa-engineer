@@ -52,7 +52,7 @@ point at the test or contract that backs the level.
 | Flaky detection | `qa-flaky` | Detects/quantifies flakiness; proposes quarantine (never auto-applies). | Beta | [`flaky-result.schema.json`](../skills/qa-flaky/contracts/flaky-result.schema.json) + examples. |
 | API testing | `qa-api` | Assesses REST, GraphQL, and WebSocket behavior. | Beta | [`api-result.schema.json`](../skills/qa-api/contracts/api-result.schema.json) + examples. |
 | Page audit | `qa-audit` | Accessibility, performance, security, and visual audits. | Beta | [`audit-result.schema.json`](../skills/qa-audit/contracts/audit-result.schema.json) + examples. |
-| Live product QA | `qa-explore` | Live-URL, multi-dimension QA with an evidence report and screenshots. | **Experimental** | [`explore-result.schema.json`](../skills/qa-explore/contracts/explore-result.schema.json) + examples; newest command ([RFC-0001](rfcs/RFC-0001-qa-explore.md)), broadest scope, least track record; optional DB validation is the least-proven part. |
+| Live product QA | `qa-explore` | Live-URL, multi-dimension QA with an evidence report and screenshots. | **Experimental** | [`explore-result.schema.json`](../skills/qa-explore/contracts/explore-result.schema.json) + 1 golden and 6 adversarial eval cases. Reporting and API analysis are deterministic (`artifacts verify`, `analysis network`, `report-bundle`); **performance, security, and accessibility remain model judgement with no analyzer behind them**. Newest command ([RFC-0001](rfcs/RFC-0001-qa-explore.md)), broadest scope, least track record; no live-application run has been measured. |
 
 Supporting platforms that the commands share:
 
