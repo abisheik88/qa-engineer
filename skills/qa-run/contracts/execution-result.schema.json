@@ -33,6 +33,50 @@
       }
     },
     {
+      "title": "A red run must record what happened next",
+      "description": "From contract 1.1.0 on, 'failed' and 'errored' must carry a handoff: the automatic dispatch to /qa-debug, or the recorded reason it was skipped or unavailable. A red run that ends in silence leaves the reader unable to tell whether the diagnosis was declined, impossible, or forgotten. Gated on the minor version so results written against 1.0.0 stay valid.",
+      "if": {
+        "required": ["classification", "contract"],
+        "properties": {
+          "classification": { "enum": ["failed", "errored"] },
+          "contract": {
+            "required": ["version"],
+            "properties": { "version": { "pattern": "^1\\.[1-9][0-9]*\\." } }
+          }
+        }
+      },
+      "then": { "required": ["handoff"] }
+    },
+    {
+      "title": "A red run must point at the evidence it captured",
+      "description": "From contract 1.1.0 on, 'failed' requires at least one collected artifact. The failure evidence floor puts a screenshot, and usually a trace, on every failing test, so an empty artifact list means either the floor was lowered or collection was skipped — both of which force the reader into a second run to learn what the first already knew. An expected-but-absent entry (present: false) satisfies this: a stated gap is evidence, an empty list is not.",
+      "if": {
+        "required": ["classification", "contract"],
+        "properties": {
+          "classification": { "const": "failed" },
+          "contract": {
+            "required": ["version"],
+            "properties": { "version": { "pattern": "^1\\.[1-9][0-9]*\\." } }
+          }
+        }
+      },
+      "then": { "properties": { "artifacts": { "minItems": 1 } } }
+    },
+    {
+      "title": "A handoff that did not happen must say why",
+      "description": "status 'skipped' or 'unavailable' requires a reason. Without it the field records that no diagnosis exists while hiding whether the user declined it or the tool was missing — the two call for opposite next actions.",
+      "if": {
+        "required": ["handoff"],
+        "properties": {
+          "handoff": {
+            "required": ["status"],
+            "properties": { "status": { "enum": ["skipped", "unavailable"] } }
+          }
+        }
+      },
+      "then": { "properties": { "handoff": { "required": ["reason"] } } }
+    },
+    {
       "title": "no-tests-run means nothing executed",
       "description": "classification 'no-tests-run' requires a zero total. If tests executed, the status is decided by their outcomes.",
       "if": {
@@ -183,6 +227,39 @@
           "type": "array",
           "description": "Names only of the environment variables the run depended on — never values.",
           "items": { "type": "string" }
+        }
+      }
+    },
+    "handoff": {
+      "description": "The automatic forward handoff a red run performs: the diagnostic command dispatched with this result, or the reason it was not. Required for 'failed' and 'errored' from contract 1.1.0 on; absent for a run that produced nothing to diagnose.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "status"],
+      "properties": {
+        "skill": {
+          "description": "The successor, by command name — never a path to another skill's files.",
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "description": "The exact command dispatched, including the artifact path. Secret-free, like every recorded command."
+        },
+        "artifact": {
+          "type": "string",
+          "description": "Path to the validated execution result handed over."
+        },
+        "status": {
+          "description": "dispatched — the diagnosis ran; skipped — the user asked for the run only; unavailable — the command or its engine could not run.",
+          "enum": ["dispatched", "skipped", "unavailable"]
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the handoff is not a dispatch. Required in practice for 'skipped' and 'unavailable'."
+        },
+        "resultRef": {
+          "type": "string",
+          "description": "Path to the artifact the successor produced, when it produced one."
         }
       }
     },

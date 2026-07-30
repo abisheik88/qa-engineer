@@ -52,7 +52,23 @@ All twelve commands are implemented and wired. The shape did not change as they 
              └─► qa-report   reads any qa-artifacts/* → summary
 ```
 
-Handoffs follow the artifacts: `qa-run` produces a result a human or `qa-debug` can consume; `qa-debug` produces a classification `qa-fix` can consume; `qa-explore` produces a product-QA report a human or `qa-report` can summarize; `qa-report` consumes anything. No skill in this chain calls the next — each ends with a [recommendation](execution-lifecycle.md) naming it.
+Handoffs follow the artifacts: `qa-run` produces a result a human or `qa-debug` can consume; `qa-debug` produces a classification `qa-fix` can consume; `qa-explore` produces a product-QA report a human or `qa-report` can summarize; `qa-report` consumes anything. No skill in this chain calls the next — each ends with a [recommendation](execution-lifecycle.md) naming it, with one exception.
+
+### The exception: red run → diagnosis
+
+```text
+  qa-run ──► execution result (failed / errored)
+     │            │  written and validated first
+     │            ▼
+     └── dispatch /qa-debug by name ──► debug result ──► recommends /qa-fix (never runs it)
+```
+
+A `failed` or `errored` run dispatches `/qa-debug` **without being asked**, because that is
+the one handoff with no decision in it. It is still the two mechanisms above and nothing
+new: dispatch by command name, over an artifact, with the result's `handoff` block
+recording what happened. The chain stops there — `qa-debug` may not dispatch onward, and
+`qa-fix` is never automatic because it changes files. The seven conditions and why no other
+skill gets the same are in [ADR-0018](ADR-0018-failure-handoff.md).
 
 ## Responsibilities and ownership
 

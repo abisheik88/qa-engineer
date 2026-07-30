@@ -26,6 +26,10 @@ The command builder maps strategy and scope onto each binding's runner; the shap
 
 Scope (smoke, targeted, directory, tag) maps onto each runner's native selection, exactly as the shared [execution strategy](../../execution/execution-strategy.md) and [command builder](../../execution/command-builder.md) define — the strategy is framework-agnostic; only the selection syntax is Selenium's.
 
+## Failure evidence floor
+
+The shared [failure evidence floor](../../execution/command-builder.md) has no command-line realization in Selenium: WebDriver takes a screenshot only when the test code asks it to, so failure capture is a property of the project (a JUnit/pytest listener, a TestNG `ITestListener`, a `conftest.py` hook) and not of the invocation. The adapter's obligation is therefore to *report* the floor's state rather than to satisfy it — confirm the project has a failure-screenshot hook and where it writes, or record the screenshot row as unavailable so the reader knows a red result will have no picture and why. Recommending the hook is `/qa-review`'s work, not the runner's.
+
 ## Browser and Grid
 
 Selenium drives real browsers through WebDriver, locally or against a Grid. The shared [browser lifecycle](../../execution/browser-launch.md) (startup, timeout, retry, cleanup, cancellation) applies unchanged; Selenium's realization — driver management, Grid connection — is what the adapter would add when execution flips on.

@@ -22,6 +22,7 @@ Each stage is a module below. The engine is framework-agnostic; everything frame
 | [command-builder.md](command-builder.md) | Turning strategy + scope + environment into a concrete command | Yes |
 | [browser-launch.md](browser-launch.md) | Browser and mode lifecycle: startup, timeout, retry, cleanup, cancellation | Yes |
 | [artifact-collector.md](artifact-collector.md) | The common, framework-independent artifact model and collection rules | Yes |
+| [failure-handoff.md](failure-handoff.md) | The automatic red-run handoff to diagnosis: when it fires, its bounds, what is recorded | Yes |
 | [report-normalization.md](report-normalization.md) | Mapping raw framework output to the normalized result contract | Yes |
 | [environment-detection.md](environment-detection.md) | Local vs CI, headed vs headless defaults, base URL and environment variables | Yes |
 

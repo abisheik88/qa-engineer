@@ -41,7 +41,19 @@ A skill need not *perform* every phase — [qa-run](../../skills/qa-run/README.m
 | 7 | Execute | Perform the work. Deterministic tooling owns this phase where it exists; until then a skill plans it and hands off ([extension points](extension-points.md)) |
 | 8 | Validate | Confirm the intended outcome with a checkable signal — an exit code, a parsed report, a diff guard. No validation, no success claim |
 | 9 | Report | Emit an [output-contract](../skills/output-contracts.md)-conformant result: summary, classification, evidence, recommendations |
-| 10 | Recommendations | End by naming the next command and the artifact to feed it (principle 6: composition) — never by doing that next step yourself |
+| 10 | Recommendations | End by naming the next command and the artifact to feed it (principle 6: composition) — never by doing that next step yourself, with one bounded exception: the [failure handoff](ADR-0018-failure-handoff.md) |
+
+### The one exception: a red run diagnoses itself
+
+Phase 10 names the next step rather than taking it, because a chain of skills calling
+skills is how a pack becomes unpredictable. A failure is the single case where the next
+step is not a choice — nobody runs tests, sees `1 failed`, and *doesn't* want to know
+why — so `qa-run` dispatches `/qa-debug` on `failed` and `errored` and shows the
+diagnosis with the run. The bounds that keep it from becoming general chaining are in
+[ADR-0018](ADR-0018-failure-handoff.md) and in the shared `failure-handoff` module: one
+hop, forward only, after the predecessor's artifact is written and validated, by command
+name rather than by path, to a successor that does not mutate, recorded in the artifact,
+and suppressible by the user. Any other skill wanting the same must amend that ADR.
 
 ## Where a skill may stop
 

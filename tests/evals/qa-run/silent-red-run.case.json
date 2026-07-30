@@ -1,0 +1,36 @@
+{
+  "id": "qa-run/silent-red-run",
+  "skill": "qa-run",
+  "kind": "adversarial",
+  "description": "SILENT RED RUN: a failure reported against contract 1.1.0 with no handoff block at all. The reader cannot tell whether the diagnosis was declined, impossible, or simply forgotten — the ambiguity ADR-0018 exists to remove. The scorer MUST reject it.",
+  "input": {
+    "scenario": "The agent reports the red run and stops, skipping the automatic /qa-debug handoff without recording that it did.",
+    "request": "/qa-run regression"
+  },
+  "contract": "skills/qa-run/contracts/execution-result.schema.json",
+  "assertions": [
+    { "path": "handoff", "present": true }
+  ],
+  "output": {
+    "contract": { "name": "qa-run/execution-result", "version": "1.1.0" },
+    "skill": { "name": "qa-run", "version": "0.3.0" },
+    "generatedAt": "2026-07-24T12:52:00Z",
+    "summary": "Regression run on Playwright/Chromium: 11 passed, 1 failed.",
+    "classification": "failed",
+    "confidence": 0.97,
+    "evidence": [
+      { "type": "report", "description": "Playwright JSON reporter: 11 passed, 1 failed", "source": "test-results/results.json" },
+      { "type": "command", "description": "Runner exited non-zero", "source": "exit code 1" }
+    ],
+    "execution": { "strategy": "regression", "command": "npx playwright test --reporter=json,line --screenshot=only-on-failure --video=retain-on-failure --trace=on-first-retry", "exitCode": 1 },
+    "framework": { "name": "playwright", "version": "1.58.0" },
+    "tests": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
+    "executed": [
+      { "title": "checkout > completes a purchase", "file": "e2e/checkout.spec.ts", "status": "failed", "durationMs": 8300, "retries": 1 }
+    ],
+    "artifacts": [
+      { "type": "screenshot", "location": "test-results/checkout/test-failed-1.png", "framework": "playwright", "timestamp": "2026-07-24T12:51:55Z", "mediaType": "image/png", "ownership": "qa-run", "testRef": "checkout > completes a purchase", "present": true }
+    ],
+    "environment": { "location": "ci", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": "github-actions", "envVarNames": ["BASE_URL"] }
+  }
+}

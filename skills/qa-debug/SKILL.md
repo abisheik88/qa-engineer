@@ -21,6 +21,8 @@ Investigate a failure the way an experienced QA engineer would: gather the evide
 
 Do not propose or make code changes here — that is `/qa-fix`, which consumes this skill's output. Do not run tests (`/qa-run`) or generate them (`/qa-generate`). This skill explains a failure; it does not repair it.
 
+This skill is often entered **automatically**: a red `/qa-run` hands its validated execution result straight here rather than asking the user to type the next command. That changes nothing about the investigation — the input is the same artifact a human would have passed — but it does bind this skill to the far end of the handoff: the chain stops here. Do not dispatch onward, and do not re-run the suite to gather more evidence; when the evidence is insufficient, say what is missing and name the command that would capture it.
+
 ## Inputs
 
 - The user's request, which follows in the conversation: the failing test, run, or artifact.
@@ -35,6 +37,7 @@ Do not propose or make code changes here — that is `/qa-fix`, which consumes t
 | When | Load |
 | --- | --- |
 | Following the investigation end to end | [references/investigation-workflow.md](references/investigation-workflow.md) |
+| Being entered automatically from a red run, and where the chain stops | [references/failure-handoff.md](references/failure-handoff.md) |
 | Classifying the root cause | [references/root-cause-analysis.md](references/root-cause-analysis.md), [references/failure-taxonomy.md](references/failure-taxonomy.md) |
 | Reconstructing the sequence of events | [references/timeline-builder.md](references/timeline-builder.md) |
 | Assigning severity, priority, and owner | [references/finding-prioritization.md](references/finding-prioritization.md) |

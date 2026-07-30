@@ -22,6 +22,8 @@ The strategies a run can take, and how one is chosen. A strategy is the answer t
 - **Inputs:** the user's intent (from the request), the project conventions and tags (from `.qa/context.md`), and, for `changed`, `failed-only`, and `retry`, prior state — a diff, or a previous execution result.
 - **Outputs:** a strategy name (the result's classification of *what kind of run this is*), an include set, an optional exclude set, and the evidence level to capture. These feed the command builder and the artifact collector.
 
+The evidence level a strategy chooses is a level *above a floor*, never below it: every strategy captures a screenshot on failure, a trace on first retry, and the run's output. A `smoke` run is narrow in scope, not blind to its own failures — see the failure evidence floor in the command-builder module.
+
 ## Decision tree
 
 Applied top to bottom; the first match wins:

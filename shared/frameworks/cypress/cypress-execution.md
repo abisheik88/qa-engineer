@@ -17,6 +17,10 @@ How a Cypress run is built, against the shared execution adapter contract. This 
 
 The command builder maps strategy and scope onto Cypress's selectors: `cypress run --spec <glob>` for path/targeted scope, `--browser <name>` for the browser, `--env grep=<tag>` (with the grep plugin) for tags, and a JUnit reporter (`--reporter junit`) so the result normalizes. Smoke/regression/directory strategies map to spec globs, exactly as the shared execution-strategy defines.
 
+## Failure evidence floor
+
+The shared floor (screenshot on failure, run output, and the deepest step-level evidence the framework offers) maps onto Cypress config rather than flags: `--config screenshotOnRunFailure=true,video=true`, set explicitly on the planned command so a project config that disabled either cannot silence a failure. Cypress writes them to `cypress/screenshots/` and `cypress/videos/` (see cypress-artifacts). **Known gap:** Cypress has no trace equivalent, so the trace row of the floor is recorded as unavailable for this framework — the video plus the JUnit failure message is the depth available.
+
 ## Browser and mode
 
 Cypress runs headed or headless (`--headed`), on its supported browsers (Chrome family, Firefox, WebKit experimental). The shared browser lifecycle (timeout, retry, cleanup, cancellation) applies; **known limitation:** Cypress's browser support is narrower than Playwright's, and it runs inside the browser's event loop, which shapes how some waits behave.

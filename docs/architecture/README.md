@@ -50,6 +50,7 @@ The execution, generation, and analysis platform specifications live under [shar
 | [ADR-0015](ADR-0015-no-reserved-empty-directories.md) | A directory exists only when it holds something a skill loads | Accepted |
 | [ADR-0016](ADR-0016-universal-report-rendering.md) | Reports are rendered centrally from a canonical schema, never authored by an agent | Accepted |
 | [ADR-0017](ADR-0017-installation-scopes.md) | Installation is scoped — global, workspace, or project — and each shares what it can | Accepted |
+| [ADR-0018](ADR-0018-failure-handoff.md) | A red run diagnoses itself — one bounded automatic handoff, and no others | Accepted |
 
 ## What an ADR is
 

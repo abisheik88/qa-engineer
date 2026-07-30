@@ -1,0 +1,40 @@
+{
+  "id": "qa-run/blind-failure",
+  "skill": "qa-run",
+  "kind": "adversarial",
+  "description": "BLIND FAILURE: a red run reported with an empty artifact list — no screenshot, no trace, nothing the reader or /qa-debug can look at. The failure evidence floor puts a screenshot on every failing test, so an empty list means capture was turned off or collection was skipped, and the only way to learn what broke is a second full run. The scorer MUST reject it.",
+  "input": {
+    "scenario": "The agent lowers the evidence flags to make a smoke run cheaper, then reports the failure with nothing attached.",
+    "request": "/qa-run smoke"
+  },
+  "contract": "skills/qa-run/contracts/execution-result.schema.json",
+  "assertions": [
+    { "path": "artifacts", "minItems": 1 },
+    { "path": "handoff.status", "in": ["dispatched", "skipped", "unavailable"] }
+  ],
+  "output": {
+    "contract": { "name": "qa-run/execution-result", "version": "1.1.0" },
+    "skill": { "name": "qa-run", "version": "0.3.0" },
+    "generatedAt": "2026-07-24T12:41:00Z",
+    "summary": "Smoke run on Playwright/Chromium: 11 passed, 1 failed. The checkout test failed.",
+    "classification": "failed",
+    "confidence": 0.95,
+    "evidence": [
+      { "type": "report", "description": "Playwright JSON reporter: 11 passed, 1 failed", "source": "test-results/results.json" }
+    ],
+    "execution": { "strategy": "smoke", "command": "npx playwright test --grep @smoke --reporter=json --screenshot=off --trace=off", "exitCode": 1 },
+    "framework": { "name": "playwright", "version": "1.58.0" },
+    "tests": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
+    "executed": [
+      { "title": "checkout > completes a purchase", "file": "e2e/checkout.spec.ts", "status": "failed", "durationMs": 8300, "retries": 0 }
+    ],
+    "artifacts": [],
+    "environment": { "location": "local", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": null, "envVarNames": ["BASE_URL"] },
+    "handoff": {
+      "skill": "qa-debug",
+      "command": "/qa-debug qa-artifacts/qa-run-result-77a1.json",
+      "artifact": "qa-artifacts/qa-run-result-77a1.json",
+      "status": "dispatched"
+    }
+  }
+}

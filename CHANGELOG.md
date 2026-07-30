@@ -8,6 +8,61 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Nothing yet.
 
+## [0.12.0] — 2026-07-30
+
+A minor version, and one behavioral promise: a test that fails leaves something to look
+at, and a run that goes red says why without being asked.
+
+### A failing test is captured, and a red run diagnoses itself
+
+Two halves of the same gap, reported from use: a test would fail and leave nothing to
+look at, and then the run would end by asking the user to type the one command they were
+always going to type next.
+
+- **Added** the **failure evidence floor** to the shared command builder. Every built
+  command now carries `--screenshot=only-on-failure`, `--video=retain-on-failure`, and
+  `--trace=on-first-retry`, written explicitly even when the project config already sets
+  them — a CLI flag overrides `use.screenshot`, an ambient default is invisible in the
+  recorded command, and a config edit can silence it. A strategy may raise a level and
+  may not lower one: a smoke run is narrow in scope, not blind to its own failures. The
+  green path pays nothing, because `only-on-failure` writes nothing when nothing fails.
+- **Added** per-failure evidence attachment. Each `failed` or `flaky` test in the result
+  now carries its screenshots (one per attempt), video, and trace by `testRef`. A failing
+  test with nothing on disk is recorded `present: false` with the directory searched and
+  the reason when it is known — a zero-byte capture counts as absent, because a broken
+  screenshot debugs exactly as badly as a missing one.
+- **Added** the **automatic failure handoff** ([ADR-0018](docs/architecture/ADR-0018-failure-handoff.md)).
+  A `failed` or `errored` run writes and validates its result, then dispatches `/qa-debug`
+  on it without being asked and presents the diagnosis with the run. `qa-run` still
+  diagnoses nothing itself — ownership stays with the diagnostic platform.
+- **Amended** principle 6 and lifecycle phase 10, which said a skill ends by *naming* the
+  next command and never taking it. That rule stands everywhere except here, under seven
+  conditions: one hop, forward only; the successor must not mutate (so `/qa-fix` stays a
+  recommendation the user approves); dispatch by command name, never by path; the artifact
+  is written and validated first, so the automatic path and a human typing
+  `/qa-debug <path>` produce the same diagnosis; announced and suppressible with
+  `--no-debug`; degrades honestly when the command is unavailable; and recorded in the
+  artifact. Another automatic handoff requires amending that ADR.
+- **Changed** `qa-run/execution-result` to **1.1.0**: a `handoff` block (`skill`,
+  `command`, `artifact`, `status`, `reason`, `resultRef`), plus three invariants —
+  `failed`/`errored` ⇒ `handoff` present, `failed` ⇒ at least one collected artifact, and
+  `skipped`/`unavailable` ⇒ a `reason`, because "no diagnosis exists" and "the user
+  declined it" call for opposite next actions.
+- **Added** version-gated invariants as a documented mechanism. All three are gated on the
+  producer's own `contract.version`, so results written against 1.0.0 keep validating
+  while every 1.1.0 producer is held to the new floor. This is how a contract tightens
+  without a major break — and it applies only where the old shape was *permitted*, never
+  where it was wrong: hallucinated green was always invalid and gets no grandfather clause.
+- **Added** eval coverage: `blind-failure` (a red run with an empty artifact list) and
+  `silent-red-run` (a 1.1.0 failure with no handoff), both rejected by the contract rather
+  than only by an assertion. The golden red-run case now carries its screenshot and its
+  dispatched handoff.
+- **Noted** the gated adapters' honest limits: Cypress sets the floor through
+  `--config screenshotOnRunFailure=true,video=true` and has no trace equivalent; Selenium
+  and WebdriverIO capture a failure screenshot only where the project's own hook does, so
+  their adapters *report* the floor's state rather than satisfying it, and recommending the
+  hook stays `/qa-review`'s work.
+
 ## [0.11.0] — 2026-07-29
 
 A minor version. Two subsystems were rebuilt — the reporting platform and the
