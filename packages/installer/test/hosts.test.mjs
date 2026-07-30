@@ -185,9 +185,17 @@ test('a plain file-copy install produces a working skill, with no installer invo
     const launcher = path.join(skillDir, 'scripts', 'qa-tool.mjs');
     assert.ok(fs.existsSync(launcher), 'a file-copy install has no entry point');
 
+    // The scenario is a machine with nothing installed, so the home directory has to be
+    // the temp root and not the developer's. Resolution walks up for `.qa-engineer/engine`
+    // and falls back to the real home, so a maintainer who ran `install --global` — the
+    // command this project's own README recommends first — made the launcher answer
+    // 'shared' here and failed the suite on their machine while passing in CI.
+    // USERPROFILE comes along because that is what os.homedir() reads on Windows.
+    const env = { ...process.env, HOME: root, USERPROFILE: root };
+
     // And it must resolve an engine. Here there is no bundle and no node_modules, so
     // the honest answer is npx — reported rather than guessed at.
-    const where = spawnSync(process.execPath, [launcher, '--where'], { encoding: 'utf8' });
+    const where = spawnSync(process.execPath, [launcher, '--where'], { encoding: 'utf8', env });
     assert.equal(where.status, 0, where.stderr);
     assert.equal(JSON.parse(where.stdout).resolved, 'npx');
 
@@ -199,6 +207,7 @@ test('a plain file-copy install produces a working skill, with no installer invo
     const resolved = spawnSync(process.execPath, [launcher, '--where'], {
       encoding: 'utf8',
       cwd: root,
+      env,
     });
     assert.equal(JSON.parse(resolved.stdout).resolved, 'node_modules');
 
@@ -211,7 +220,7 @@ test('a plain file-copy install produces a working skill, with no installer invo
     const run = spawnSync(
       process.execPath,
       [launcher, 'diagnostics', 'report', '--execution-result', execution],
-      { encoding: 'utf8', cwd: root },
+      { encoding: 'utf8', cwd: root, env },
     );
     assert.equal(run.status, 0, `file-copy install could not run the engine: ${run.stderr}`);
     assert.equal(JSON.parse(run.stdout).diagnosis.entries[0].rootCause.classification, 'locator-failure');
