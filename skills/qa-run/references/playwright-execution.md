@@ -20,9 +20,22 @@ Start from the package-manager invocation (`pnpm exec playwright test`, `npx pla
 | Scope — project or browser | `--project=<name>` |
 | Display | `--headed` only on explicit request; headless is the default (no flag) |
 | Evidence — trace | `--trace=on-first-retry` by default, `on` when the strategy asks |
-| Evidence — video / screenshot | `--video` and `--screenshot` at the strategy's level |
+| Evidence — screenshot | `--screenshot=only-on-failure` always, `on` when the strategy asks |
+| Evidence — video | `--video=retain-on-failure` always, `on` when the strategy asks |
 
 The full command is recorded verbatim. Secrets are never interpolated; environment variables are referenced by name and resolved at run time (see the environment-detection module).
+
+### The failure floor in Playwright flags
+
+The last three rows are the shared failure evidence floor (see the command-builder module) expressed in Playwright's own flags, and they are written on every command — including a one-spec run and a smoke run:
+
+```text
+--screenshot=only-on-failure --video=retain-on-failure --trace=on-first-retry
+```
+
+- **`--screenshot=off`, `--video=off`, and `--trace=off` are never built.** Playwright's own defaults are `off`, and a project config may set `off` explicitly; the flags are passed anyway because a CLI flag overrides `use.screenshot` / `use.video` / `use.trace` in the config, which is exactly the point.
+- **Retries interact with the floor.** `--trace=on-first-retry` produces a trace only when a retry happens, so a run with `--retries=0` fails without one. When a diagnosis needs the trace of a first, un-retried failure, the strategy raises tracing to `--trace=retain-on-failure` rather than lowering the floor.
+- **The cost is paid only by failures.** `only-on-failure` and `retain-on-failure` write nothing for a passing test — a green run produces the same artifacts it always did, which is why the floor does not need a fast-mode exemption.
 
 ## Launch and run
 

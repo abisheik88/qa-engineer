@@ -2,7 +2,7 @@
 
 > Teach your AI coding assistant to work like a senior QA engineer — and stop it from telling you tests pass when they don't.
 
-[![Version](https://img.shields.io/badge/version-0.11.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.12.0-blue.svg)](CHANGELOG.md)
 [![Status](https://img.shields.io/badge/status-public%20preview-orange.svg)](docs/release/v0.9-release-checklist.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933.svg)](#step-1--check-your-prerequisite)

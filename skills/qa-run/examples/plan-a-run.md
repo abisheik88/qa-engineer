@@ -16,7 +16,7 @@ The repository from the qa-init example: `.qa/context.md` exists with `testFrame
 2. **Understand repository / framework.** Runner is Playwright via pnpm, from the context.
 3. **Understand intent.** "smoke" selects the smoke strategy; no ambiguity, so no question.
 4. **Determine strategy.** `smoke`, justified by the intent word "smoke" and the Playwright context fact.
-5. **Plan.** Scope is the `@smoke`-tagged tests; the evidence plan captures a trace on failure and a report always; the collect, execute, and validate phases are marked `deferred`.
+5. **Plan.** Scope is the `@smoke`-tagged tests; the evidence plan carries the failure floor — screenshot and video on failure, trace on first retry — plus a machine-readable report always; the collect, execute, and validate phases are marked `deferred`.
 6. **Report.** Emit and self-validate the execution plan; execute nothing.
 
 ## Expected output
@@ -48,7 +48,7 @@ The repository from the qa-init example: `.qa/context.md` exists with `testFrame
   "plan": {
     "framework": "playwright",
     "runner": "pnpm exec playwright test",
-    "command": "pnpm exec playwright test --grep @smoke --trace on-first-retry",
+    "command": "pnpm exec playwright test --grep @smoke --reporter=json,line --screenshot=only-on-failure --video=retain-on-failure --trace=on-first-retry",
     "scope": { "include": ["@smoke"], "exclude": [] },
     "environment": {},
     "phases": [
@@ -66,7 +66,9 @@ The repository from the qa-init example: `.qa/context.md` exists with `testFrame
   },
   "evidencePlan": {
     "artifacts": [
-      { "type": "trace", "when": "on-failure", "purpose": "timeline for /qa-debug if the run fails" },
+      { "type": "screenshot", "when": "on-failure", "purpose": "what was on screen when the test broke — the failure evidence floor" },
+      { "type": "video", "when": "on-failure", "purpose": "the steps before the failing assertion, which one frame cannot show" },
+      { "type": "trace", "when": "on-retry", "purpose": "timeline for the automatic /qa-debug handoff if the run goes red" },
       { "type": "report", "when": "always", "purpose": "machine-readable pass/fail for the result" }
     ]
   },

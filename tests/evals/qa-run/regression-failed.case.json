@@ -2,7 +2,7 @@
   "id": "qa-run/regression-failed",
   "skill": "qa-run",
   "kind": "golden",
-  "description": "A red run is honestly reported 'failed', backed by a non-zero exit code and a failing count — never softened.",
+  "description": "A red run is honestly reported 'failed', backed by a non-zero exit code and a failing count — never softened. The failure carries its own screenshot and trace, and the run hands itself to /qa-debug without being asked.",
   "input": {
     "scenario": "Playwright checkout suite; one test genuinely fails after a retry.",
     "request": "/qa-run regression",
@@ -13,25 +13,41 @@
   "assertions": [
     { "path": "classification", "equals": "failed" },
     { "path": "evidence", "minItems": 1 },
-    { "anyOf": [{ "path": "tests.failed", "equals": 0 }, { "path": "classification", "notEquals": "passed" }] }
+    { "anyOf": [{ "path": "tests.failed", "equals": 0 }, { "path": "classification", "notEquals": "passed" }] },
+    { "path": "artifacts", "minItems": 1 },
+    { "path": "handoff.skill", "equals": "qa-debug" },
+    { "path": "handoff.status", "equals": "dispatched" }
   ],
   "output": {
-    "contract": { "name": "qa-run/execution-result", "version": "1.0.0" },
-    "skill": { "name": "qa-run", "version": "0.2.0" },
+    "contract": { "name": "qa-run/execution-result", "version": "1.1.0" },
+    "skill": { "name": "qa-run", "version": "0.3.0" },
     "generatedAt": "2026-07-24T11:05:03Z",
-    "summary": "Regression run on Playwright/Chromium: 11 passed, 1 failed. The checkout purchase test failed after one retry.",
+    "summary": "Regression run on Playwright/Chromium: 11 passed, 1 failed. The checkout purchase test failed after one retry; its screenshot, video, and trace were collected and handed to /qa-debug.",
     "classification": "failed",
     "confidence": 0.98,
     "evidence": [
       { "type": "report", "description": "Playwright JSON reporter: 11 passed, 1 failed", "source": "test-results/results.json", "excerpt": "\"expected\": 11, \"unexpected\": 1" },
-      { "type": "command", "description": "Runner exited non-zero, consistent with a reported failure", "source": "exit code 1" }
+      { "type": "command", "description": "Runner exited non-zero, consistent with a reported failure", "source": "exit code 1" },
+      { "type": "artifact", "description": "Failure screenshot present for the failing test, per the failure evidence floor", "source": "test-results/checkout/test-failed-1.png" }
     ],
-    "execution": { "strategy": "regression", "command": "npx playwright test --reporter=json,line --trace=on-first-retry", "exitCode": 1 },
+    "execution": { "strategy": "regression", "command": "npx playwright test --reporter=json,line --screenshot=only-on-failure --video=retain-on-failure --trace=on-first-retry", "exitCode": 1 },
     "framework": { "name": "playwright", "version": "1.58.0" },
     "tests": { "total": 12, "passed": 11, "failed": 1, "skipped": 0, "flaky": 0 },
-    "artifacts": [
-      { "type": "trace", "location": "test-results/checkout/trace.zip", "framework": "playwright", "timestamp": "2026-07-24T11:05:01Z", "ownership": "qa-run", "present": true }
+    "executed": [
+      { "title": "checkout > completes a purchase", "file": "e2e/checkout.spec.ts", "status": "failed", "durationMs": 8300, "retries": 1 }
     ],
-    "environment": { "location": "ci", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": "github-actions", "envVarNames": ["BASE_URL"] }
+    "artifacts": [
+      { "type": "screenshot", "location": "test-results/checkout/test-failed-1.png", "framework": "playwright", "timestamp": "2026-07-24T11:04:58Z", "mediaType": "image/png", "ownership": "qa-run", "testRef": "checkout > completes a purchase", "present": true },
+      { "type": "video", "location": "test-results/checkout/video.webm", "framework": "playwright", "timestamp": "2026-07-24T11:04:58Z", "mediaType": "video/webm", "ownership": "qa-run", "testRef": "checkout > completes a purchase", "present": true },
+      { "type": "trace", "location": "test-results/checkout/trace.zip", "framework": "playwright", "timestamp": "2026-07-24T11:05:01Z", "ownership": "qa-run", "testRef": "checkout > completes a purchase", "present": true }
+    ],
+    "environment": { "location": "ci", "headless": true, "browser": "chromium", "baseUrl": "http://localhost:3000", "os": "linux", "ciProvider": "github-actions", "envVarNames": ["BASE_URL"] },
+    "handoff": {
+      "skill": "qa-debug",
+      "command": "/qa-debug qa-artifacts/qa-run-result-4f10.json",
+      "artifact": "qa-artifacts/qa-run-result-4f10.json",
+      "status": "dispatched",
+      "resultRef": "qa-artifacts/qa-debug-result-4f10.json"
+    }
   }
 }

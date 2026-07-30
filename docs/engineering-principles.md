@@ -42,6 +42,8 @@ Skills combine by handing off by name and by exchanging artifacts — not by cal
 
 **In practice:** a skill ends by recommending the next command and the artifact to feed it; it never loads a sibling skill's files (sibling paths are not guaranteed at runtime). The only dispatcher is the [router](../skills/qa/README.md), and it dispatches once.
 
+**The one exception,** recorded in [ADR-0018](architecture/ADR-0018-failure-handoff.md): a red run hands off to `/qa-debug` automatically, because "the tests failed, now ask me to find out why" is friction with no upside. It stays composition rather than chaining because it dispatches by command name over a written, validated artifact — one hop, forward only, to a skill that cannot mutate anything — and because the handoff is recorded in the result. Automation stops at the diagnosis: acting on it (`/qa-fix`) remains a recommendation the user approves.
+
 ## 7. Vendor and framework neutrality
 
 The pack belongs to no agent, no test framework, and no cloud. It targets open standards and degrades gracefully when an optional integration is absent.

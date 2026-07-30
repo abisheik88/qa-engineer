@@ -107,6 +107,9 @@ Current invariants:
 | `qa-run/execution-result` | `passed` ⇒ `execution.exitCode == 0` and `tests.failed == 0` |
 | `qa-run/execution-result` | `failed` ⇒ `tests.failed >= 1` |
 | `qa-run/execution-result` | `no-tests-run` ⇒ `tests.total == 0` |
+| `qa-run/execution-result` | `failed` / `errored` ⇒ `handoff` present (contract ≥ 1.1.0) |
+| `qa-run/execution-result` | `failed` ⇒ at least one collected artifact (contract ≥ 1.1.0) |
+| `qa-run/execution-result` | `handoff.status` `skipped` / `unavailable` ⇒ `handoff.reason` present |
 | `qa-report/report-result` | `ready` ⇒ `testSummary.failed == 0` |
 | `qa-report/report-result` | `ready` / `not-ready` ⇒ matching `releaseReadiness.verdict` |
 | `qa-fix/fix-result` | `diffGuardReview.status == "fail"` ⇒ disposition is not `repairable` |
@@ -114,6 +117,16 @@ Current invariants:
 Adding an invariant is a MINOR contract change when it only rejects documents
 that were already wrong, and MAJOR if it rejects a shape the previous version
 legitimately allowed.
+
+**Version-gated invariants.** The three `handoff` and artifact invariants above
+would have been MAJOR by that rule — a 1.0.0 red result with no handoff and no
+artifacts was legitimately allowed. They are instead gated on the producer's own
+`contract.version` (`pattern: ^1\.[1-9][0-9]*\.`), so documents written against
+1.0.0 keep validating while every 1.1.0 producer is held to the new floor. This
+is the mechanism for tightening a contract without a major break: gate on the
+version, and let the requirement arrive with the producers that claim it. It is
+only appropriate when the old shape was *permitted*, never when it was wrong —
+a hallucinated-green result was always invalid and gets no grandfather clause.
 
 ## Compatibility and evolution
 

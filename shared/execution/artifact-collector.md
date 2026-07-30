@@ -31,8 +31,9 @@ A framework that emits something outside this set maps it to the closest type or
 - **Locate, describe, never move.** Collection records where the framework wrote each artifact; it does not relocate or rewrite them. The result points at real files in place.
 - **Run-scoped and test-scoped.** Some artifacts belong to the whole run (stdout, the JUnit report); others belong to one test (a trace, a failure screenshot). Test-scoped artifacts carry `testRef`.
 - **Collect what the strategy planned.** The evidence plan chose what to capture and when (for example, a trace only on failure). Collection gathers exactly that set, so cost matches the strategy.
+- **Every failing test carries its own evidence.** For each test the run reports `failed` or `flaky`, the artifacts belonging to it are attached by `testRef` — at minimum its failure screenshot, plus the trace and video when the floor produced them. A red result whose failures point at nothing is a dead end for the reader and for the diagnostic layer, so this is checked before the result is emitted, not hoped for.
 - **Redact at the boundary.** Text artifacts (stdout, logs) may contain credentials from the environment; any credential or token is redacted as the artifact is described, before it appears in a result or is shown. This applies to the description and any excerpt, not to the file on disk, which the user controls.
-- **Absence is data.** A planned artifact that is missing (no trace though a test failed) is recorded as an expected-but-absent note, not silently dropped — its absence may matter to an analyzer.
+- **Absence is data.** A planned artifact that is missing (no trace though a test failed) is recorded as an expected-but-absent note, not silently dropped — its absence may matter to an analyzer. A failure screenshot the floor asked for and the run did not write is recorded with `present: false`, naming the path that was searched and, when it is known, why nothing is there (capture disabled in config, the browser died before it could be taken). A zero-byte capture counts as absent: a broken screenshot debugs exactly as badly as a missing one.
 
 ## Why normalize now
 
